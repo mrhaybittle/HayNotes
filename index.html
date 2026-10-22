@@ -596,7 +596,6 @@
             return { baseTitle: filename.trim(), pageNum: null };
         }
 
-        // Checks whether a given sub-page actually has an active parent page with the exact same base title
         function isPageLinkedToParent(pageObj) {
             const groupInfo = parsePageGroupInfo(pageObj.filename);
             if (groupInfo.pageNum === null) return false;
@@ -613,12 +612,37 @@
             if (!pageObj) return;
 
             if (confirm(`Unlink "${pageObj.filename}" as an independent page?`)) {
-                // Strips p2/p3 suffix so it no longer auto-links to the base song name
                 const groupInfo = parsePageGroupInfo(pageObj.filename);
                 pageObj.filename = groupInfo.baseTitle + ` (Part ${groupInfo.pageNum})`;
                 renderPagesListDrawer();
                 updatePageIndicator();
             }
+        }
+
+        function getGroupMemberIds(targetPageId) {
+            const targetObj = pagesData.find(p => p.id === targetPageId);
+            if (!targetObj) return [targetPageId];
+
+            const info = parsePageGroupInfo(targetObj.filename);
+            
+            const parentObj = pagesData.find(p => {
+                const pInfo = parsePageGroupInfo(p.filename);
+                return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && !isPageLinkedToParent(p);
+            });
+
+            const baseObj = parentObj || targetObj;
+            const baseInfo = parsePageGroupInfo(baseObj.filename);
+
+            const groupMembers = pagesData.filter(p => {
+                const pInfo = parsePageGroupInfo(p.filename);
+                return pInfo.baseTitle.toLowerCase() === baseInfo.baseTitle.toLowerCase();
+            }).sort((a, b) => {
+                const numA = parsePageGroupInfo(a.filename).pageNum || 1;
+                const numB = parsePageGroupInfo(b.filename).pageNum || 1;
+                return numA - numB;
+            });
+
+            return groupMembers.map(p => p.id);
         }
 
         // ---------------------------------------------------------
@@ -1574,6 +1598,14 @@
         btnCloseDraw.addEventListener('click', () => {
             annotationToolbar.classList.add('hidden');
             annotationToolbar.style.display = '';
+            
+            // Auto-deselect any active transform bounding box when closing drawing toolbar
+            const activeCanvas = fabricCanvases[pagesData[currentPageIndex]?.id];
+            if (activeCanvas) {
+                activeCanvas.discardActiveObject();
+                activeCanvas.requestRenderAll();
+            }
+            
             document.querySelector('[data-tool="navigate"]').click();
         });
 
@@ -1719,13 +1751,17 @@
 
             if (jumpTarget !== null) {
                 stampText.set('targetPage', jumpTarget);
-                const badge = new fabric.Text(`p.${jumpTarget}`, {
-                    left: pointer.x + (isArrow ? 400 : 25),
-                    top: pointer.y - 10,
-                    fontSize: isArrow ? 36 : 12,
+                const targetPageObj = pagesData[jumpTarget - 1];
+                const pageName = targetPageObj ? targetPageObj.filename : `Page ${jumpTarget}`;
+                const labelString = `p.${jumpTarget} - ${pageName}`;
+
+                const badge = new fabric.Text(labelString, {
+                    left: pointer.x + (isArrow ? 20 : 25),
+                    top: pointer.y - (isArrow ? 80 : 20),
+                    fontSize: isArrow ? 32 : 12,
                     fontWeight: 'bold',
                     fill: activeColor,
-                    fontFamily: 'monospace',
+                    fontFamily: 'sans-serif',
                     selectable: false
                 });
                 canvas.add(badge);
@@ -2113,77 +2149,22 @@
             ghostClass: 'sortable-ghost',
             chosenClass: 'sortable-chosen',
             dragClass: 'sortable-drag',
-            onEnd: () => {
+            onEnd: (evt) => {
+                const draggedDomEl = evt.item;
+                const draggedId = draggedDomEl ? draggedDomEl.dataset.id : null;
+                if (!draggedId) return;
+
+                const groupMemberIds = getGroupMemberIds(draggedId);
+                const memberObjects = groupMemberIds.map(id => pagesData.find(p => p.id === id)).filter(Boolean);
+
+                pagesData = pagesData.filter(p => !groupMemberIds.includes(p.id));
+
                 const listChildren = Array.from(document.getElementById('pagesList').children);
-                const rawDomIds = listChildren.map(li => li.dataset.id);
-                
-                let reorderedPages = [];
-                let processedIds = new Set();
+                let targetIdx = listChildren.indexOf(draggedDomEl);
+                if (targetIdx === -1) targetIdx = pagesData.length;
 
-                rawDomIds.forEach(id => {
-                    if (processedIds.has(id)) return;
+                pagesData.splice(targetIdx, 0, ...memberObjects);
 
-                    const pageObj = pagesData.find(p => p.id === id);
-                    if (!pageObj) return;
-
-                    const isLinked = isPageLinkedToParent(pageObj);
-                    const info = parsePageGroupInfo(pageObj.filename);
-
-                    // Case A: Standalone page or Main Song Page
-                    if (!isLinked && info.pageNum === null) {
-                        reorderedPages.push(pageObj);
-                        processedIds.add(id);
-
-                        // Pull sub-pages sharing the EXACT base title
-                        const subPages = pagesData.filter(p => {
-                            if (p.id === id) return false;
-                            const pInfo = parsePageGroupInfo(p.filename);
-                            return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && isPageLinkedToParent(p);
-                        }).sort((a, b) => (parsePageGroupInfo(a.filename).pageNum || 0) - (parsePageGroupInfo(b.filename).pageNum || 0));
-
-                        subPages.forEach(sp => {
-                            if (!processedIds.has(sp.id)) {
-                                reorderedPages.push(sp);
-                                processedIds.add(sp.id);
-                            }
-                        });
-                    } 
-                    // Case B: Dragged directly via a linked sub-page
-                    else if (isLinked) {
-                        const parentObj = pagesData.find(p => {
-                            const pInfo = parsePageGroupInfo(p.filename);
-                            return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && !isPageLinkedToParent(p);
-                        });
-
-                        if (parentObj && !processedIds.has(parentObj.id)) {
-                            reorderedPages.push(parentObj);
-                            processedIds.add(parentObj.id);
-
-                            const subPages = pagesData.filter(p => {
-                                if (p.id === parentObj.id) return false;
-                                const pInfo = parsePageGroupInfo(p.filename);
-                                return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && isPageLinkedToParent(p);
-                            }).sort((a, b) => (parsePageGroupInfo(a.filename).pageNum || 0) - (parsePageGroupInfo(b.filename).pageNum || 0));
-
-                            subPages.forEach(sp => {
-                                if (!processedIds.has(sp.id)) {
-                                    reorderedPages.push(sp);
-                                    processedIds.add(sp.id);
-                                }
-                            });
-                        } else if (!processedIds.has(id)) {
-                            reorderedPages.push(pageObj);
-                            processedIds.add(id);
-                        }
-                    } else {
-                        if (!processedIds.has(id)) {
-                            reorderedPages.push(pageObj);
-                            processedIds.add(id);
-                        }
-                    }
-                });
-
-                pagesData = reorderedPages;
                 renderPagesListDrawer();
             }
         });
