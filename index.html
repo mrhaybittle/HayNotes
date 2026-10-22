@@ -81,7 +81,7 @@
         .cropper-point.point-ne { top: -16px !important; right: -16px !important; cursor: nesw-resize !important; }
         .cropper-point.point-nw { top: -16px !important; left: -16px !important; cursor: nwse-resize !important; }
         .cropper-point.point-se { bottom: -16px !important; right: -16px !important; cursor: nwse-resize !important; }
-        .cropper-point.point-sw { bottom: -16px !important; left: -16px !important; cursor: nesw-resize !important; }
+        .cropper-point.point-sw { bottom: -16px !important; right: -16px !important; cursor: nesw-resize !important; }
     </style>
 </head>
 <body class="h-full flex flex-col sm:flex-row antialiased text-slate-800 bg-slate-100">
@@ -255,6 +255,29 @@
         </div>
     </div>
 
+    <!-- Clear / New Setlist Confirmation Modal -->
+    <div id="clearConfirmModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center gap-3 text-amber-400">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                <h3 class="font-bold text-lg text-white">Start New File?</h3>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">
+                Are you ready to start a new setlist? Any unsaved changes on the active canvas will be cleared.
+            </p>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400 flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                <span>Don't worry: Your current setlist has been automatically backed up to local storage.</span>
+            </div>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button id="btnCancelClear" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors">Cancel</button>
+                <button id="btnConfirmClear" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-lg">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear & Start New
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Google Drive Library Browser Modal -->
     <div id="driveLibraryModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
@@ -337,8 +360,14 @@
                         driveAccessToken = tokenResponse.access_token;
                         localStorage.setItem('haynotes_drive_token', driveAccessToken);
                         setDriveConnectedUI();
+                    } else {
+                        setDriveDisconnectedUI();
                     }
                 },
+                error_callback: (err) => {
+                    console.warn("Google Drive authentication popup closed or cancelled:", err);
+                    setDriveDisconnectedUI();
+                }
             });
 
             if (driveAccessToken) {
@@ -591,7 +620,6 @@
                     const isImg = file.mimeType.startsWith('image/');
                     const iconName = isFolder ? 'folder-open' : isImg ? 'image' : file.mimeType.includes('pdf') ? 'file-text' : 'file';
                     const buttonText = isFolder ? 'Import Setlist' : 'Add Page';
-                    const actionFn = isFolder ? `loadSetlistFast('${file.id}', '${file.name.replace(/'/g, "\\'")}')` : `importDriveFile('${file.id}', '${file.name.replace(/'/g, "\\'")}', '${file.mimeType}')`;
 
                     item.innerHTML = `
                         <div class="flex items-center gap-3 overflow-hidden">
@@ -603,10 +631,32 @@
                                 <div class="text-[10px] text-slate-400 uppercase">${isFolder ? 'Setlist Folder' : (file.mimeType.split('/')[1] || file.mimeType)}</div>
                             </div>
                         </div>
-                        <button onclick="${actionFn}" class="px-3 py-1.5 ${isFolder ? 'bg-amber-600 hover:bg-amber-500' : 'bg-cyan-600 hover:bg-cyan-500'} text-white rounded-lg text-xs font-bold transition-colors shrink-0 flex items-center gap-1">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> ${buttonText}
+                        <button id="btn-import-${file.id}" class="px-3 py-1.5 ${isFolder ? 'bg-amber-600 hover:bg-amber-500' : 'bg-cyan-600 hover:bg-cyan-500'} text-white rounded-lg text-xs font-bold transition-colors shrink-0 flex items-center gap-1.5">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> <span>${buttonText}</span>
                         </button>
                     `;
+
+                    const btn = item.querySelector(`#btn-import-${file.id}`);
+                    btn.onclick = async () => {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-75', 'cursor-not-allowed');
+                        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> <span>Loading...</span>`;
+                        lucide.createIcons();
+
+                        try {
+                            if (isFolder) {
+                                await loadSetlistFast(file.id, file.name);
+                            } else {
+                                await importDriveFile(file.id, file.name, file.mimeType);
+                            }
+                        } finally {
+                            btn.disabled = false;
+                            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                            btn.innerHTML = `<i data-lucide="plus" class="w-3.5 h-3.5"></i> <span>${buttonText}</span>`;
+                            lucide.createIcons();
+                        }
+                    };
+
                     fileListEl.appendChild(item);
                 });
                 lucide.createIcons();
@@ -939,7 +989,7 @@
         document.getElementById('btnNext').addEventListener('click', () => showPage(currentPageIndex + 1));
         document.getElementById('btnPrev').addEventListener('click', () => showPage(currentPageIndex - 1));
 
-        // Touch Swipe Gestures (Left = Next Page, Right = Previous Page in Navigate Mode)
+        // Touch Swipe Gestures
         let touchStartX = 0;
         let touchStartY = 0;
         const touchWrapper = document.getElementById('touchCanvasWrapper');
@@ -958,13 +1008,10 @@
             const diffX = touchEndX - touchStartX;
             const diffY = touchEndY - touchStartY;
 
-            // Horizontal Swipe threshold check (diffX > 50px & horizontal > vertical movement)
             if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX < 0) {
-                    // Swiped Left -> Go Next Page
                     showPage(currentPageIndex + 1);
                 } else {
-                    // Swiped Right -> Go Previous Page
                     showPage(currentPageIndex - 1);
                 }
             }
@@ -1178,6 +1225,50 @@
         // Drawers Toggle Controls
         document.getElementById('btnTogglePages').addEventListener('click', () => { document.getElementById('pagesDrawer').classList.toggle('hidden'); });
         document.getElementById('btnClosePages').addEventListener('click', () => document.getElementById('pagesDrawer').classList.add('hidden'));
+
+        // Clear Workspace with Auto-Local Backup and Confirmation Popup
+        const clearConfirmModal = document.getElementById('clearConfirmModal');
+
+        document.getElementById('btnClear').addEventListener('click', () => {
+            if (pagesData.length === 0) return;
+            clearConfirmModal.classList.remove('hidden');
+        });
+
+        document.getElementById('btnCancelClear').addEventListener('click', () => {
+            clearConfirmModal.classList.add('hidden');
+        });
+
+        document.getElementById('btnConfirmClear').addEventListener('click', () => {
+            // 1. Automatic Local Auto-Backup before clearing workspace
+            if (pagesData.length > 0) {
+                const autoBackupPayload = {
+                    title: `AutoBackup_${Date.now()}`,
+                    updatedAt: new Date().toISOString(),
+                    pages: pagesData.map((page, index) => ({
+                        order: index + 1,
+                        id: page.id,
+                        filename: page.filename,
+                        type: page.type,
+                        content: page.content,
+                        annotations: fabricCanvases[page.id] ? fabricCanvases[page.id].toJSON() : null
+                    }))
+                };
+                try {
+                    localStorage.setItem(`haynotes_autobackup_${Date.now()}`, JSON.stringify(autoBackupPayload));
+                    localStorage.setItem('haynotes_last_autobackup', JSON.stringify(autoBackupPayload));
+                } catch(e) {
+                    console.warn('Auto-backup local storage quota exceeded:', e);
+                }
+            }
+
+            // 2. Perform Clear Action
+            pagesData.forEach(p => removePage(p.id));
+            pagesData = [];
+            currentPageIndex = 0;
+            updatePageIndicator();
+
+            clearConfirmModal.classList.add('hidden');
+        });
 
         // Audio Fallbacks
         function setupAudio() {
