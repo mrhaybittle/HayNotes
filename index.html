@@ -36,7 +36,7 @@
         
         .paper-canvas { width: 100%; height: 100%; position: relative; transition: transform 0.15s ease-out; transform-origin: center center; display: flex; align-items: center; justify-content: center; }
         
-        .sheet-page { display: none; width: 100%; height: 100%; position: absolute; inset: 0; align-items: center; justify-content: center; overflow: auto; padding: 16px; }
+        .sheet-page { display: none; width: 100%; height: 100%; position: absolute; inset: 0; align-items: center; justify-content: center; overflow: auto; padding: 16px; padding-bottom: 80px; }
         .sheet-page.active { display: flex; }
 
         .doc-wrapper { position: relative; display: inline-block; background: #ffffff; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); max-width: 100%; max-height: 100%; }
@@ -60,6 +60,17 @@
 
         .tool-btn.active { background-color: #3b82f6; color: white; border-color: #2563eb; }
         .color-btn.active { transform: scale(1.3); outline: 2px solid #3b82f6; outline-offset: 2px; }
+
+        /* Scrubber Handle Enlarge & Red Styling */
+        .scrubber-handle {
+            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease;
+        }
+        .scrubber-handle:active, .scrubber-handle.active-drag {
+            transform: scale(4) !important;
+            background-color: #ef4444 !important; /* Red color when active/dragging */
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.8) !important;
+            z-index: 50 !important;
+        }
 
         /* Oversized Crop Handles */
         .cropper-view-box { outline: 3px solid #3b82f6 !important; outline-color: rgba(59, 130, 246, 0.95) !important; }
@@ -101,6 +112,10 @@
         <!-- Middle Action Controls -->
         <div class="flex sm:flex-col items-center gap-2">
             
+            <button id="btnHome" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Home (First Page)">
+                <i data-lucide="home" class="w-4 h-4 text-amber-400"></i>
+            </button>
+
             <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Import Files">
                 <i data-lucide="folder-plus" class="w-4 h-4 text-blue-400"></i>
                 <input type="file" id="fileInput" accept=".abc,.txt,.pdf,image/*,.xml,.mxl,.musicxml" multiple class="hidden" />
@@ -191,7 +206,7 @@
         
         <!-- Floating Page Indicator Header Overlay with Original Brand Logo -->
         <div class="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-slate-800 text-white shadow-lg">
-            <div class="flex items-center gap-2 font-bold text-white text-sm mr-1">
+            <div class="flex items-center gap-2 font-bold text-white text-sm mr-1 cursor-pointer" onclick="showPage(0)" title="Go to Home/First Page">
                 <i data-lucide="music-4" class="w-4 h-4 text-blue-400 shrink-0"></i>
                 <span class="font-bold text-white text-sm">HayNotes</span>
             </div>
@@ -228,7 +243,7 @@
         </div>
 
         <!-- Document Viewer Canvas (Touch Swipe Target) -->
-        <main class="flex-1 w-full h-full overflow-hidden" id="touchCanvasWrapper">
+        <main class="flex-1 w-full h-full overflow-hidden relative" id="touchCanvasWrapper">
             <div id="paperWrapper" class="paper-canvas">
                 <!-- Empty State -->
                 <div id="dropZone" class="w-full max-w-2xl border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center p-12 text-center bg-white hover:bg-blue-50/50 transition-colors cursor-pointer shadow-sm">
@@ -239,6 +254,24 @@
                     </div>
                     <h2 class="text-2xl font-bold text-slate-800 mb-2">Build Your Setlist</h2>
                     <p class="text-sm text-slate-500 max-w-md mb-2">Drag & Drop or Import:<br><strong>PDFs, MusicXML, ABC notation, Images, or Google Drive library.</strong></p>
+                </div>
+            </div>
+
+            <!-- BLACK HORIZONTAL PAGE SCRUBBER BAR -->
+            <div id="scrubberContainer" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-slate-950/95 border border-slate-800 shadow-2xl rounded-2xl p-2.5 z-30 flex-col gap-1 backdrop-blur-md">
+                
+                <!-- Floating Scrubber Tooltip Indicator -->
+                <div id="scrubberBadge" class="hidden absolute -top-8 bg-slate-900 border border-slate-700 text-white font-mono text-[11px] px-2 py-0.5 rounded-md shadow-lg pointer-events-none -translate-x-1/2 whitespace-nowrap">
+                    0 / 0
+                </div>
+
+                <!-- Page Ticks Row -->
+                <div id="scrubberTicks" class="w-full flex justify-between text-[9px] text-slate-500 font-mono select-none px-1"></div>
+
+                <!-- Track & Interactive Drag Circle -->
+                <div id="scrubberTrack" class="w-full h-3 bg-slate-900 border border-slate-800 rounded-full relative cursor-pointer flex items-center">
+                    <div id="scrubberProgress" class="h-full bg-blue-600/40 rounded-full pointer-events-none w-0"></div>
+                    <div id="scrubberHandle" class="scrubber-handle w-5 h-5 bg-slate-200 border-2 border-slate-900 rounded-full absolute -ml-2.5 cursor-grab shadow-md"></div>
                 </div>
             </div>
         </main>
@@ -288,8 +321,8 @@
         </div>
     </div>
 
-    <!-- VISUALLY APPEALING 3-CHOICE IMPORT POPUP MODAL -->
-    <div id="importOptionModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-md">
+    <!-- VISUALLY APPEALING 3-CHOICE IMPORT POPUP MODAL (z-[60] so it shows over Drive Modal) -->
+    <div id="importOptionModal" class="hidden fixed inset-0 z-[60] bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-5">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 shrink-0">
@@ -312,7 +345,7 @@
                         <div class="text-xs font-bold text-red-300 group-hover:text-red-200 flex items-center gap-1.5">
                             <i data-lucide="sparkles" class="w-4 h-4"></i> Start Fresh
                         </div>
-                        <div class="text-[11px] text-red-400/80">Current pages will be cleared (Auto-backed up)</div>
+                        <div class="text-[11px] text-red-400/80">Current pages will be DELETED (Auto-backed up)</div>
                     </div>
                     <i data-lucide="chevron-right" class="w-4 h-4 text-red-400"></i>
                 </button>
@@ -321,7 +354,7 @@
                 <button id="btnImportMerge" class="w-full p-3 bg-blue-950/40 hover:bg-blue-900/60 border border-blue-800/80 rounded-xl text-left transition-colors flex items-center justify-between group">
                     <div>
                         <div class="text-xs font-bold text-blue-300 group-hover:text-blue-200 flex items-center gap-1.5">
-                            <i data-lucide="layers" class="w-4 h-4"></i> ADD / Merge to Current Pages
+                            <i data-lucide="layers" class="w-4 h-4"></i> ADD to Current Pages / Merge
                         </div>
                         <div class="text-[11px] text-blue-400/80">Appends setlist pages to your current workspace</div>
                     </div>
@@ -723,7 +756,6 @@
             }
         }
 
-        // Prompts user with custom 3-choice modal (Fresh vs Merge vs Cancel)
         function showImportOptionModal(folderName) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('importOptionModal');
@@ -1047,13 +1079,24 @@
             }
         }
 
-        // Core Page Navigation Logic
+        // Core Page Navigation & Scrubber Logic
         function generateId() { return 'page-' + Math.random().toString(36).substr(2, 9); }
 
         function updatePageIndicator() {
             const total = pagesData.length;
             document.getElementById('pageIndicator').textContent = `${total === 0 ? 0 : currentPageIndex + 1} / ${total}`;
             document.getElementById('dropZone').style.display = total === 0 ? 'flex' : 'none';
+
+            // Scrubber Visibility & Position Update
+            const scrubberContainer = document.getElementById('scrubberContainer');
+            if (total > 1) {
+                scrubberContainer.classList.remove('hidden');
+                scrubberContainer.classList.add('flex');
+                updateScrubberUI();
+            } else {
+                scrubberContainer.classList.add('hidden');
+                scrubberContainer.classList.remove('flex');
+            }
         }
 
         function showPage(index) {
@@ -1067,8 +1110,8 @@
                 
                 const li = document.querySelector(`li[data-id="${p.id}"]`);
                 if(li) {
-                    li.classList.toggle('border-blue-500', i === index);
-                    li.classList.toggle('bg-slate-700', i === index);
+                    li.classList.toggle('border-red-500', i === index);
+                    li.classList.toggle('bg-red-950/40', i === index);
                     li.classList.toggle('border-slate-700', i !== index);
                     li.classList.toggle('bg-slate-800', i !== index);
                 }
@@ -1076,8 +1119,111 @@
             updatePageIndicator();
         }
 
+        document.getElementById('btnHome').addEventListener('click', () => showPage(0));
         document.getElementById('btnNext').addEventListener('click', () => showPage(currentPageIndex + 1));
         document.getElementById('btnPrev').addEventListener('click', () => showPage(currentPageIndex - 1));
+
+        // ---------------------------------------------------------
+        // HORIZONTAL PAGE SCRUBBER BAR LOGIC
+        // ---------------------------------------------------------
+        const scrubberTrack = document.getElementById('scrubberTrack');
+        const scrubberHandle = document.getElementById('scrubberHandle');
+        const scrubberProgress = document.getElementById('scrubberProgress');
+        const scrubberTicks = document.getElementById('scrubberTicks');
+        const scrubberBadge = document.getElementById('scrubberBadge');
+        let isScrubbing = false;
+
+        function updateScrubberUI() {
+            const total = pagesData.length;
+            if (total <= 1) return;
+
+            const ratio = currentPageIndex / (total - 1);
+            const trackWidth = scrubberTrack.clientWidth;
+            const handleLeft = ratio * trackWidth;
+
+            scrubberHandle.style.left = `${handleLeft}px`;
+            scrubberProgress.style.width = `${handleLeft}px`;
+
+            // Build Scrubber Ticks
+            scrubberTicks.innerHTML = '';
+            const tickCount = Math.min(total, 10);
+            for (let i = 0; i < tickCount; i++) {
+                const pageNum = Math.round((i / (tickCount - 1)) * (total - 1)) + 1;
+                const span = document.createElement('span');
+                span.textContent = pageNum;
+                scrubberTicks.appendChild(span);
+            }
+        }
+
+        function handleScrubberMove(clientX) {
+            const total = pagesData.length;
+            if (total <= 1) return;
+
+            const rect = scrubberTrack.getBoundingClientRect();
+            let offsetX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+            const ratio = offsetX / rect.width;
+
+            const targetIndex = Math.round(ratio * (total - 1));
+
+            // Position handle and badge live during move
+            scrubberHandle.style.left = `${offsetX}px`;
+            scrubberProgress.style.width = `${offsetX}px`;
+
+            scrubberBadge.textContent = `${targetIndex + 1} / ${total}`;
+            scrubberBadge.style.left = `${offsetX}px`;
+            scrubberBadge.classList.remove('hidden');
+
+            if (targetIndex !== currentPageIndex) {
+                showPage(targetIndex);
+            }
+        }
+
+        // Mouse Scrubber Events
+        scrubberTrack.addEventListener('mousedown', (e) => {
+            isScrubbing = true;
+            scrubberHandle.classList.add('active-drag');
+            handleScrubberMove(e.clientX);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isScrubbing) {
+                e.preventDefault();
+                handleScrubberMove(e.clientX);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isScrubbing) {
+                isScrubbing = false;
+                scrubberHandle.classList.remove('active-drag');
+                scrubberBadge.classList.add('hidden');
+                updateScrubberUI();
+            }
+        });
+
+        // Touch Scrubber Events
+        scrubberTrack.addEventListener('touchstart', (e) => {
+            isScrubbing = true;
+            scrubberHandle.classList.add('active-drag');
+            handleScrubberMove(e.touches[0].clientX);
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            if (isScrubbing) {
+                handleScrubberMove(e.touches[0].clientX);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            if (isScrubbing) {
+                isScrubbing = false;
+                scrubberHandle.classList.remove('active-drag');
+                scrubberBadge.classList.add('hidden');
+                updateScrubberUI();
+            }
+        });
+
+        window.addEventListener('resize', updateScrubberUI);
 
         // Touch Swipe Gestures
         let touchStartX = 0;
@@ -1085,13 +1231,13 @@
         const touchWrapper = document.getElementById('touchCanvasWrapper');
 
         touchWrapper.addEventListener('touchstart', (e) => {
-            if (activeTool !== 'navigate') return;
+            if (activeTool !== 'navigate' || isScrubbing) return;
             touchStartX = e.changedTouches[0].screenX;
             touchStartY = e.changedTouches[0].screenY;
         }, { passive: true });
 
         touchWrapper.addEventListener('touchend', (e) => {
-            if (activeTool !== 'navigate' || pagesData.length === 0) return;
+            if (activeTool !== 'navigate' || pagesData.length === 0 || isScrubbing) return;
             const touchEndX = e.changedTouches[0].screenX;
             const touchEndY = e.changedTouches[0].screenY;
 
@@ -1154,15 +1300,17 @@
             let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
             
             li.innerHTML = `
-                <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-500"></i>
+                <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-500 shrink-0"></i>
                 <div class="w-8 h-8 rounded bg-slate-900 flex items-center justify-center shrink-0">
                     <i data-lucide="${iconStr}" class="w-4 h-4 text-blue-400"></i>
                 </div>
-                <div class="flex-1 overflow-hidden" onclick="showPage(${pageIndex})" style="cursor:pointer;">
+                <div class="flex-1 overflow-hidden" onclick="jumpToPageById('${pageId}')" style="cursor:pointer;">
                     <div class="text-xs text-slate-200 truncate font-medium">${filename}</div>
                     <div class="text-[10px] text-slate-500 uppercase">${type}</div>
                 </div>
-                <button onclick="removePage('${pageId}')" class="p-1 hover:text-red-400 text-slate-500"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>
+                <button onclick="event.stopPropagation(); removePage('${pageId}');" class="p-1.5 hover:text-red-400 text-slate-400 rounded hover:bg-slate-900 transition-colors shrink-0" title="Delete Page">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
             `;
             document.getElementById('pagesList').appendChild(li);
             lucide.createIcons();
@@ -1215,6 +1363,11 @@
             }
 
             showPage(pagesData.length - 1);
+        }
+
+        function jumpToPageById(pageId) {
+            const index = pagesData.findIndex(p => p.id === pageId);
+            if (index !== -1) showPage(index);
         }
 
         function removePage(id) {
