@@ -67,9 +67,18 @@
         }
         .scrubber-handle:active, .scrubber-handle.active-drag {
             transform: scale(4) !important;
-            background-color: #ef4444 !important; /* Red color when active/dragging */
+            background-color: #ef4444 !important;
             box-shadow: 0 0 12px rgba(239, 68, 68, 0.8) !important;
             z-index: 50 !important;
+        }
+
+        /* Trash feedback animation in page drawer */
+        .btn-delete-page {
+            transition: color 0.15s ease, transform 0.15s ease;
+        }
+        .btn-delete-page.deleting {
+            color: #ef4444 !important;
+            transform: scale(1.25);
         }
 
         /* Oversized Crop Handles */
@@ -132,10 +141,6 @@
 
             <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 transition-colors flex items-center justify-center" title="Google Drive Disconnected - Click to connect">
                 <i id="driveStatusIcon" data-lucide="cloud-off" class="w-4 h-4 text-red-500"></i>
-            </button>
-
-            <button id="btnSaveToDrive" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors disabled:opacity-40" disabled title="Save Current Page Image">
-                <i data-lucide="hard-drive-upload" class="w-4 h-4 text-emerald-400"></i>
             </button>
 
             <button id="btnSaveSetlist" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-xl text-xs font-medium flex items-center justify-center transition-colors shadow-sm" title="Save Setlist to Drive Folder">
@@ -413,7 +418,6 @@
             icon.className = "w-4 h-4 text-emerald-400";
             lucide.createIcons();
 
-            document.getElementById('btnSaveToDrive').disabled = false;
             document.getElementById('btnOpenDriveLibrary').disabled = false;
         }
 
@@ -426,7 +430,6 @@
             icon.className = "w-4 h-4 text-red-500";
             lucide.createIcons();
 
-            document.getElementById('btnSaveToDrive').disabled = true;
             document.getElementById('btnOpenDriveLibrary').disabled = true;
         }
 
@@ -572,34 +575,6 @@
             }
             return await response.json();
         }
-
-        document.getElementById('btnSaveToDrive').addEventListener('click', async () => {
-            if (!driveAccessToken) {
-                alert('Please connect to Google Drive first.');
-                return;
-            }
-            if (pagesData.length === 0) {
-                alert('No pages available to save.');
-                return;
-            }
-
-            const currentPage = pagesData[currentPageIndex];
-            const blob = await getPageAsBlob(currentPage);
-
-            if (!blob) {
-                alert('Error capturing page content.');
-                return;
-            }
-
-            const fileName = `${currentPage.filename || 'Score'}_${Date.now()}.jpg`;
-
-            try {
-                await uploadFileToDrive(fileName, blob, 'image/jpeg', ROOT_HAYNOTES_FOLDER_ID);
-                alert(`Successfully saved "${fileName}" to your "HayNotes" folder on Google Drive!`);
-            } catch (e) {
-                alert(`Upload error: ${e.message}`);
-            }
-        });
 
         document.getElementById('btnSaveSetlist').addEventListener('click', async () => {
             if (pagesData.length === 0) {
@@ -1144,7 +1119,6 @@
             scrubberHandle.style.left = `${handleLeft}px`;
             scrubberProgress.style.width = `${handleLeft}px`;
 
-            // Build Scrubber Ticks
             scrubberTicks.innerHTML = '';
             const tickCount = Math.min(total, 10);
             for (let i = 0; i < tickCount; i++) {
@@ -1165,7 +1139,6 @@
 
             const targetIndex = Math.round(ratio * (total - 1));
 
-            // Position handle and badge live during move
             scrubberHandle.style.left = `${offsetX}px`;
             scrubberProgress.style.width = `${offsetX}px`;
 
@@ -1178,7 +1151,6 @@
             }
         }
 
-        // Mouse Scrubber Events
         scrubberTrack.addEventListener('mousedown', (e) => {
             isScrubbing = true;
             scrubberHandle.classList.add('active-drag');
@@ -1201,7 +1173,6 @@
             }
         });
 
-        // Touch Scrubber Events
         scrubberTrack.addEventListener('touchstart', (e) => {
             isScrubbing = true;
             scrubberHandle.classList.add('active-drag');
@@ -1308,7 +1279,7 @@
                     <div class="text-xs text-slate-200 truncate font-medium">${filename}</div>
                     <div class="text-[10px] text-slate-500 uppercase">${type}</div>
                 </div>
-                <button onclick="event.stopPropagation(); removePage('${pageId}');" class="p-1.5 hover:text-red-400 text-slate-400 rounded hover:bg-slate-900 transition-colors shrink-0" title="Delete Page">
+                <button id="btn-trash-${pageId}" onclick="event.stopPropagation(); triggerRemovePageWithFeedback('${pageId}');" class="btn-delete-page p-1.5 hover:text-red-400 text-slate-400 rounded hover:bg-slate-900 shrink-0" title="Delete Page">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
             `;
@@ -1368,6 +1339,17 @@
         function jumpToPageById(pageId) {
             const index = pagesData.findIndex(p => p.id === pageId);
             if (index !== -1) showPage(index);
+        }
+
+        // Trash Icon Visual Red Feedback Trigger
+        function triggerRemovePageWithFeedback(id) {
+            const trashBtn = document.getElementById(`btn-trash-${id}`);
+            if (trashBtn) {
+                trashBtn.classList.add('deleting');
+            }
+            setTimeout(() => {
+                removePage(id);
+            }, 180);
         }
 
         function removePage(id) {
