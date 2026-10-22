@@ -86,18 +86,18 @@
         .cropper-point.point-ne { top: -16px !important; right: -16px !important; cursor: nesw-resize !important; }
         .cropper-point.point-nw { top: -16px !important; left: -16px !important; cursor: nwse-resize !important; }
         .cropper-point.point-se { bottom: -16px !important; right: -16px !important; cursor: nwse-resize !important; }
-        .cropper-point.point-sw { bottom: -16px !important; left: -16px !important; cursor: nesw-resize !important; }
+        .cropper-point.point-sw { bottom: -16px !important; right: -16px !important; cursor: nesw-resize !important; }
     </style>
 </head>
 <body class="h-full flex flex-col antialiased text-slate-800 bg-slate-100">
 
     <!-- STRICT SINGLE-ROW HEADER -->
     <header class="w-full bg-slate-900 text-slate-100 shadow-md border-b border-slate-800 flex-none z-40 relative">
-        <div class="flex items-center justify-between gap-1 sm:gap-3 text-sm px-2 py-1.5 overflow-x-auto no-scrollbar whitespace-nowrap w-full">
+        <div class="flex items-center justify-between gap-1 sm:gap-2 text-sm px-2 py-1.5 overflow-x-auto no-scrollbar whitespace-nowrap w-full">
             
             <!-- Left: Logo & Core Import -->
-            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
-                <div class="flex items-center gap-1 font-bold text-white text-sm sm:text-base mr-1">
+            <div class="flex items-center gap-1 shrink-0">
+                <div class="flex items-center gap-1 font-bold text-white text-xs sm:text-base mr-0.5 sm:mr-1">
                     <i data-lucide="music-4" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-400"></i>
                     <span class="hidden sm:inline">HayNotes</span>
                 </div>
@@ -121,8 +121,8 @@
             </div>
 
             <!-- Center: Pagination & Playback -->
-            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <div class="flex items-center gap-0.5 bg-slate-950/80 px-1.5 py-0.5 rounded-xl border border-slate-800">
+            <div class="flex items-center gap-1 shrink-0">
+                <div class="flex items-center gap-0.5 bg-slate-950/80 px-1 py-0.5 rounded-xl border border-slate-800">
                     <button id="btnPrev" class="p-1 text-slate-400 hover:text-white rounded-lg transition-colors" title="Previous Page (Left Arrow)"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
                     <span id="pageIndicator" class="text-xs font-mono text-slate-300 min-w-[2.2rem] text-center">0 / 0</span>
                     <button id="btnNext" class="p-1 text-slate-400 hover:text-white rounded-lg transition-colors" title="Next Page (Right Arrow)"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
@@ -141,7 +141,7 @@
             </div>
 
             <!-- Right: Tools & Google Drive Controls -->
-            <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            <div class="flex items-center gap-1 shrink-0">
                 
                 <!-- Google Drive Connect Button (Icon Only with Dynamic Green/Red Color) -->
                 <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 p-1.5 rounded-lg border border-slate-700 transition-colors flex items-center justify-center" title="Google Drive Disconnected - Click to connect">
@@ -173,7 +173,7 @@
                 </button>
 
                 <!-- Toggle Pages Drawer -->
-                <button id="btnTogglePages" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors" title="Toggle Pages">
+                <button id="btnTogglePages" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors" title="Rearrange Pages">
                     <i data-lucide="gallery-vertical-end" class="w-3.5 h-3.5 text-amber-400"></i>
                     <span class="hidden lg:inline">Pages</span>
                 </button>
