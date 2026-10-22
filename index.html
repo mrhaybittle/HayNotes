@@ -400,6 +400,58 @@
         lucide.createIcons();
 
         // ---------------------------------------------------------
+        // INDEXEDDB LOCAL STORAGE MANAGER (ELIMINATES 5MB QUOTA ERROR)
+        // ---------------------------------------------------------
+        const DB_NAME = 'HayNotesDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'setlists';
+
+        function openIDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function saveToIDB(key, data) {
+            try {
+                const db = await openIDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    store.put({ key: key, value: data });
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => reject(tx.error);
+                });
+            } catch (e) {
+                console.warn('IndexedDB write error:', e);
+            }
+        }
+
+        async function getFromIDB(key) {
+            try {
+                const db = await openIDB();
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const req = store.get(key);
+                    req.onsuccess = () => resolve(req.result ? req.result.value : null);
+                    req.onerror = () => reject(req.error);
+                });
+            } catch (e) {
+                console.warn('IndexedDB read error:', e);
+                return null;
+            }
+        }
+
+        // ---------------------------------------------------------
         // GOOGLE DRIVE API INTEGRATION CONFIG
         // ---------------------------------------------------------
         const DRIVE_CLIENT_ID = '1086834950344-qce6cl6d57ufu1hpkq1pq9th5quo19kg.apps.googleusercontent.com';
@@ -588,13 +640,10 @@
             const nowIso = new Date().toISOString();
 
             const localKey = `haynotes_setlist_${setlistName.replace(/\s+/g, '_')}`;
-            const existingLocal = localStorage.getItem(localKey);
+            const existingLocal = await getFromIDB(localKey);
             let currentVersion = 1;
             if (existingLocal) {
-                try {
-                    const parsed = JSON.parse(existingLocal);
-                    currentVersion = (parsed.version || 1) + 1;
-                } catch(e){}
+                currentVersion = (existingLocal.version || 1) + 1;
             }
 
             const setlistPayload = {
@@ -611,12 +660,9 @@
                 }))
             };
 
-            try {
-                localStorage.setItem(localKey, JSON.stringify(setlistPayload));
-                localStorage.setItem('haynotes_last_setlist', JSON.stringify(setlistPayload));
-            } catch (e) {
-                console.warn('LocalStorage save failed/exceeded size limit:', e);
-            }
+            // Save to IndexedDB (Supports 100s of MBs)
+            await saveToIDB(localKey, setlistPayload);
+            await saveToIDB('haynotes_last_setlist', setlistPayload);
 
             if (driveAccessToken) {
                 try {
@@ -759,16 +805,15 @@
                 const choice = await showImportOptionModal(folderName);
                 if (choice === 'cancel') return;
                 if (choice === 'fresh') {
-                    performAutoBackupAndClear();
+                    await performAutoBackupAndClear();
                 }
             }
 
             const localKey = `haynotes_setlist_${folderName.replace(/\s+/g, '_')}`;
-            const localDataStr = localStorage.getItem(localKey);
+            const localSetlist = await getFromIDB(localKey);
 
-            if (localDataStr) {
+            if (localSetlist) {
                 try {
-                    const localSetlist = JSON.parse(localDataStr);
                     await renderSetlistPayload(localSetlist);
                     driveLibraryModal.classList.add('hidden');
                     syncSetlistFromCloudInBackground(folderId, localSetlist, localKey);
@@ -811,8 +856,8 @@
                     const cloudTime = new Date(cloudSetlist.updatedAt || 0).getTime();
 
                     if (cloudTime > localTime) {
-                        localStorage.setItem(localKey, JSON.stringify(cloudSetlist));
-                        console.log('Background Sync: Updated local cache with newer cloud setlist version.');
+                        await saveToIDB(localKey, cloudSetlist);
+                        console.log('Background Sync: Updated IndexedDB with newer cloud setlist version.');
                     }
                 }
             } catch (e) {
@@ -838,7 +883,7 @@
                     await renderSetlistPayload(setlistData);
 
                     const localKey = `haynotes_setlist_${folderName.replace(/\s+/g, '_')}`;
-                    localStorage.setItem(localKey, JSON.stringify(setlistData));
+                    await saveToIDB(localKey, setlistData);
                     
                     driveLibraryModal.classList.add('hidden');
                     return;
@@ -1062,7 +1107,6 @@
             document.getElementById('pageIndicator').textContent = `${total === 0 ? 0 : currentPageIndex + 1} / ${total}`;
             document.getElementById('dropZone').style.display = total === 0 ? 'flex' : 'none';
 
-            // Scrubber Visibility & Position Update
             const scrubberContainer = document.getElementById('scrubberContainer');
             if (total > 1) {
                 scrubberContainer.classList.remove('hidden');
@@ -1098,9 +1142,7 @@
         document.getElementById('btnNext').addEventListener('click', () => showPage(currentPageIndex + 1));
         document.getElementById('btnPrev').addEventListener('click', () => showPage(currentPageIndex - 1));
 
-        // ---------------------------------------------------------
-        // HORIZONTAL PAGE SCRUBBER BAR LOGIC
-        // ---------------------------------------------------------
+        // Horizontal Page Scrubber Bar Logic
         const scrubberTrack = document.getElementById('scrubberTrack');
         const scrubberHandle = document.getElementById('scrubberHandle');
         const scrubberProgress = document.getElementById('scrubberProgress');
@@ -1341,7 +1383,6 @@
             if (index !== -1) showPage(index);
         }
 
-        // Trash Icon Visual Red Feedback Trigger
         function triggerRemovePageWithFeedback(id) {
             const trashBtn = document.getElementById(`btn-trash-${id}`);
             if (trashBtn) {
@@ -1452,8 +1493,8 @@
         document.getElementById('btnTogglePages').addEventListener('click', () => { document.getElementById('pagesDrawer').classList.toggle('hidden'); });
         document.getElementById('btnClosePages').addEventListener('click', () => document.getElementById('pagesDrawer').classList.add('hidden'));
 
-        // Perform Local Auto-Backup & Clear Helper
-        function performAutoBackupAndClear() {
+        // Perform Local Auto-Backup & Clear Helper using IndexedDB
+        async function performAutoBackupAndClear() {
             if (pagesData.length > 0) {
                 const autoBackupPayload = {
                     title: `AutoBackup_${Date.now()}`,
@@ -1467,12 +1508,8 @@
                         annotations: fabricCanvases[page.id] ? fabricCanvases[page.id].toJSON() : null
                     }))
                 };
-                try {
-                    localStorage.setItem(`haynotes_autobackup_${Date.now()}`, JSON.stringify(autoBackupPayload));
-                    localStorage.setItem('haynotes_last_autobackup', JSON.stringify(autoBackupPayload));
-                } catch(e) {
-                    console.warn('Auto-backup local storage quota exceeded:', e);
-                }
+                await saveToIDB(`haynotes_autobackup_${Date.now()}`, autoBackupPayload);
+                await saveToIDB('haynotes_last_autobackup', autoBackupPayload);
             }
 
             const copyPages = [...pagesData];
@@ -1494,8 +1531,8 @@
             clearConfirmModal.classList.add('hidden');
         });
 
-        document.getElementById('btnConfirmClear').addEventListener('click', () => {
-            performAutoBackupAndClear();
+        document.getElementById('btnConfirmClear').addEventListener('click', async () => {
+            await performAutoBackupAndClear();
             clearConfirmModal.classList.add('hidden');
         });
 
