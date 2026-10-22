@@ -59,10 +59,17 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
         .drag-handle { cursor: grab; transition: color 0.15s ease, transform 0.15s ease; }
-        .drag-handle:active { cursor: grabbing; color: #3b82f6 !important; transform: scale(1.25); }
-        .sortable-ghost { opacity: 0.3; }
-        .sortable-chosen { border-color: #3b82f6 !important; background-color: #1e293b !important; }
-        .sortable-drag { cursor: grabbing !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important; border-color: #3b82f6 !important; }
+        .drag-handle:active { cursor: grabbing; color: #10b981 !important; transform: scale(1.25); }
+        
+        /* High-visibility green drop space indicator for Drag-and-Drop */
+        .sortable-ghost {
+            opacity: 0.85 !important;
+            border: 2px dashed #10b981 !important;
+            background-color: rgba(6, 78, 59, 0.4) !important;
+            box-shadow: inset 0 0 12px rgba(16, 185, 129, 0.3) !important;
+        }
+        .sortable-chosen { border-color: #10b981 !important; background-color: #064e3b !important; }
+        .sortable-drag { cursor: grabbing !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7) !important; border-color: #10b981 !important; }
 
         .page-thumb-container { user-select: none; touch-action: manipulation; transition: all 0.15s ease; }
 
@@ -1600,11 +1607,10 @@
             annotationToolbar.style.display = '';
             
             // Auto-deselect any active transform bounding box when closing drawing toolbar
-            const activeCanvas = fabricCanvases[pagesData[currentPageIndex]?.id];
-            if (activeCanvas) {
-                activeCanvas.discardActiveObject();
-                activeCanvas.requestRenderAll();
-            }
+            Object.values(fabricCanvases).forEach(canvas => {
+                canvas.discardActiveObject();
+                canvas.requestRenderAll();
+            });
             
             document.querySelector('[data-tool="navigate"]').click();
         });
@@ -1660,6 +1666,11 @@
                 canvas.off('mouse:down', textHandler);
                 canvas.off('mouse:down', stampHandler);
                 canvas.off('mouse:down', linkNavigationHandler);
+
+                if (activeTool !== 'navigate') {
+                    canvas.discardActiveObject();
+                    canvas.requestRenderAll();
+                }
 
                 if (activeTool === 'navigate') {
                     canvas.allowTouchScrolling = true;
@@ -1738,36 +1749,64 @@
             }
 
             const isArrow = (activeStampSymbol === '←' || activeStampSymbol === '→');
-            const stampText = new fabric.Text(activeStampSymbol, {
-                left: pointer.x,
-                top: pointer.y,
-                fontSize: isArrow ? 480 : 36,
-                fontWeight: isArrow ? 'bold' : 'normal',
-                fill: activeColor,
-                fontFamily: 'serif',
-                selectable: true,
-                hasControls: true
-            });
-
-            if (jumpTarget !== null) {
-                stampText.set('targetPage', jumpTarget);
+            
+            if (isArrow && jumpTarget !== null) {
                 const targetPageObj = pagesData[jumpTarget - 1];
                 const pageName = targetPageObj ? targetPageObj.filename : `Page ${jumpTarget}`;
                 const labelString = `p.${jumpTarget} - ${pageName}`;
 
-                const badge = new fabric.Text(labelString, {
-                    left: pointer.x + (isArrow ? 20 : 25),
-                    top: pointer.y - (isArrow ? 80 : 20),
-                    fontSize: isArrow ? 32 : 12,
+                // Header Label Text positioned right above arrow
+                const labelText = new fabric.Text(labelString, {
+                    left: 0,
+                    top: 0,
+                    fontSize: 32,
                     fontWeight: 'bold',
                     fill: activeColor,
                     fontFamily: 'sans-serif',
-                    selectable: false
+                    originX: 'center',
+                    originY: 'bottom'
                 });
-                canvas.add(badge);
+
+                // Arrow Symbol Object
+                const arrowText = new fabric.Text(activeStampSymbol, {
+                    left: 0,
+                    top: 10,
+                    fontSize: 480,
+                    fontWeight: 'bold',
+                    fill: activeColor,
+                    fontFamily: 'serif',
+                    originX: 'center',
+                    originY: 'top'
+                });
+
+                // Wrap both into a single unified Fabric Group that moves as one
+                const arrowGroup = new fabric.Group([labelText, arrowText], {
+                    left: pointer.x,
+                    top: pointer.y,
+                    selectable: true,
+                    hasControls: true
+                });
+                
+                arrowGroup.set('targetPage', jumpTarget);
+                canvas.add(arrowGroup);
+            } else {
+                const stampText = new fabric.Text(activeStampSymbol, {
+                    left: pointer.x,
+                    top: pointer.y,
+                    fontSize: isArrow ? 480 : 36,
+                    fontWeight: isArrow ? 'bold' : 'normal',
+                    fill: activeColor,
+                    fontFamily: 'serif',
+                    selectable: true,
+                    hasControls: true
+                });
+                
+                if (jumpTarget !== null) {
+                    stampText.set('targetPage', jumpTarget);
+                }
+                canvas.add(stampText);
             }
 
-            canvas.add(stampText);
             canvas.renderAll();
         }
 
@@ -2001,7 +2040,6 @@
                 const type = pageObj.type;
                 const groupInfo = parsePageGroupInfo(filename);
                 
-                // Strictly link ONLY if it shares base name with a parent page
                 const isLinked = isPageLinkedToParent(pageObj);
 
                 const li = document.createElement('li');
@@ -2011,7 +2049,7 @@
                 let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
 
                 li.innerHTML = `
-                    <div class="drag-handle p-1 text-slate-500 hover:text-blue-400 shrink-0" title="Drag to reorder locked group">
+                    <div class="drag-handle p-1 text-slate-500 hover:text-emerald-400 shrink-0" title="Drag to reorder song group">
                         <i data-lucide="grip-vertical" class="w-4 h-4"></i>
                     </div>
                     <div onclick="${isLinked ? `unlinkPageGroup('${pageId}')` : ''}" class="w-7 h-7 rounded-lg ${isLinked ? 'bg-amber-950/60 border border-amber-700/50 hover:bg-amber-900/80 cursor-pointer' : 'bg-slate-900 border border-slate-800'} flex items-center justify-center shrink-0" title="${isLinked ? 'Click to UNLINK page' : ''}">
@@ -2141,7 +2179,7 @@
         }
 
         // ---------------------------------------------------------
-        // LOCKED SONG GROUP REARRANGE ENGINE
+        // LOCKED SONG GROUP REARRANGE ENGINE WITH GREEN DROP ZONE
         // ---------------------------------------------------------
         new Sortable(document.getElementById('pagesList'), {
             handle: '.drag-handle',
