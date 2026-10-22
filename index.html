@@ -52,14 +52,36 @@
         .abcjs-highlight { fill: #2563eb !important; stroke: #1d4ed8 !important; }
         .abcjs-cursor { stroke: #dc2626; stroke-width: 2.5px; }
 
+        /* Custom scrollbar for main areas */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
-        .sortable-ghost { opacity: 0.4; }
-        .sortable-drag { cursor: grabbing !important; }
-        .page-thumb-container { cursor: grab; }
-        .page-thumb-container:active { cursor: grabbing; }
+        /* Strict Drag-and-Drop Handle Styles */
+        .drag-handle {
+            cursor: grab;
+            transition: color 0.15s ease, transform 0.15s ease;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+            color: #3b82f6 !important;
+            transform: scale(1.25);
+        }
+        .sortable-ghost { opacity: 0.3; }
+        .sortable-chosen {
+            border-color: #3b82f6 !important;
+            background-color: #1e293b !important;
+        }
+        .sortable-drag {
+            cursor: grabbing !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+            border-color: #3b82f6 !important;
+        }
+
+        .page-thumb-container {
+            user-select: none;
+            touch-action: manipulation;
+        }
 
         .tool-btn.active { background-color: #3b82f6; color: white; border-color: #2563eb; }
         .color-btn.active { transform: scale(1.3); outline: 2px solid #3b82f6; outline-offset: 2px; }
@@ -97,7 +119,7 @@
         .cropper-point.point-ne { top: -16px !important; right: -16px !important; cursor: nesw-resize !important; }
         .cropper-point.point-nw { top: -16px !important; left: -16px !important; cursor: nwse-resize !important; }
         .cropper-point.point-se { bottom: -16px !important; right: -16px !important; cursor: nwse-resize !important; }
-        .cropper-point.point-sw { bottom: -16px !important; left: -16px !important; cursor: nesw-resize !important; }
+        .cropper-point.point-sw { bottom: -16px !important; right: -16px !important; cursor: nesw-resize !important; }
     </style>
 </head>
 <body class="h-full flex flex-col sm:flex-row antialiased text-slate-800 bg-slate-100">
@@ -130,7 +152,7 @@
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
             </label>
 
-            <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors disabled:opacity-40" disabled title="Google Drive Library">
+            <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors disabled:opacity-40" disabled title="Import from Google Drive Library">
                 <i data-lucide="cloud-download" class="w-4 h-4 text-cyan-400"></i>
             </button>
 
@@ -235,7 +257,6 @@
         <div class="text-[10px] text-slate-400">Select a stamp, then tap on the sheet music to place it.</div>
         
         <div class="grid grid-cols-6 gap-1.5 text-center text-sm font-serif">
-            <!-- Dynamics -->
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="p">p</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="pp">pp</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="mp">mp</button>
@@ -243,7 +264,6 @@
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="f">f</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="ff">ff</button>
             
-            <!-- Articulations & Accidentals -->
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="𝄐" title="Fermata">𝄐</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="’" title="Breath Mark">’</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp=">" title="Accent">&gt;</button>
@@ -254,9 +274,8 @@
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="𝄋" title="Segno" data-link="true">𝄋</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="𝄌" title="Coda" data-link="true">𝄌</button>
             
-            <!-- Jump Arrows -->
-            <button class="stamp-btn p-2 bg-rose-950/70 border border-rose-800 hover:bg-rose-700 rounded-lg font-bold text-lg text-rose-300" data-stamp="←" title="Left Jump Arrow (Jumps to previous page)" data-link="true">←</button>
-            <button class="stamp-btn p-2 bg-blue-950/70 border border-blue-800 hover:bg-blue-700 rounded-lg font-bold text-lg text-blue-300" data-stamp="→" title="Right Jump Arrow (Jumps to target page)" data-link="true">→</button>
+            <button class="stamp-btn p-2 bg-rose-950/70 border border-rose-800 hover:bg-rose-700 rounded-lg font-bold text-lg text-rose-300" data-stamp="←" title="Left Jump Arrow" data-link="true">←</button>
+            <button class="stamp-btn p-2 bg-blue-950/70 border border-blue-800 hover:bg-blue-700 rounded-lg font-bold text-lg text-blue-300" data-stamp="→" title="Right Jump Arrow" data-link="true">→</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="D.S." title="Dal Segno" data-link="true">D.S.</button>
         </div>
     </div>
@@ -278,18 +297,6 @@
                 <span id="pageIndicator" class="text-xs font-mono min-w-[3rem] text-center text-slate-200">0 / 0</span>
                 <button id="btnNext" class="p-1 text-slate-400 hover:text-white rounded-full transition-colors"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
             </div>
-
-            <div class="h-3.5 w-px bg-slate-700 hidden md:block"></div>
-
-            <div class="items-center gap-1.5 hidden md:flex">
-                <button id="btnPlay" class="bg-blue-600 hover:bg-blue-500 text-white p-1 rounded-full transition-all disabled:opacity-40" disabled>
-                    <i id="playIcon" data-lucide="play" class="w-3 h-3 fill-current"></i>
-                </button>
-                <button id="btnStop" class="text-slate-400 hover:text-white p-0.5 rounded-lg disabled:opacity-30" disabled>
-                    <i data-lucide="square" class="w-3 h-3"></i>
-                </button>
-                <input type="range" id="tempoSlider" min="40" max="240" value="120" class="w-14 accent-blue-500 bg-slate-800 h-1 rounded-lg cursor-pointer">
-            </div>
         </div>
 
         <!-- RIGHT-HAND SIDE PAGES MANAGER DRAWER -->
@@ -298,11 +305,13 @@
                 <span class="flex items-center gap-1.5"><i data-lucide="arrow-up-down" class="w-4 h-4 text-amber-400"></i> Rearrange Pages</span>
                 <button id="btnClosePages" class="text-slate-400 hover:text-white p-1 rounded"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-            <div class="p-2 text-[10px] text-slate-400 text-center border-b border-slate-800 bg-slate-900/50 uppercase tracking-wide">Drag to reorder or tap to jump</div>
+            <div class="p-2 text-[10px] text-slate-400 text-center border-b border-slate-800 bg-slate-900/50 uppercase tracking-wide">
+                Drag 6-dots to reorder • Double-tap title to rename
+            </div>
             <ul id="pagesList" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-900"></ul>
         </div>
 
-        <!-- Document Viewer Canvas (Touch Swipe Target) -->
+        <!-- Document Viewer Canvas -->
         <main class="flex-1 w-full h-full overflow-hidden relative" id="touchCanvasWrapper">
             <div id="paperWrapper" class="paper-canvas">
                 <!-- Empty State -->
@@ -317,12 +326,18 @@
                 </div>
             </div>
 
-            <!-- BLACK HORIZONTAL PAGE SCRUBBER BAR -->
+            <!-- BLACK HORIZONTAL PAGE SCRUBBER BAR WITH LIVE SONG TITLE DISPLAY -->
             <div id="scrubberContainer" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-slate-950/95 border border-slate-800 shadow-2xl rounded-2xl p-2.5 z-30 flex-col gap-1 backdrop-blur-md">
-                <div id="scrubberBadge" class="hidden absolute -top-8 bg-slate-900 border border-slate-700 text-white font-mono text-[11px] px-2 py-0.5 rounded-md shadow-lg pointer-events-none -translate-x-1/2 whitespace-nowrap">
-                    0 / 0
+                
+                <!-- Floating Scrubber Tooltip Indicator (Page Number + Song Title) -->
+                <div id="scrubberBadge" class="hidden absolute -top-9 bg-slate-900 border border-slate-700 text-white font-mono text-[11px] px-3 py-1 rounded-lg shadow-xl pointer-events-none -translate-x-1/2 whitespace-nowrap flex items-center gap-2">
+                    <span id="badgePageNum" class="text-blue-400 font-bold">0 / 0</span>
+                    <span class="text-slate-600">|</span>
+                    <span id="badgeTitle" class="text-slate-200 max-w-[180px] truncate">Title</span>
                 </div>
+
                 <div id="scrubberTicks" class="w-full flex justify-between text-[9px] text-slate-500 font-mono select-none px-1"></div>
+
                 <div id="scrubberTrack" class="w-full h-3 bg-slate-900 border border-slate-800 rounded-full relative cursor-pointer flex items-center">
                     <div id="scrubberProgress" class="h-full bg-blue-600/40 rounded-full pointer-events-none w-0"></div>
                     <div id="scrubberHandle" class="scrubber-handle w-5 h-5 bg-slate-200 border-2 border-slate-900 rounded-full absolute -ml-2.5 cursor-grab shadow-md"></div>
@@ -330,8 +345,6 @@
             </div>
         </main>
     </div>
-
-    <div id="audio-player" class="hidden"></div>
 
     <!-- Crop Modal Wrapper with Auto-Trim Whitespace -->
     <div id="cropModal" class="hidden fixed inset-0 z-50 bg-slate-900/95 flex flex-col p-4 sm:p-8 backdrop-blur-sm">
@@ -366,7 +379,6 @@
                 <button id="btnCloseTuner" class="p-1 rounded text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <!-- Ensemble Reference Tones (Default: Concert Bb) -->
             <div>
                 <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Ensemble Reference Tones</label>
                 <div class="grid grid-cols-3 gap-2">
@@ -385,7 +397,6 @@
                 </div>
             </div>
 
-            <!-- Guitar Tuner Mode -->
             <div>
                 <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Guitar Tuner (Standard 6-String)</label>
                 <div class="grid grid-cols-6 gap-1.5 font-mono text-center">
@@ -398,7 +409,6 @@
                 </div>
             </div>
 
-            <!-- Active Tone Feedback / Stop -->
             <div class="pt-2 flex items-center justify-between border-t border-slate-800">
                 <span id="activeToneDisplay" class="text-xs text-slate-400 font-mono">Status: Idle</span>
                 <button id="btnStopTuner" class="px-4 py-1.5 rounded-lg bg-red-950 border border-red-800 text-red-300 text-xs font-bold hover:bg-red-900 transition-colors">
@@ -408,7 +418,7 @@
         </div>
     </div>
 
-    <!-- BAND LEADER LOCAL SYNC (WebRTC PeerJS) MODAL -->
+    <!-- BAND LEADER LOCAL SYNC MODAL -->
     <div id="syncModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -423,7 +433,6 @@
                 Turn pages for your whole band in real time over peer-to-peer WebRTC without a server.
             </p>
 
-            <!-- Leader Section -->
             <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-col gap-2">
                 <div class="text-xs font-bold text-indigo-300">Band Leader Mode (Host)</div>
                 <p class="text-[11px] text-slate-400">Host a session and share this code with ensemble players:</p>
@@ -434,7 +443,6 @@
                 <div id="connectedMembersCount" class="text-[11px] text-slate-400">Connected musicians: 0</div>
             </div>
 
-            <!-- Member Section -->
             <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-col gap-2">
                 <div class="text-xs font-bold text-cyan-300">Musician Mode (Follower)</div>
                 <p class="text-[11px] text-slate-400">Enter the Band Leader's 5-letter or Peer ID code:</p>
@@ -796,7 +804,6 @@
                 document.getElementById('connectedMembersCount').textContent = `Connected musicians: ${hostConnections.length}`;
                 
                 conn.on('open', () => {
-                    // Send current page immediately upon join
                     conn.send({ type: 'SYNC_PAGE', pageIndex: currentPageIndex });
                 });
 
@@ -832,7 +839,7 @@
 
                 memberConn.on('data', (data) => {
                     if (data && data.type === 'SYNC_PAGE' && typeof data.pageIndex === 'number') {
-                        showPage(data.pageIndex, false); // Don't re-broadcast
+                        showPage(data.pageIndex, false);
                     }
                 });
 
@@ -899,7 +906,7 @@
             const data = imgData.data;
 
             let minX = w, minY = h, maxX = 0, maxY = 0;
-            const step = 4; // Sample every 4th pixel for speed
+            const step = 4;
 
             for (let y = 0; y < h; y += step) {
                 for (let x = 0; x < w; x += step) {
@@ -909,7 +916,6 @@
                     const b = data[idx + 2];
                     const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
 
-                    // If darker than threshold (i.e. ink/notation)
                     if (luminance < 235) {
                         if (x < minX) minX = x;
                         if (x > maxX) maxX = x;
@@ -1178,7 +1184,7 @@
 
         async function fetchDriveLibraryFiles() {
             const fileListEl = document.getElementById('driveFileList');
-            fileListEl.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs">Fetching items from HayNotes folder...</div>`;
+            fileListEl.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs">Fetching library items from HayNotes folder...</div>`;
 
             const query = `'${ROOT_HAYNOTES_FOLDER_ID}' in parents and trashed = false`;
             try {
@@ -1398,9 +1404,6 @@
         let leftArrowTimer; let leftArrowPressed = false;
         let cropper = null; let cropResolve = null;
 
-        // Audio Globals
-        let visualObj = null; let synthControl = null; let timingCallbacks = null; let isPlaying = false; let currentBpm = 120;
-
         // Fullscreen Logic
         const btnFullscreen = document.getElementById('btnFullscreen');
         const fullscreenIcon = document.getElementById('fullscreenIcon');
@@ -1600,7 +1603,6 @@
 
             if (jumpTarget !== null) {
                 stampText.set('targetPage', jumpTarget);
-                // Add tiny visual target badge indicator text
                 const badge = new fabric.Text(`p.${jumpTarget}`, {
                     left: pointer.x + (isArrow ? 40 : 25),
                     top: pointer.y - 10,
@@ -1687,6 +1689,8 @@
         const scrubberProgress = document.getElementById('scrubberProgress');
         const scrubberTicks = document.getElementById('scrubberTicks');
         const scrubberBadge = document.getElementById('scrubberBadge');
+        const badgePageNum = document.getElementById('badgePageNum');
+        const badgeTitle = document.getElementById('badgeTitle');
         let isScrubbing = false;
 
         function updateScrubberUI() {
@@ -1722,7 +1726,10 @@
             scrubberHandle.style.left = `${offsetX}px`;
             scrubberProgress.style.width = `${offsetX}px`;
 
-            scrubberBadge.textContent = `${targetIndex + 1} / ${total}`;
+            // Live Badge Displaying Page Number + Song Title
+            const currentTitle = pagesData[targetIndex]?.filename || 'Page';
+            badgePageNum.textContent = `${targetIndex + 1} / ${total}`;
+            badgeTitle.textContent = currentTitle;
             scrubberBadge.style.left = `${offsetX}px`;
             scrubberBadge.classList.remove('hidden');
 
@@ -1839,20 +1846,22 @@
             document.getElementById('paperWrapper').appendChild(pageDiv);
 
             const li = document.createElement('li');
-            li.className = 'page-thumb-container bg-slate-800 p-2 rounded border border-slate-700 flex items-center gap-3 hover:bg-slate-700 transition-colors';
+            li.className = 'page-thumb-container bg-slate-800 p-2 rounded-xl border border-slate-700 flex items-center gap-2.5 hover:bg-slate-750 transition-all';
             li.dataset.id = pageId;
             let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
             
             li.innerHTML = `
-                <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-500 shrink-0"></i>
-                <div class="w-8 h-8 rounded bg-slate-900 flex items-center justify-center shrink-0">
+                <div class="drag-handle p-1 text-slate-500 hover:text-blue-400 shrink-0" title="Drag 6-dots to reorder">
+                    <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+                </div>
+                <div class="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shrink-0 border border-slate-800">
                     <i data-lucide="${iconStr}" class="w-4 h-4 text-blue-400"></i>
                 </div>
-                <div class="flex-1 overflow-hidden" onclick="jumpToPageById('${pageId}')" style="cursor:pointer;">
-                    <div class="text-xs text-slate-200 truncate font-medium">${filename}</div>
+                <div class="flex-1 overflow-hidden cursor-pointer" onclick="jumpToPageById('${pageId}')" ondblclick="renamePageTitle('${pageId}')" title="Single tap to jump • Double tap to rename">
+                    <div id="thumb-title-${pageId}" class="text-xs text-slate-200 truncate font-semibold">${filename}</div>
                     <div class="text-[10px] text-slate-500 uppercase">${type}</div>
                 </div>
-                <button id="btn-trash-${pageId}" onclick="event.stopPropagation(); triggerRemovePageWithFeedback('${pageId}');" class="btn-delete-page p-1.5 hover:text-red-400 text-slate-400 rounded hover:bg-slate-900 shrink-0" title="Delete Page">
+                <button id="btn-trash-${pageId}" onclick="event.stopPropagation(); triggerRemovePageWithFeedback('${pageId}');" class="btn-delete-page p-1.5 hover:text-red-400 text-slate-400 rounded-lg hover:bg-slate-900 shrink-0" title="Delete Page">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
             `;
@@ -1884,17 +1893,6 @@
                 
                 let localVisualObj = ABCJS.renderAbc(abcContainer.id, content, { responsive: 'resize', paddingtop: 10, paddingbottom: 20 })[0];
                 setupFabric(wrapperDiv.clientWidth || 800, wrapperDiv.clientHeight || 1000);
-
-                if (!visualObj) {
-                    visualObj = localVisualObj;
-                    document.getElementById('btnPlay').disabled = false;
-                    document.getElementById('btnStop').disabled = false;
-                    if (visualObj.metaText?.tempo?.bpm) {
-                        currentBpm = visualObj.metaText.tempo.bpm;
-                        document.getElementById('tempoSlider').value = currentBpm;
-                    }
-                    setupAudio();
-                }
             }
             else if (type === 'musicxml') {
                 const osmdContainer = document.createElement('div');
@@ -1914,6 +1912,20 @@
             if (index !== -1) showPage(index);
         }
 
+        // Double-Click / Double-Tap Page Title Renaming
+        function renamePageTitle(pageId) {
+            const pageObj = pagesData.find(p => p.id === pageId);
+            if (!pageObj) return;
+
+            const newTitle = prompt("Enter a new name for this page:", pageObj.filename);
+            if (newTitle && newTitle.trim()) {
+                pageObj.filename = newTitle.trim();
+                const titleEl = document.getElementById(`thumb-title-${pageId}`);
+                if (titleEl) titleEl.textContent = pageObj.filename;
+                updatePageIndicator();
+            }
+        }
+
         function triggerRemovePageWithFeedback(id) {
             const trashBtn = document.getElementById(`btn-trash-${id}`);
             if (trashBtn) trashBtn.classList.add('deleting');
@@ -1928,16 +1940,16 @@
             pagesData = pagesData.filter(p => p.id !== id);
             currentPageIndex = Math.min(currentPageIndex, Math.max(0, pagesData.length - 1));
             
-            if (pagesData.length === 0) { 
-                stopPlay(); visualObj = null; 
-                document.getElementById('btnPlay').disabled = true; 
-                document.getElementById('btnStop').disabled = true; 
-            }
             showPage(currentPageIndex);
         }
 
+        // STRICT DRAG-AND-DROP REORDERING LIMITED TO 6-DOTS HANDLE
         new Sortable(document.getElementById('pagesList'), {
-            animation: 150, ghostClass: 'sortable-ghost',
+            handle: '.drag-handle', // Strict Handle Filter
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
             onEnd: () => {
                 const newOrderIds = Array.from(document.getElementById('pagesList').children).map(li => li.dataset.id);
                 pagesData = newOrderIds.map(id => pagesData.find(p => p.id === id)).filter(Boolean);
@@ -2059,36 +2071,6 @@
             await performAutoBackupAndClear();
             clearConfirmModal.classList.add('hidden');
         });
-
-        // Audio
-        function setupAudio() {
-            if (!ABCJS.synth.supportsAudio() || !visualObj) return;
-            synthControl = new ABCJS.synth.SynthController();
-            synthControl.load('#audio-player', { displayLoop: false, displayRestart: false, displayPlay: false, displayProgress: false });
-            new ABCJS.synth.CreateSynth().init({ visualObj: visualObj, options: { midiBuffer: true, bpm: currentBpm } })
-            .then(() => synthControl.setTune(visualObj, false, { bpm: currentBpm }));
-        }
-        function togglePlay() {
-            if (!visualObj) return;
-            if (isPlaying) stopPlay();
-            else {
-                timingCallbacks = new ABCJS.TimingCallbacks(visualObj, {
-                    eventCallback: function (ev) {
-                        if (ev === null) { stopPlay(); return; }
-                        document.querySelectorAll('.abcjs-highlight').forEach(el => el.classList.remove('abcjs-highlight'));
-                        if (ev.elements) ev.elements.forEach(arr => arr.forEach(el => el.classList.add('abcjs-highlight')));
-                    }, bpm: currentBpm
-                });
-                ABCJS.synth.play().then(() => { timingCallbacks.start(); isPlaying = true; document.getElementById('playIcon').setAttribute('data-lucide', 'pause'); lucide.createIcons(); });
-            }
-        }
-        function stopPlay() {
-            if(ABCJS.synth) ABCJS.synth.stop(); if (timingCallbacks) timingCallbacks.stop(); isPlaying = false;
-            document.getElementById('playIcon').setAttribute('data-lucide', 'play'); lucide.createIcons();
-            document.querySelectorAll('.abcjs-highlight').forEach(el => el.classList.remove('abcjs-highlight'));
-        }
-        document.getElementById('btnPlay').addEventListener('click', togglePlay);
-        document.getElementById('btnStop').addEventListener('click', stopPlay);
     </script>
 </body>
 </html>
