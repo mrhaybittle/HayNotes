@@ -46,7 +46,6 @@
         .sheet-page.active { display: flex; }
 
         .doc-wrapper { position: relative; display: inline-block; margin: auto; background: #ffffff; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); max-width: 100%; }
-        /* Removed max-height and object-fit to fix annotation squashing by preserving aspect ratio strictly */
         .doc-wrapper img, .doc-wrapper > div.abc-osmd-container { display: block; max-width: 100%; height: auto; background-color: #ffffff; }
         
         .canvas-container { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 20 !important; touch-action: none !important; pointer-events: auto !important; }
@@ -65,7 +64,7 @@
         .sortable-chosen { border-color: #3b82f6 !important; background-color: #1e293b !important; }
         .sortable-drag { cursor: grabbing !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important; border-color: #3b82f6 !important; }
 
-        .page-thumb-container { user-select: none; touch-action: manipulation; }
+        .page-thumb-container { user-select: none; touch-action: manipulation; transition: all 0.15s ease; }
 
         .tool-btn.active { background-color: #3b82f6; color: white; border-color: #2563eb; }
         .color-btn.active { transform: scale(1.3); outline: 2px solid #3b82f6; outline-offset: 2px; }
@@ -277,13 +276,13 @@
         </div>
 
         <!-- RIGHT-HAND SIDE PAGES MANAGER DRAWER -->
-        <div id="pagesDrawer" class="hidden absolute right-0 top-0 bottom-0 w-64 bg-slate-900 border-l border-slate-800 z-30 flex flex-col shadow-2xl transition-all">
+        <div id="pagesDrawer" class="hidden absolute right-0 top-0 bottom-0 w-72 bg-slate-900 border-l border-slate-800 z-30 flex flex-col shadow-2xl transition-all">
             <div class="p-3 bg-slate-950 border-b border-slate-800 flex justify-between text-xs font-semibold text-slate-300">
-                <span class="flex items-center gap-1.5"><i data-lucide="arrow-up-down" class="w-4 h-4 text-amber-400"></i> Rearrange Pages</span>
+                <span class="flex items-center gap-1.5"><i data-lucide="link" class="w-4 h-4 text-amber-400"></i> Rearrange & Group Songs</span>
                 <button id="btnClosePages" class="text-slate-400 hover:text-white p-1 rounded"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div class="p-2 text-[10px] text-slate-400 text-center border-b border-slate-800 bg-slate-900/50 uppercase tracking-wide">
-                Drag 6-dots to reorder • Double-tap title to rename
+                Pages titled "p2", "p3" locked to main song
             </div>
             <ul id="pagesList" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-900"></ul>
         </div>
@@ -304,7 +303,6 @@
             </div>
 
             <!-- BLACK HORIZONTAL PAGE SCRUBBER BAR -->
-            <!-- Note: added opacity-15 and hover transition classes to make it nearly invisible until interacted with -->
             <div id="scrubberContainer" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-slate-950/95 border border-slate-800 shadow-2xl rounded-2xl p-2.5 z-30 flex-col gap-1 backdrop-blur-md opacity-15 hover:opacity-100 transition-opacity duration-300">
                 
                 <!-- Floating Scrubber Tooltip Indicator -->
@@ -580,6 +578,24 @@
 
         let lastUsedPageTitle = "Page 1";
         let activeSetlistName = "Main Setlist";
+
+        // ---------------------------------------------------------
+        // SONG / PAGE GROUPING UTILITIES
+        // ---------------------------------------------------------
+        function parsePageGroupInfo(filename) {
+            if (!filename) return { baseTitle: "Page", pageNum: null };
+
+            // Matches patterns like: "Song p2", "Song P-3", "Song (p.4)", "Song_p5", "Song p 2"
+            const match = filename.match(/^(.*?)[_\s\(-]*p\.?\s*(\d+)\)?$/i);
+            if (match) {
+                const base = match[1].trim();
+                const pNum = parseInt(match[2], 10);
+                if (base.length > 0 && !isNaN(pNum)) {
+                    return { baseTitle: base, pageNum: pNum };
+                }
+            }
+            return { baseTitle: filename.trim(), pageNum: null };
+        }
 
         // ---------------------------------------------------------
         // FAST TOP-REGION CROP OCR FOR TITLE DETECTION
@@ -1387,6 +1403,7 @@
                     });
                 }
             }
+            renderPagesListDrawer();
         }
 
         async function syncSetlistFromCloudInBackground(folderId, localSetlist, localKey) {
@@ -1914,6 +1931,48 @@
             }
         });
 
+        function renderPagesListDrawer() {
+            const pagesListEl = document.getElementById('pagesList');
+            pagesListEl.innerHTML = '';
+
+            pagesData.forEach((pageObj) => {
+                const pageId = pageObj.id;
+                const filename = pageObj.filename;
+                const type = pageObj.type;
+                const groupInfo = parsePageGroupInfo(filename);
+                const isLinked = groupInfo.pageNum !== null;
+
+                const li = document.createElement('li');
+                li.className = `page-thumb-container bg-slate-800 p-2 rounded-xl border flex items-center gap-2 hover:bg-slate-750 transition-all ${isLinked ? 'ml-4 border-amber-800/60 bg-slate-850' : 'border-slate-700'}`;
+                li.dataset.id = pageId;
+
+                let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
+
+                li.innerHTML = `
+                    <div class="drag-handle p-1 text-slate-500 hover:text-blue-400 shrink-0" title="Drag to reorder locked group">
+                        <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+                    </div>
+                    <div class="w-7 h-7 rounded-lg ${isLinked ? 'bg-amber-950/60 border border-amber-700/50' : 'bg-slate-900 border border-slate-800'} flex items-center justify-center shrink-0">
+                        <i data-lucide="${isLinked ? 'link' : iconStr}" class="w-3.5 h-3.5 ${isLinked ? 'text-amber-400' : 'text-blue-400'}"></i>
+                    </div>
+                    <div class="flex-1 overflow-hidden cursor-pointer" onclick="jumpToPageById('${pageId}')" ondblclick="renamePageTitle('${pageId}')" title="Single tap to jump • Double tap to rename">
+                        <div id="thumb-title-${pageId}" class="text-xs text-slate-200 truncate font-semibold flex items-center gap-1">
+                            <span class="truncate">${filename}</span>
+                            ${isLinked ? `<span class="px-1 py-0.2 bg-amber-500/20 text-amber-300 text-[9px] font-mono rounded shrink-0">p.${groupInfo.pageNum}</span>` : ''}
+                        </div>
+                        <div class="text-[10px] text-slate-500 uppercase">${isLinked ? 'Linked Sub-Page' : type}</div>
+                    </div>
+                    <button id="btn-trash-${pageId}" onclick="event.stopPropagation(); triggerRemovePageWithFeedback('${pageId}');" class="btn-delete-page p-1.5 hover:text-red-400 text-slate-400 rounded-lg hover:bg-slate-900 shrink-0" title="Delete Page">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                pagesListEl.appendChild(li);
+            });
+
+            lucide.createIcons();
+            showPage(currentPageIndex, false);
+        }
+
         async function addPage(type, content, filename = "Page", insertIndex = null) {
             const pageId = generateId();
             
@@ -1931,7 +1990,6 @@
             pageDiv.id = pageId;
             pageDiv.className = 'sheet-page';
             
-            // NEW: Fix for FabricJS Pointer Offset Desync when scrolling native DOM elements
             pageDiv.addEventListener('scroll', () => {
                 if (fabricCanvases[pageId]) {
                     fabricCanvases[pageId].calcOffset();
@@ -1944,35 +2002,6 @@
             pageDiv.appendChild(wrapperDiv);
 
             document.getElementById('paperWrapper').appendChild(pageDiv);
-
-            const li = document.createElement('li');
-            li.className = 'page-thumb-container bg-slate-800 p-2 rounded-xl border border-slate-700 flex items-center gap-2.5 hover:bg-slate-750 transition-all';
-            li.dataset.id = pageId;
-            let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
-            
-            li.innerHTML = `
-                <div class="drag-handle p-1 text-slate-500 hover:text-blue-400 shrink-0" title="Drag 6-dots to reorder">
-                    <i data-lucide="grip-vertical" class="w-4 h-4"></i>
-                </div>
-                <div class="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center shrink-0 border border-slate-800">
-                    <i data-lucide="${iconStr}" class="w-4 h-4 text-blue-400"></i>
-                </div>
-                <div class="flex-1 overflow-hidden cursor-pointer" onclick="jumpToPageById('${pageId}')" ondblclick="renamePageTitle('${pageId}')" title="Single tap to jump • Double tap to rename">
-                    <div id="thumb-title-${pageId}" class="text-xs text-slate-200 truncate font-semibold">${filename}</div>
-                    <div class="text-[10px] text-slate-500 uppercase">${type}</div>
-                </div>
-                <button id="btn-trash-${pageId}" onclick="event.stopPropagation(); triggerRemovePageWithFeedback('${pageId}');" class="btn-delete-page p-1.5 hover:text-red-400 text-slate-400 rounded-lg hover:bg-slate-900 shrink-0" title="Delete Page">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
-            `;
-
-            const pagesListEl = document.getElementById('pagesList');
-            if (insertIndex !== null && insertIndex < pagesListEl.children.length) {
-                pagesListEl.insertBefore(li, pagesListEl.children[insertIndex]);
-            } else {
-                pagesListEl.appendChild(li);
-            }
-            lucide.createIcons();
 
             const setupFabric = (width, height) => {
                 const canvasEl = document.createElement('canvas');
@@ -2010,6 +2039,7 @@
                 setupFabric(wrapperDiv.clientWidth || 800, wrapperDiv.clientHeight || 1000);
             }
 
+            renderPagesListDrawer();
             const targetPos = (insertIndex !== null) ? insertIndex : pagesData.length - 1;
             showPage(targetPos);
         }
@@ -2027,8 +2057,7 @@
             if (newTitle && newTitle.trim()) {
                 pageObj.filename = newTitle.trim();
                 lastUsedPageTitle = pageObj.filename;
-                const titleEl = document.getElementById(`thumb-title-${pageId}`);
-                if (titleEl) titleEl.textContent = pageObj.filename;
+                renderPagesListDrawer();
                 updatePageIndicator();
             }
         }
@@ -2041,15 +2070,17 @@
 
         function removePage(id) {
             document.getElementById(id)?.remove();
-            document.querySelector(`li[data-id="${id}"]`)?.remove();
             if (fabricCanvases[id]) { fabricCanvases[id].dispose(); delete fabricCanvases[id]; }
             
             pagesData = pagesData.filter(p => p.id !== id);
             currentPageIndex = Math.min(currentPageIndex, Math.max(0, pagesData.length - 1));
             
-            showPage(currentPageIndex);
+            renderPagesListDrawer();
         }
 
+        // ---------------------------------------------------------
+        // LOCKED SONG GROUP REARRANGE ENGINE
+        // ---------------------------------------------------------
         new Sortable(document.getElementById('pagesList'), {
             handle: '.drag-handle',
             animation: 150,
@@ -2057,9 +2088,71 @@
             chosenClass: 'sortable-chosen',
             dragClass: 'sortable-drag',
             onEnd: () => {
-                const newOrderIds = Array.from(document.getElementById('pagesList').children).map(li => li.dataset.id);
-                pagesData = newOrderIds.map(id => pagesData.find(p => p.id === id)).filter(Boolean);
-                showPage(currentPageIndex);
+                const listChildren = Array.from(document.getElementById('pagesList').children);
+                const rawDomIds = listChildren.map(li => li.dataset.id);
+                
+                let reorderedPages = [];
+                let processedIds = new Set();
+
+                rawDomIds.forEach(id => {
+                    if (processedIds.has(id)) return;
+
+                    const pageObj = pagesData.find(p => p.id === id);
+                    if (!pageObj) return;
+
+                    const info = parsePageGroupInfo(pageObj.filename);
+
+                    // Case A: Main Song Page (e.g. "Song Name")
+                    if (info.pageNum === null) {
+                        reorderedPages.push(pageObj);
+                        processedIds.add(id);
+
+                        // Find and pull all linked sub-pages (p2, p3) belonging to this base title in correct sequence
+                        const subPages = pagesData.filter(p => {
+                            if (p.id === id) return false;
+                            const pInfo = parsePageGroupInfo(p.filename);
+                            return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && pInfo.pageNum !== null;
+                        }).sort((a, b) => (parsePageGroupInfo(a.filename).pageNum || 0) - (parsePageGroupInfo(b.filename).pageNum || 0));
+
+                        subPages.forEach(sp => {
+                            if (!processedIds.has(sp.id)) {
+                                reorderedPages.push(sp);
+                                processedIds.add(sp.id);
+                            }
+                        });
+                    } 
+                    // Case B: Dragged directly via sub-page (e.g. "Song Name p2")
+                    else {
+                        const parentObj = pagesData.find(p => {
+                            const pInfo = parsePageGroupInfo(p.filename);
+                            return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && pInfo.pageNum === null;
+                        });
+
+                        if (parentObj && !processedIds.has(parentObj.id)) {
+                            reorderedPages.push(parentObj);
+                            processedIds.add(parentObj.id);
+
+                            const subPages = pagesData.filter(p => {
+                                if (p.id === parentObj.id) return false;
+                                const pInfo = parsePageGroupInfo(p.filename);
+                                return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && pInfo.pageNum !== null;
+                            }).sort((a, b) => (parsePageGroupInfo(a.filename).pageNum || 0) - (parsePageGroupInfo(b.filename).pageNum || 0));
+
+                            subPages.forEach(sp => {
+                                if (!processedIds.has(sp.id)) {
+                                    reorderedPages.push(sp);
+                                    processedIds.add(sp.id);
+                                }
+                            });
+                        } else if (!processedIds.has(id)) {
+                            reorderedPages.push(pageObj);
+                            processedIds.add(id);
+                        }
+                    }
+                });
+
+                pagesData = reorderedPages;
+                renderPagesListDrawer();
             }
         });
 
@@ -2169,11 +2262,11 @@
 
             if (['abc', 'txt'].includes(ext)) { 
                 const name = isDirectDriveImport ? originalName : (prompt("Score name:", suggestedDefaultTitle) || suggestedDefaultTitle);
-                addPage('abc', await file.text(), name); 
+                await addPage('abc', await file.text(), name); 
             } 
             else if (['xml', 'mxl', 'musicxml'].includes(ext)) { 
                 const name = isDirectDriveImport ? originalName : (prompt("Score name:", suggestedDefaultTitle) || suggestedDefaultTitle);
-                addPage('musicxml', await file.text(), name); 
+                await addPage('musicxml', await file.text(), name); 
             }
             else if (file.type === 'application/pdf' || ext === 'pdf') {
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
@@ -2187,11 +2280,13 @@
                     const pageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
                     
                     if (isDirectDriveImport) {
-                        await addPage('pdf', pageDataUrl, `${originalName} (p.${i})`);
+                        const pageSuffix = i > 1 ? ` p${i}` : '';
+                        await addPage('pdf', pageDataUrl, `${originalName}${pageSuffix}`);
                     } else {
                         const detected = await detectTitleFromImage(pageDataUrl);
-                        const pageTitle = detected ? `${detected} (p.${i})` : `${suggestedDefaultTitle} (p.${i})`;
-                        await addPage('pdf', pageDataUrl, pageTitle);
+                        const baseTitle = detected || suggestedDefaultTitle;
+                        const pageSuffix = i > 1 ? ` p${i}` : '';
+                        await addPage('pdf', pageDataUrl, `${baseTitle}${pageSuffix}`);
                     }
                 }
             }
