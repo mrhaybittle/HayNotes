@@ -42,11 +42,13 @@
         
         .paper-canvas { width: 100%; height: 100%; position: relative; transition: transform 0.15s ease-out; transform-origin: center center; display: flex; align-items: center; justify-content: center; }
         
-        .sheet-page { display: none; width: 100%; height: 100%; position: absolute; inset: 0; align-items: center; justify-content: center; overflow: auto; padding: 16px; padding-bottom: 90px; }
+        /* Changed align-items to flex-start to allow natural scrolling of tall images without margin clipping */
+        .sheet-page { display: none; width: 100%; height: 100%; position: absolute; inset: 0; align-items: flex-start; justify-content: center; overflow: auto; padding: 16px; padding-bottom: 90px; }
         .sheet-page.active { display: flex; }
 
-        .doc-wrapper { position: relative; display: inline-block; background: #ffffff; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); max-width: 100%; max-height: 100%; }
-        .doc-wrapper img, .doc-wrapper > div.abc-osmd-container { display: block; max-width: 100%; max-height: 100%; object-fit: contain; background-color: #ffffff; }
+        /* Removed max-height constraint and added margin: auto to handle natural document flow perfectly */
+        .doc-wrapper { position: relative; display: inline-block; margin: auto; background: #ffffff; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); max-width: 100%; }
+        .doc-wrapper img, .doc-wrapper > div.abc-osmd-container { display: block; max-width: 100%; height: auto; object-fit: contain; background-color: #ffffff; }
         
         .canvas-container { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 20 !important; touch-action: none !important; pointer-events: auto !important; }
         .lower-canvas, .upper-canvas { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; touch-action: none !important; pointer-events: auto !important; }
@@ -1851,7 +1853,12 @@
             }
         });
 
-        window.addEventListener('resize', updateScrubberUI);
+        window.addEventListener('resize', () => {
+            updateScrubberUI();
+            if (pagesData.length > 0 && fabricCanvases[pagesData[currentPageIndex]?.id]) {
+                fabricCanvases[pagesData[currentPageIndex].id].calcOffset();
+            }
+        });
 
         // Touch Swipe Gestures
         let touchStartX = 0;
@@ -1919,6 +1926,13 @@
             pageDiv.id = pageId;
             pageDiv.className = 'sheet-page';
             
+            // NEW: Fix for FabricJS Pointer Offset Desync when scrolling native DOM elements
+            pageDiv.addEventListener('scroll', () => {
+                if (fabricCanvases[pageId]) {
+                    fabricCanvases[pageId].calcOffset();
+                }
+            }, { passive: true });
+
             const wrapperDiv = document.createElement('div');
             wrapperDiv.className = 'doc-wrapper';
             wrapperDiv.id = `wrap-${pageId}`;
