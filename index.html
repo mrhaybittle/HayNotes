@@ -93,43 +93,43 @@
 
     <!-- STRICT SINGLE-ROW HEADER -->
     <header class="w-full bg-slate-900 text-slate-100 shadow-md border-b border-slate-800 flex-none z-40 relative">
-        <div class="flex items-center justify-between gap-4 text-sm px-4 py-2 overflow-x-auto no-scrollbar whitespace-nowrap w-full">
+        <div class="flex items-center justify-between gap-2 sm:gap-4 text-sm px-2 sm:px-4 py-2 overflow-x-auto no-scrollbar whitespace-nowrap w-full">
             
             <!-- Left: Logo & Core Import -->
-            <div class="flex items-center gap-2 shrink-0">
-                <div class="flex items-center gap-2 font-bold text-white text-base mr-2">
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <div class="flex items-center gap-1.5 font-bold text-white text-base mr-1 sm:mr-2">
                     <i data-lucide="music-4" class="w-5 h-5 text-blue-400"></i>
                     <span class="hidden sm:inline">HayNotes</span>
                 </div>
                 
-                <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors">
-                    <i data-lucide="folder-plus" class="w-3.5 h-3.5 text-blue-400"></i>
-                    <span>Import</span>
+                <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Import Files">
+                    <i data-lucide="folder-plus" class="w-4 h-4 text-blue-400"></i>
+                    <span class="hidden sm:inline">Import</span>
                     <input type="file" id="fileInput" accept=".abc,.txt,.pdf,image/*,.xml,.mxl,.musicxml" multiple class="hidden" />
                 </label>
 
-                <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors">
-                    <i data-lucide="camera" class="w-3.5 h-3.5 text-emerald-400"></i>
-                    <span>Scan</span>
+                <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Scan Document">
+                    <i data-lucide="camera" class="w-4 h-4 text-emerald-400"></i>
+                    <span class="hidden sm:inline">Scan</span>
                     <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
                 </label>
 
-                <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-40" disabled title="Import from Google Drive HayNotes Folder">
-                    <i data-lucide="cloud-download" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-40" disabled title="Import from Google Drive HayNotes Folder">
+                    <i data-lucide="cloud-download" class="w-4 h-4 text-cyan-400"></i>
                     <span class="hidden md:inline">Drive Library</span>
                 </button>
 
-                <button id="btnToggleEditor" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Toggle ABC Code Editor">
-                    <i data-lucide="code" class="w-3.5 h-3.5 text-indigo-400"></i>
+                <button id="btnToggleEditor" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Toggle ABC Code Editor">
+                    <i data-lucide="code" class="w-4 h-4 text-indigo-400"></i>
                 </button>
             </div>
 
             <!-- Center: Pagination & Playback -->
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
                 <div class="flex items-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-800">
-                    <button id="btnPrev" class="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors" title="Previous Page (Left Arrow)"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-                    <span id="pageIndicator" class="text-xs font-mono text-slate-300 min-w-[3rem] text-center">0 / 0</span>
-                    <button id="btnNext" class="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors" title="Next Page (Right Arrow)"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    <button id="btnPrev" class="p-1 text-slate-400 hover:text-white rounded-lg transition-colors" title="Previous Page (Left Arrow)"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                    <span id="pageIndicator" class="text-xs font-mono text-slate-300 min-w-[2.5rem] sm:min-w-[3rem] text-center">0 / 0</span>
+                    <button id="btnNext" class="p-1 text-slate-400 hover:text-white rounded-lg transition-colors" title="Next Page (Right Arrow)"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                 </div>
 
                 <div class="flex items-center gap-2 bg-slate-950/80 px-3 py-1 rounded-xl border border-slate-800 hidden md:flex">
@@ -145,21 +145,20 @@
             </div>
 
             <!-- Right: Tools & Google Drive Controls -->
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 
-                <!-- Google Drive Connect / Save Group -->
-                <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors">
-                    <i data-lucide="cloud" class="w-3.5 h-3.5 text-cyan-400"></i>
-                    <span id="driveStatusText">Drive: Off</span>
+                <!-- Google Drive Connect Button (Icon Only with Dynamic Green/Red Color) -->
+                <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 p-1.5 rounded-lg border border-slate-700 transition-colors flex items-center justify-center" title="Google Drive Disconnected - Click to connect">
+                    <i id="driveStatusIcon" data-lucide="cloud-off" class="w-4 h-4 text-red-500"></i>
                 </button>
 
-                <button id="btnSaveToDrive" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-40" disabled title="Save current page image to HayNotes folder">
-                    <i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <button id="btnSaveToDrive" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors disabled:opacity-40" disabled title="Save current page image to HayNotes folder">
+                    <i data-lucide="hard-drive-upload" class="w-4 h-4 text-emerald-400"></i>
                     <span class="hidden lg:inline">Save Page</span>
                 </button>
 
-                <button id="btnSaveSetlist" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm" title="Save setlist as a new Google Drive folder with images & metadata">
-                    <i data-lucide="folder-output" class="w-3.5 h-3.5"></i>
+                <button id="btnSaveSetlist" class="bg-blue-600 hover:bg-blue-500 text-white p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm" title="Save setlist as a new Google Drive folder with images & metadata">
+                    <i data-lucide="folder-output" class="w-4 h-4"></i>
                     <span class="hidden lg:inline">Save Setlist</span>
                 </button>
 
@@ -172,20 +171,20 @@
                 </div>
                 
                 <!-- Toggle Pencil Trigger -->
-                <button id="btnToggleDraw" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Draw & Annotate">
-                    <i data-lucide="pencil" class="w-3.5 h-3.5 text-pink-400"></i>
+                <button id="btnToggleDraw" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Draw & Annotate">
+                    <i data-lucide="pencil" class="w-4 h-4 text-pink-400"></i>
                     <span class="hidden lg:inline">Draw</span>
                 </button>
 
                 <!-- Toggle Pages Drawer -->
-                <button id="btnTogglePages" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors">
-                    <i data-lucide="gallery-vertical-end" class="w-3.5 h-3.5 text-amber-400"></i>
+                <button id="btnTogglePages" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Toggle Pages">
+                    <i data-lucide="gallery-vertical-end" class="w-4 h-4 text-amber-400"></i>
                     <span class="hidden lg:inline">Pages</span>
                 </button>
                 
                 <!-- Fullscreen -->
-                <button id="btnFullscreen" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Toggle Fullscreen">
-                    <i id="fullscreenIcon" data-lucide="maximize" class="w-3.5 h-3.5 text-purple-400"></i>
+                <button id="btnFullscreen" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors" title="Toggle Fullscreen">
+                    <i id="fullscreenIcon" data-lucide="maximize" class="w-4 h-4 text-purple-400"></i>
                 </button>
 
                 <!-- Clear -->
@@ -332,15 +331,27 @@
         let driveAccessToken = localStorage.getItem('haynotes_drive_token') || null;
 
         function setDriveConnectedUI() {
-            document.getElementById('driveStatusText').textContent = 'Drive: Connected';
-            document.getElementById('btnConnectDrive').classList.replace('bg-slate-800', 'bg-emerald-900/60');
+            const btn = document.getElementById('btnConnectDrive');
+            const icon = document.getElementById('driveStatusIcon');
+            
+            btn.title = "Google Drive Connected";
+            icon.setAttribute('data-lucide', 'cloud');
+            icon.className = "w-4 h-4 text-emerald-400";
+            lucide.createIcons();
+
             document.getElementById('btnSaveToDrive').disabled = false;
             document.getElementById('btnOpenDriveLibrary').disabled = false;
         }
 
         function setDriveDisconnectedUI() {
-            document.getElementById('driveStatusText').textContent = 'Drive: Off';
-            document.getElementById('btnConnectDrive').classList.replace('bg-emerald-900/60', 'bg-slate-800');
+            const btn = document.getElementById('btnConnectDrive');
+            const icon = document.getElementById('driveStatusIcon');
+
+            btn.title = "Google Drive Disconnected - Click to connect";
+            icon.setAttribute('data-lucide', 'cloud-off');
+            icon.className = "w-4 h-4 text-red-500";
+            lucide.createIcons();
+
             document.getElementById('btnSaveToDrive').disabled = true;
             document.getElementById('btnOpenDriveLibrary').disabled = true;
         }
@@ -380,6 +391,8 @@
                     driveAccessToken = null;
                     setDriveDisconnectedUI();
                 }
+            } else {
+                setDriveDisconnectedUI();
             }
         }
 
