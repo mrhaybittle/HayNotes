@@ -585,7 +585,6 @@
         function parsePageGroupInfo(filename) {
             if (!filename) return { baseTitle: "Page", pageNum: null };
 
-            // Matches patterns like: "Song p2", "Song P-3", "Song (p.4)", "Song_p5", "Song p 2"
             const match = filename.match(/^(.*?)[_\s\(-]*p\.?\s*(\d+)\)?$/i);
             if (match) {
                 const base = match[1].trim();
@@ -1614,7 +1613,7 @@
                     canvas.isDrawingMode = true;
                     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                     canvas.freeDrawingBrush.color = activeColor;
-                    canvas.freeDrawingBrush.width = 30;
+                    canvas.freeDrawingBrush.width = 15;
                 } 
                 else if (activeTool === 'highlight') {
                     canvas.allowTouchScrolling = false;
@@ -1685,7 +1684,7 @@
             const stampText = new fabric.Text(activeStampSymbol, {
                 left: pointer.x,
                 top: pointer.y,
-                fontSize: isArrow ? 48 : 36,
+                fontSize: isArrow ? 480 : 36,
                 fontWeight: isArrow ? 'bold' : 'normal',
                 fill: activeColor,
                 fontFamily: 'serif',
@@ -1696,9 +1695,9 @@
             if (jumpTarget !== null) {
                 stampText.set('targetPage', jumpTarget);
                 const badge = new fabric.Text(`p.${jumpTarget}`, {
-                    left: pointer.x + (isArrow ? 40 : 25),
+                    left: pointer.x + (isArrow ? 400 : 25),
                     top: pointer.y - 10,
-                    fontSize: 12,
+                    fontSize: isArrow ? 36 : 12,
                     fontWeight: 'bold',
                     fill: activeColor,
                     fontFamily: 'monospace',
