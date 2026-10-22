@@ -282,7 +282,7 @@
                 <button id="btnClosePages" class="text-slate-400 hover:text-white p-1 rounded"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div class="p-2 text-[10px] text-slate-400 text-center border-b border-slate-800 bg-slate-900/50 uppercase tracking-wide">
-                Pages titled "p2", "p3" locked to main song
+                Click chain icon to unlink • Drag to reorder
             </div>
             <ul id="pagesList" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-900"></ul>
         </div>
@@ -594,6 +594,31 @@
                 }
             }
             return { baseTitle: filename.trim(), pageNum: null };
+        }
+
+        // Checks whether a given sub-page actually has an active parent page with the exact same base title
+        function isPageLinkedToParent(pageObj) {
+            const groupInfo = parsePageGroupInfo(pageObj.filename);
+            if (groupInfo.pageNum === null) return false;
+
+            return pagesData.some(p => {
+                if (p.id === pageObj.id) return false;
+                const pInfo = parsePageGroupInfo(p.filename);
+                return pInfo.baseTitle.toLowerCase() === groupInfo.baseTitle.toLowerCase();
+            });
+        }
+
+        function unlinkPageGroup(pageId) {
+            const pageObj = pagesData.find(p => p.id === pageId);
+            if (!pageObj) return;
+
+            if (confirm(`Unlink "${pageObj.filename}" as an independent page?`)) {
+                // Strips p2/p3 suffix so it no longer auto-links to the base song name
+                const groupInfo = parsePageGroupInfo(pageObj.filename);
+                pageObj.filename = groupInfo.baseTitle + ` (Part ${groupInfo.pageNum})`;
+                renderPagesListDrawer();
+                updatePageIndicator();
+            }
         }
 
         // ---------------------------------------------------------
@@ -1939,7 +1964,9 @@
                 const filename = pageObj.filename;
                 const type = pageObj.type;
                 const groupInfo = parsePageGroupInfo(filename);
-                const isLinked = groupInfo.pageNum !== null;
+                
+                // Strictly link ONLY if it shares base name with a parent page
+                const isLinked = isPageLinkedToParent(pageObj);
 
                 const li = document.createElement('li');
                 li.className = `page-thumb-container bg-slate-800 p-2 rounded-xl border flex items-center gap-2 hover:bg-slate-750 transition-all ${isLinked ? 'ml-4 border-amber-800/60 bg-slate-850' : 'border-slate-700'}`;
@@ -1951,8 +1978,8 @@
                     <div class="drag-handle p-1 text-slate-500 hover:text-blue-400 shrink-0" title="Drag to reorder locked group">
                         <i data-lucide="grip-vertical" class="w-4 h-4"></i>
                     </div>
-                    <div class="w-7 h-7 rounded-lg ${isLinked ? 'bg-amber-950/60 border border-amber-700/50' : 'bg-slate-900 border border-slate-800'} flex items-center justify-center shrink-0">
-                        <i data-lucide="${isLinked ? 'link' : iconStr}" class="w-3.5 h-3.5 ${isLinked ? 'text-amber-400' : 'text-blue-400'}"></i>
+                    <div onclick="${isLinked ? `unlinkPageGroup('${pageId}')` : ''}" class="w-7 h-7 rounded-lg ${isLinked ? 'bg-amber-950/60 border border-amber-700/50 hover:bg-amber-900/80 cursor-pointer' : 'bg-slate-900 border border-slate-800'} flex items-center justify-center shrink-0" title="${isLinked ? 'Click to UNLINK page' : ''}">
+                        <i data-lucide="${isLinked ? 'link' : iconStr}" class="w-3.5 h-3.5 ${isLinked ? 'text-amber-400 hover:text-rose-400' : 'text-blue-400'}"></i>
                     </div>
                     <div class="flex-1 overflow-hidden cursor-pointer" onclick="jumpToPageById('${pageId}')" ondblclick="renamePageTitle('${pageId}')" title="Single tap to jump • Double tap to rename">
                         <div id="thumb-title-${pageId}" class="text-xs text-slate-200 truncate font-semibold flex items-center gap-1">
@@ -2099,18 +2126,19 @@
                     const pageObj = pagesData.find(p => p.id === id);
                     if (!pageObj) return;
 
+                    const isLinked = isPageLinkedToParent(pageObj);
                     const info = parsePageGroupInfo(pageObj.filename);
 
-                    // Case A: Main Song Page (e.g. "Song Name")
-                    if (info.pageNum === null) {
+                    // Case A: Standalone page or Main Song Page
+                    if (!isLinked && info.pageNum === null) {
                         reorderedPages.push(pageObj);
                         processedIds.add(id);
 
-                        // Find and pull all linked sub-pages (p2, p3) belonging to this base title in correct sequence
+                        // Pull sub-pages sharing the EXACT base title
                         const subPages = pagesData.filter(p => {
                             if (p.id === id) return false;
                             const pInfo = parsePageGroupInfo(p.filename);
-                            return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && pInfo.pageNum !== null;
+                            return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && isPageLinkedToParent(p);
                         }).sort((a, b) => (parsePageGroupInfo(a.filename).pageNum || 0) - (parsePageGroupInfo(b.filename).pageNum || 0));
 
                         subPages.forEach(sp => {
@@ -2120,11 +2148,11 @@
                             }
                         });
                     } 
-                    // Case B: Dragged directly via sub-page (e.g. "Song Name p2")
-                    else {
+                    // Case B: Dragged directly via a linked sub-page
+                    else if (isLinked) {
                         const parentObj = pagesData.find(p => {
                             const pInfo = parsePageGroupInfo(p.filename);
-                            return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && pInfo.pageNum === null;
+                            return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && !isPageLinkedToParent(p);
                         });
 
                         if (parentObj && !processedIds.has(parentObj.id)) {
@@ -2134,7 +2162,7 @@
                             const subPages = pagesData.filter(p => {
                                 if (p.id === parentObj.id) return false;
                                 const pInfo = parsePageGroupInfo(p.filename);
-                                return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && pInfo.pageNum !== null;
+                                return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && isPageLinkedToParent(p);
                             }).sort((a, b) => (parsePageGroupInfo(a.filename).pageNum || 0) - (parsePageGroupInfo(b.filename).pageNum || 0));
 
                             subPages.forEach(sp => {
@@ -2144,6 +2172,11 @@
                                 }
                             });
                         } else if (!processedIds.has(id)) {
+                            reorderedPages.push(pageObj);
+                            processedIds.add(id);
+                        }
+                    } else {
+                        if (!processedIds.has(id)) {
                             reorderedPages.push(pageObj);
                             processedIds.add(id);
                         }
