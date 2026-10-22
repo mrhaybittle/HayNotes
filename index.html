@@ -513,7 +513,7 @@
             }
         });
 
-        // Save Setlist as a SUBFOLDER on Google Drive containing all images + manifest
+        // Save Setlist Dual-Storage (Local + Google Drive Subfolder) with Timestamps
         document.getElementById('btnSaveSetlist').addEventListener('click', async () => {
             if (pagesData.length === 0) {
                 alert('Your setlist is currently empty.');
@@ -523,10 +523,22 @@
             const rawName = prompt("Enter a name for this Setlist folder:", "Main Setlist");
             if (!rawName || !rawName.trim()) return;
             const setlistName = rawName.trim();
+            const nowIso = new Date().toISOString();
+
+            const localKey = `haynotes_setlist_${setlistName.replace(/\s+/g, '_')}`;
+            const existingLocal = localStorage.getItem(localKey);
+            let currentVersion = 1;
+            if (existingLocal) {
+                try {
+                    const parsed = JSON.parse(existingLocal);
+                    currentVersion = (parsed.version || 1) + 1;
+                } catch(e){}
+            }
 
             const setlistPayload = {
                 title: setlistName,
-                createdAt: new Date().toISOString(),
+                updatedAt: nowIso,
+                version: currentVersion,
                 pages: pagesData.map((page, index) => ({
                     order: index + 1,
                     id: page.id,
@@ -537,15 +549,15 @@
                 }))
             };
 
-            // Save locally
+            // 1. Instant Save to Local Cache for Fast Reads
             try {
-                localStorage.setItem(`haynotes_setlist_${setlistName}`, JSON.stringify(setlistPayload));
+                localStorage.setItem(localKey, JSON.stringify(setlistPayload));
                 localStorage.setItem('haynotes_last_setlist', JSON.stringify(setlistPayload));
             } catch (e) {
                 console.warn('LocalStorage save failed/exceeded size limit:', e);
             }
 
-            // Upload to Google Drive inside a NEW Subfolder
+            // 2. Non-blocking Cloud Save to Google Drive inside Subfolder
             if (driveAccessToken) {
                 try {
                     const setlistFolderId = await createDriveFolder(setlistName, ROOT_HAYNOTES_FOLDER_ID);
@@ -564,16 +576,16 @@
                     const jsonBlob = new Blob([JSON.stringify(setlistPayload, null, 2)], { type: 'application/json' });
                     await uploadFileToDrive('setlist_manifest.json', jsonBlob, 'application/json', setlistFolderId);
 
-                    alert(`Successfully created Setlist Folder "${setlistName}" on Google Drive with all page images and annotations saved!`);
+                    alert(`Setlist "${setlistName}" saved locally & synced to Google Drive (v${currentVersion})!`);
                 } catch (err) {
-                    alert(`Saved locally! (Drive subfolder creation/upload error: ${err.message})`);
+                    alert(`Saved locally! (Drive subfolder upload warning: ${err.message})`);
                 }
             } else {
-                alert(`Setlist "${setlistName}" saved locally! Connect Google Drive to create cloud setlist folders.`);
+                alert(`Setlist "${setlistName}" saved locally! Connect Google Drive to enable cloud sync.`);
             }
         });
 
-        // Browse & Add Images or Folders from Google Drive HayNotes Folder
+        // Browse & Add Images or Folders from Google Drive HayNotes Folder with Local-First Strategy
         const driveLibraryModal = document.getElementById('driveLibraryModal');
         document.getElementById('btnOpenDriveLibrary').addEventListener('click', async () => {
             if (!driveAccessToken) {
@@ -615,7 +627,7 @@
                     const isImg = file.mimeType.startsWith('image/');
                     const iconName = isFolder ? 'folder-open' : isImg ? 'image' : file.mimeType.includes('pdf') ? 'file-text' : 'file';
                     const buttonText = isFolder ? 'Import Setlist' : 'Add Page';
-                    const actionFn = isFolder ? `importDriveSetlistFolder('${file.id}', '${file.name.replace(/'/g, "\\'")}')` : `importDriveFile('${file.id}', '${file.name.replace(/'/g, "\\'")}', '${file.mimeType}')`;
+                    const actionFn = isFolder ? `loadSetlistFast('${file.id}', '${file.name.replace(/'/g, "\\'")}')` : `importDriveFile('${file.id}', '${file.name.replace(/'/g, "\\'")}', '${file.mimeType}')`;
 
                     item.innerHTML = `
                         <div class="flex items-center gap-3 overflow-hidden">
@@ -639,9 +651,72 @@
             }
         }
 
+        // Cache-First Setlist Loader with Cloud Timestamp Sync Check
+        async function loadSetlistFast(folderId, folderName) {
+            const localKey = `haynotes_setlist_${folderName.replace(/\s+/g, '_')}`;
+            const localDataStr = localStorage.getItem(localKey);
+
+            // 1. FAST PATH: Load instantly if stored in local cache
+            if (localDataStr) {
+                try {
+                    const localSetlist = JSON.parse(localDataStr);
+                    await renderSetlistPayload(localSetlist);
+                    driveLibraryModal.classList.add('hidden');
+
+                    // Background Check for Cloud Updates
+                    syncSetlistFromCloudInBackground(folderId, localSetlist, localKey);
+                    return;
+                } catch (e) {
+                    console.warn('Local setlist parse error, falling back to network:', e);
+                }
+            }
+
+            // 2. NETWORK PATH: Download from Google Drive if not present locally
+            await importDriveSetlistFolder(folderId, folderName);
+        }
+
+        async function renderSetlistPayload(setlistData) {
+            for (const page of setlistData.pages) {
+                await addPage(page.type, page.content, page.filename);
+                if (page.annotations && fabricCanvases[page.id]) {
+                    fabricCanvases[page.id].loadFromJSON(page.annotations, () => {
+                        fabricCanvases[page.id].renderAll();
+                    });
+                }
+            }
+        }
+
+        async function syncSetlistFromCloudInBackground(folderId, localSetlist, localKey) {
+            try {
+                const manifestQuery = `'${folderId}' in parents and name = 'setlist_manifest.json' and trashed = false`;
+                const manifestRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(manifestQuery)}&fields=files(id,name)`, {
+                    headers: { 'Authorization': `Bearer ${driveAccessToken}` }
+                });
+                const manifestData = await manifestRes.json();
+
+                if (manifestData.files && manifestData.files.length > 0) {
+                    const manifestId = manifestData.files[0].id;
+                    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${manifestId}?alt=media`, {
+                        headers: { 'Authorization': `Bearer ${driveAccessToken}` }
+                    });
+                    const cloudSetlist = await res.json();
+
+                    // Compare Timestamps / Versioning
+                    const localTime = new Date(localSetlist.updatedAt || 0).getTime();
+                    const cloudTime = new Date(cloudSetlist.updatedAt || 0).getTime();
+
+                    if (cloudTime > localTime) {
+                        localStorage.setItem(localKey, JSON.stringify(cloudSetlist));
+                        console.log('Background Sync: Updated local cache with newer cloud setlist version.');
+                    }
+                }
+            } catch (e) {
+                console.warn('Background sync check skipped:', e);
+            }
+        }
+
         async function importDriveSetlistFolder(folderId, folderName) {
             try {
-                // Check for manifest
                 const manifestQuery = `'${folderId}' in parents and name = 'setlist_manifest.json' and trashed = false`;
                 const manifestRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(manifestQuery)}&fields=files(id,name)`, {
                     headers: { 'Authorization': `Bearer ${driveAccessToken}` }
@@ -655,14 +730,12 @@
                     });
                     const setlistData = await res.json();
                     
-                    for (const page of setlistData.pages) {
-                        await addPage(page.type, page.content, page.filename);
-                        if (page.annotations && fabricCanvases[page.id]) {
-                            fabricCanvases[page.id].loadFromJSON(page.annotations, () => {
-                                fabricCanvases[page.id].renderAll();
-                            });
-                        }
-                    }
+                    await renderSetlistPayload(setlistData);
+
+                    // Update Local Storage Cache
+                    const localKey = `haynotes_setlist_${folderName.replace(/\s+/g, '_')}`;
+                    localStorage.setItem(localKey, JSON.stringify(setlistData));
+                    
                     driveLibraryModal.classList.add('hidden');
                     return;
                 }
@@ -696,7 +769,7 @@
                 });
                 const blob = await res.blob();
                 const file = new File([blob], fileName, { type: mimeType });
-                await processFile(file, true); // Direct import flag set to true
+                await processFile(file, true);
                 driveLibraryModal.classList.add('hidden');
             } catch (e) {
                 alert(`Failed to download file from Drive: ${e.message}`);
@@ -1098,10 +1171,8 @@
                 const dataUrl = await new Promise((r) => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
                 
                 if (isDirectDriveImport) {
-                    // Direct Drive import: skip cropper and prompt, keep original file name
                     await addPage('image', dataUrl, originalName);
                 } else {
-                    // Local import / camera scan: present cropper and prompt for title
                     const croppedDataUrl = await openCropper(dataUrl);
                     if (croppedDataUrl) {
                         const enteredName = prompt("Enter a name for this song / page:", originalName);
