@@ -91,7 +91,7 @@
         
         <!-- Top / App Brand with Original HayNotes Logo -->
         <div class="flex sm:flex-col items-center gap-2">
-            <div class="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-slate-800 text-blue-400 font-bold" title="HayNotes Pro">
+            <div class="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-slate-800 text-blue-400 font-bold" title="HayNotes">
                 <i data-lucide="music-4" class="w-5 h-5 text-blue-400 shrink-0"></i>
                 <span class="font-bold text-white text-base sm:hidden">HayNotes</span>
             </div>
@@ -223,7 +223,7 @@
                 <span class="flex items-center gap-1.5"><i data-lucide="arrow-up-down" class="w-4 h-4 text-amber-400"></i> Rearrange Pages</span>
                 <button id="btnClosePages" class="text-slate-400 hover:text-white p-1 rounded"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-            <div class="p-2 text-[10px] text-slate-400 text-center border-b border-slate-800 bg-slate-900/50 uppercase tracking-wide">Drag items to reorder</div>
+            <div class="p-2 text-[10px] text-slate-400 text-center border-b border-slate-800 bg-slate-900/50 uppercase tracking-wide">Drag to reorder or tap to jump</div>
             <ul id="pagesList" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-900"></ul>
         </div>
 
@@ -283,6 +283,54 @@
                 <button id="btnCancelClear" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors">Cancel</button>
                 <button id="btnConfirmClear" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-lg">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear & Start New
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISUALLY APPEALING 3-CHOICE IMPORT POPUP MODAL -->
+    <div id="importOptionModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-5">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 shrink-0">
+                    <i data-lucide="folder-input" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-white" id="importModalTitle">Import Setlist</h3>
+                    <p class="text-xs text-slate-400">Choose how you want to handle this setlist</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-300 leading-relaxed bg-slate-950 p-3 rounded-xl border border-slate-800">
+                You already have open pages in your workspace. What would you like to do with the imported setlist?
+            </p>
+
+            <div class="flex flex-col gap-2.5">
+                <!-- Option 1: Start Fresh -->
+                <button id="btnImportFresh" class="w-full p-3 bg-red-950/40 hover:bg-red-900/60 border border-red-800/80 rounded-xl text-left transition-colors flex items-center justify-between group">
+                    <div>
+                        <div class="text-xs font-bold text-red-300 group-hover:text-red-200 flex items-center gap-1.5">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> Start Fresh
+                        </div>
+                        <div class="text-[11px] text-red-400/80">Current pages will be cleared (Auto-backed up)</div>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-red-400"></i>
+                </button>
+
+                <!-- Option 2: Add / Merge -->
+                <button id="btnImportMerge" class="w-full p-3 bg-blue-950/40 hover:bg-blue-900/60 border border-blue-800/80 rounded-xl text-left transition-colors flex items-center justify-between group">
+                    <div>
+                        <div class="text-xs font-bold text-blue-300 group-hover:text-blue-200 flex items-center gap-1.5">
+                            <i data-lucide="layers" class="w-4 h-4"></i> ADD / Merge to Current Pages
+                        </div>
+                        <div class="text-[11px] text-blue-400/80">Appends setlist pages to your current workspace</div>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-blue-400"></i>
+                </button>
+
+                <!-- Option 3: Cancel -->
+                <button id="btnImportCancel" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-colors text-center mt-1">
+                    Cancel
                 </button>
             </div>
         </div>
@@ -675,11 +723,35 @@
             }
         }
 
+        // Prompts user with custom 3-choice modal (Fresh vs Merge vs Cancel)
+        function showImportOptionModal(folderName) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('importOptionModal');
+                document.getElementById('importModalTitle').textContent = `Import "${folderName}"`;
+                modal.classList.remove('hidden');
+
+                const btnFresh = document.getElementById('btnImportFresh');
+                const btnMerge = document.getElementById('btnImportMerge');
+                const btnCancel = document.getElementById('btnImportCancel');
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    btnFresh.onclick = null;
+                    btnMerge.onclick = null;
+                    btnCancel.onclick = null;
+                };
+
+                btnFresh.onclick = () => { cleanup(); resolve('fresh'); };
+                btnMerge.onclick = () => { cleanup(); resolve('merge'); };
+                btnCancel.onclick = () => { cleanup(); resolve('cancel'); };
+            });
+        }
+
         async function loadSetlistFast(folderId, folderName) {
-            // Prompt user whether to append or replace current setlist
             if (pagesData.length > 0) {
-                const shouldReplace = confirm(`Do you want to replace your current open setlist with "${folderName}"?\n\n- Click OK to START FRESH (your current setlist will be auto-backed up locally).\n- Click CANCEL to ADD these pages to your current setlist.`);
-                if (shouldReplace) {
+                const choice = await showImportOptionModal(folderName);
+                if (choice === 'cancel') return;
+                if (choice === 'fresh') {
                     performAutoBackupAndClear();
                 }
             }
@@ -1075,8 +1147,9 @@
 
             document.getElementById('paperWrapper').appendChild(pageDiv);
 
+            const pageIndex = pagesData.length - 1;
             const li = document.createElement('li');
-            li.className = 'page-thumb-container bg-slate-800 p-2 rounded border border-slate-700 flex items-center gap-3 hover:bg-slate-700';
+            li.className = 'page-thumb-container bg-slate-800 p-2 rounded border border-slate-700 flex items-center gap-3 hover:bg-slate-700 transition-colors';
             li.dataset.id = pageId;
             let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
             
@@ -1085,7 +1158,7 @@
                 <div class="w-8 h-8 rounded bg-slate-900 flex items-center justify-center shrink-0">
                     <i data-lucide="${iconStr}" class="w-4 h-4 text-blue-400"></i>
                 </div>
-                <div class="flex-1 overflow-hidden" onclick="showPage(${pagesData.length - 1})" style="cursor:pointer;">
+                <div class="flex-1 overflow-hidden" onclick="showPage(${pageIndex})" style="cursor:pointer;">
                     <div class="text-xs text-slate-200 truncate font-medium">${filename}</div>
                     <div class="text-[10px] text-slate-500 uppercase">${type}</div>
                 </div>
@@ -1267,7 +1340,6 @@
                 }
             }
 
-            // Remove all active DOM elements and fabric instances
             const copyPages = [...pagesData];
             copyPages.forEach(p => removePage(p.id));
             pagesData = [];
@@ -1289,7 +1361,7 @@
 
         document.getElementById('btnConfirmClear').addEventListener('click', () => {
             performAutoBackupAndClear();
-            clearConfirmModal.classList.add('hidden'); // Modal now reliably hides on confirm
+            clearConfirmModal.classList.add('hidden');
         });
 
         // Audio Fallbacks
