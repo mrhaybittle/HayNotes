@@ -42,13 +42,13 @@
         
         .paper-canvas { width: 100%; height: 100%; position: relative; transition: transform 0.15s ease-out; transform-origin: center center; display: flex; align-items: center; justify-content: center; }
         
-        .sheet-page { display: none; width: 100%; height: 100%; position: absolute; inset: 0; align-items: center; justify-content: center; overflow: auto; padding: 16px; padding-bottom: 80px; }
+        .sheet-page { display: none; width: 100%; height: 100%; position: absolute; inset: 0; align-items: center; justify-content: center; overflow: auto; padding: 16px; padding-bottom: 90px; }
         .sheet-page.active { display: flex; }
 
         .doc-wrapper { position: relative; display: inline-block; background: #ffffff; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); max-width: 100%; max-height: 100%; }
         .doc-wrapper img, .doc-wrapper > div.abc-osmd-container { display: block; max-width: 100%; max-height: 100%; object-fit: contain; background-color: #ffffff; }
         
-        .canvas-container { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 10; touch-action: none !important; }
+        .canvas-container { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 10; touch-action: none !important; pointer-events: auto !important; }
         .lower-canvas, .upper-canvas { width: 100% !important; height: 100% !important; touch-action: none !important; }
 
         .abcjs-highlight { fill: #2563eb !important; stroke: #1d4ed8 !important; }
@@ -323,7 +323,7 @@
     </div>
 
     <!-- Crop Modal Wrapper -->
-    <div id="cropModal" class="hidden fixed inset-0 z-50 bg-slate-900/95 flex flex-col p-4 sm:p-8 backdrop-blur-sm">
+    <div id="cropModal" class="hidden fixed inset-0 z-[70] bg-slate-900/95 flex flex-col p-4 sm:p-8 backdrop-blur-sm">
         <div class="flex-1 w-full relative bg-black rounded-xl overflow-hidden shadow-2xl flex items-center justify-center">
             <img id="cropImage" class="max-w-full max-h-full block" src="">
         </div>
@@ -1038,7 +1038,6 @@
             }
         }
 
-        // Updated Drive Connect Button - Opens Library if already verified
         document.getElementById('btnConnectDrive').addEventListener('click', async () => {
             if (driveAccessToken && await verifyToken(driveAccessToken)) {
                 setDriveConnectedUI();
@@ -2008,17 +2007,23 @@
             });
         }
 
+        function closeCropperCleanly() {
+            document.getElementById('cropModal').classList.add('hidden');
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+
         document.getElementById('btnCropConfirm').addEventListener('click', () => {
             if (!cropper) return;
             const res = cropper.getCroppedCanvas().toDataURL('image/jpeg', 0.9);
-            document.getElementById('cropModal').classList.add('hidden');
-            cropper.destroy(); cropper = null;
+            closeCropperCleanly();
             if (cropResolve) { cropResolve(res); cropResolve = null; }
         });
 
         document.getElementById('btnCropCancel').addEventListener('click', () => {
-            document.getElementById('cropModal').classList.add('hidden');
-            if (cropper) { cropper.destroy(); cropper = null; }
+            closeCropperCleanly();
             if (cropResolve) { cropResolve(null); cropResolve = null; }
         });
 
@@ -2113,7 +2118,6 @@
                     if (isDirectDriveImport) {
                         await addPage('pdf', pageDataUrl, `${originalName} (p.${i})`);
                     } else {
-                        // Attempt background OCR auto-detection per PDF page
                         const detected = await detectTitleFromImage(pageDataUrl);
                         const pageTitle = detected ? `${detected} (p.${i})` : `${suggestedDefaultTitle} (p.${i})`;
                         await addPage('pdf', pageDataUrl, pageTitle);
