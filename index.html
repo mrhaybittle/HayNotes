@@ -42,13 +42,12 @@
         
         .paper-canvas { width: 100%; height: 100%; position: relative; transition: transform 0.15s ease-out; transform-origin: center center; display: flex; align-items: center; justify-content: center; }
         
-        /* Changed align-items to flex-start to allow natural scrolling of tall images without margin clipping */
         .sheet-page { display: none; width: 100%; height: 100%; position: absolute; inset: 0; align-items: flex-start; justify-content: center; overflow: auto; padding: 16px; padding-bottom: 90px; }
         .sheet-page.active { display: flex; }
 
-        /* Removed max-height constraint and added margin: auto to handle natural document flow perfectly */
         .doc-wrapper { position: relative; display: inline-block; margin: auto; background: #ffffff; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); max-width: 100%; }
-        .doc-wrapper img, .doc-wrapper > div.abc-osmd-container { display: block; max-width: 100%; height: auto; object-fit: contain; background-color: #ffffff; }
+        /* Removed max-height and object-fit to fix annotation squashing by preserving aspect ratio strictly */
+        .doc-wrapper img, .doc-wrapper > div.abc-osmd-container { display: block; max-width: 100%; height: auto; background-color: #ffffff; }
         
         .canvas-container { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 20 !important; touch-action: none !important; pointer-events: auto !important; }
         .lower-canvas, .upper-canvas { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; touch-action: none !important; pointer-events: auto !important; }
@@ -305,7 +304,8 @@
             </div>
 
             <!-- BLACK HORIZONTAL PAGE SCRUBBER BAR -->
-            <div id="scrubberContainer" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-slate-950/95 border border-slate-800 shadow-2xl rounded-2xl p-2.5 z-30 flex-col gap-1 backdrop-blur-md">
+            <!-- Note: added opacity-15 and hover transition classes to make it nearly invisible until interacted with -->
+            <div id="scrubberContainer" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-slate-950/95 border border-slate-800 shadow-2xl rounded-2xl p-2.5 z-30 flex-col gap-1 backdrop-blur-md opacity-15 hover:opacity-100 transition-opacity duration-300">
                 
                 <!-- Floating Scrubber Tooltip Indicator -->
                 <div id="scrubberBadge" class="hidden absolute -top-9 bg-slate-900 border border-slate-700 text-white font-mono text-[11px] px-3 py-1 rounded-lg shadow-xl pointer-events-none -translate-x-1/2 whitespace-nowrap flex items-center gap-2">
@@ -1597,14 +1597,14 @@
                     canvas.isDrawingMode = true;
                     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                     canvas.freeDrawingBrush.color = activeColor;
-                    canvas.freeDrawingBrush.width = 3;
+                    canvas.freeDrawingBrush.width = 30;
                 } 
                 else if (activeTool === 'highlight') {
                     canvas.allowTouchScrolling = false;
                     canvas.isDrawingMode = true;
                     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                     canvas.freeDrawingBrush.color = hexToRgba(activeColor, 0.35);
-                    canvas.freeDrawingBrush.width = 24;
+                    canvas.freeDrawingBrush.width = 48;
                 } 
                 else if (activeTool === 'text') {
                     canvas.allowTouchScrolling = false;
@@ -1766,6 +1766,7 @@
         const scrubberBadge = document.getElementById('scrubberBadge');
         const badgePageNum = document.getElementById('badgePageNum');
         const badgeTitle = document.getElementById('badgeTitle');
+        const scrubberContainerEl = document.getElementById('scrubberContainer');
         let isScrubbing = false;
 
         function updateScrubberUI() {
@@ -1815,6 +1816,7 @@
         scrubberTrack.addEventListener('mousedown', (e) => {
             isScrubbing = true;
             scrubberHandle.classList.add('active-drag');
+            scrubberContainerEl.classList.add('!opacity-100');
             handleScrubberMove(e.clientX);
         });
 
@@ -1830,6 +1832,7 @@
                 isScrubbing = false;
                 scrubberHandle.classList.remove('active-drag');
                 scrubberBadge.classList.add('hidden');
+                scrubberContainerEl.classList.remove('!opacity-100');
                 updateScrubberUI();
             }
         });
@@ -1837,6 +1840,7 @@
         scrubberTrack.addEventListener('touchstart', (e) => {
             isScrubbing = true;
             scrubberHandle.classList.add('active-drag');
+            scrubberContainerEl.classList.add('!opacity-100');
             handleScrubberMove(e.touches[0].clientX);
         }, { passive: true });
 
@@ -1849,6 +1853,7 @@
                 isScrubbing = false;
                 scrubberHandle.classList.remove('active-drag');
                 scrubberBadge.classList.add('hidden');
+                scrubberContainerEl.classList.remove('!opacity-100');
                 updateScrubberUI();
             }
         });
