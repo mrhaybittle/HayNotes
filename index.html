@@ -89,10 +89,11 @@
     <!-- VERTICAL LEFT TOOLBAR -->
     <aside class="w-full sm:w-16 bg-slate-900 text-slate-100 shadow-xl border-b sm:border-b-0 sm:border-r border-slate-800 flex-none z-40 relative flex sm:flex-col items-center justify-between p-2 gap-2 overflow-x-auto sm:overflow-y-auto">
         
-        <!-- Top / App Brand -->
+        <!-- Top / App Brand with Original HayNotes Logo -->
         <div class="flex sm:flex-col items-center gap-2">
-            <div class="flex items-center justify-center p-2 rounded-xl bg-slate-800 text-blue-400 font-bold" title="HayNotes">
-                <i data-lucide="music-4" class="w-5 h-5"></i>
+            <div class="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-slate-800 text-blue-400 font-bold" title="HayNotes Pro">
+                <i data-lucide="music-4" class="w-5 h-5 text-blue-400 shrink-0"></i>
+                <span class="font-bold text-white text-base sm:hidden">HayNotes</span>
             </div>
             <div class="h-px w-full bg-slate-800 hidden sm:block"></div>
         </div>
@@ -188,13 +189,22 @@
     <!-- Main Workspace Area -->
     <div class="flex-1 w-full relative flex flex-col overflow-hidden bg-slate-200">
         
-        <!-- Floating Page Indicator Header Overlay -->
-        <div class="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800 text-white shadow-lg">
-            <button id="btnPrev" class="p-1 text-slate-400 hover:text-white rounded-full transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-            <span id="pageIndicator" class="text-xs font-mono min-w-[3rem] text-center text-slate-200">0 / 0</span>
-            <button id="btnNext" class="p-1 text-slate-400 hover:text-white rounded-full transition-colors"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+        <!-- Floating Page Indicator Header Overlay with Original Brand Logo -->
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-4 py-1.5 rounded-full border border-slate-800 text-white shadow-lg">
+            <div class="flex items-center gap-2 font-bold text-white text-sm mr-1">
+                <i data-lucide="music-4" class="w-4 h-4 text-blue-400 shrink-0"></i>
+                <span class="font-bold text-white text-sm">HayNotes</span>
+            </div>
 
-            <div class="h-3 w-px bg-slate-700 mx-1 hidden md:block"></div>
+            <div class="h-3.5 w-px bg-slate-700"></div>
+
+            <div class="flex items-center gap-1">
+                <button id="btnPrev" class="p-1 text-slate-400 hover:text-white rounded-full transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                <span id="pageIndicator" class="text-xs font-mono min-w-[3rem] text-center text-slate-200">0 / 0</span>
+                <button id="btnNext" class="p-1 text-slate-400 hover:text-white rounded-full transition-colors"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+            </div>
+
+            <div class="h-3.5 w-px bg-slate-700 hidden md:block"></div>
 
             <div class="items-center gap-1.5 hidden md:flex">
                 <button id="btnPlay" class="bg-blue-600 hover:bg-blue-500 text-white p-1 rounded-full transition-all disabled:opacity-40" disabled>
@@ -666,6 +676,14 @@
         }
 
         async function loadSetlistFast(folderId, folderName) {
+            // Prompt user whether to append or replace current setlist
+            if (pagesData.length > 0) {
+                const shouldReplace = confirm(`Do you want to replace your current open setlist with "${folderName}"?\n\n- Click OK to START FRESH (your current setlist will be auto-backed up locally).\n- Click CANCEL to ADD these pages to your current setlist.`);
+                if (shouldReplace) {
+                    performAutoBackupAndClear();
+                }
+            }
+
             const localKey = `haynotes_setlist_${folderName.replace(/\s+/g, '_')}`;
             const localDataStr = localStorage.getItem(localKey);
 
@@ -1226,20 +1244,8 @@
         document.getElementById('btnTogglePages').addEventListener('click', () => { document.getElementById('pagesDrawer').classList.toggle('hidden'); });
         document.getElementById('btnClosePages').addEventListener('click', () => document.getElementById('pagesDrawer').classList.add('hidden'));
 
-        // Clear Workspace with Auto-Local Backup and Confirmation Popup
-        const clearConfirmModal = document.getElementById('clearConfirmModal');
-
-        document.getElementById('btnClear').addEventListener('click', () => {
-            if (pagesData.length === 0) return;
-            clearConfirmModal.classList.remove('hidden');
-        });
-
-        document.getElementById('btnCancelClear').addEventListener('click', () => {
-            clearConfirmModal.classList.add('hidden');
-        });
-
-        document.getElementById('btnConfirmClear').addEventListener('click', () => {
-            // 1. Automatic Local Auto-Backup before clearing workspace
+        // Perform Local Auto-Backup & Clear Helper
+        function performAutoBackupAndClear() {
             if (pagesData.length > 0) {
                 const autoBackupPayload = {
                     title: `AutoBackup_${Date.now()}`,
@@ -1261,13 +1267,29 @@
                 }
             }
 
-            // 2. Perform Clear Action
-            pagesData.forEach(p => removePage(p.id));
+            // Remove all active DOM elements and fabric instances
+            const copyPages = [...pagesData];
+            copyPages.forEach(p => removePage(p.id));
             pagesData = [];
             currentPageIndex = 0;
             updatePageIndicator();
+        }
 
+        // Clear Workspace with Confirmation Modal Fix
+        const clearConfirmModal = document.getElementById('clearConfirmModal');
+
+        document.getElementById('btnClear').addEventListener('click', () => {
+            if (pagesData.length === 0) return;
+            clearConfirmModal.classList.remove('hidden');
+        });
+
+        document.getElementById('btnCancelClear').addEventListener('click', () => {
             clearConfirmModal.classList.add('hidden');
+        });
+
+        document.getElementById('btnConfirmClear').addEventListener('click', () => {
+            performAutoBackupAndClear();
+            clearConfirmModal.classList.add('hidden'); // Modal now reliably hides on confirm
         });
 
         // Audio Fallbacks
