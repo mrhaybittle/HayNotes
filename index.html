@@ -48,15 +48,10 @@
         .abcjs-highlight { fill: #2563eb !important; stroke: #1d4ed8 !important; }
         .abcjs-cursor { stroke: #dc2626; stroke-width: 2.5px; }
 
-        /* Hide Scrollbar for Top Toolbar but allow horizontal scrolling */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
         /* Custom scrollbar for main areas */
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 5px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
         .sortable-ghost { opacity: 0.4; }
         .sortable-drag { cursor: grabbing !important; }
@@ -86,114 +81,76 @@
         .cropper-point.point-ne { top: -16px !important; right: -16px !important; cursor: nesw-resize !important; }
         .cropper-point.point-nw { top: -16px !important; left: -16px !important; cursor: nwse-resize !important; }
         .cropper-point.point-se { bottom: -16px !important; right: -16px !important; cursor: nwse-resize !important; }
-        .cropper-point.point-sw { bottom: -16px !important; right: -16px !important; cursor: nesw-resize !important; }
+        .cropper-point.point-sw { bottom: -16px !important; left: -16px !important; cursor: nesw-resize !important; }
     </style>
 </head>
-<body class="h-full flex flex-col antialiased text-slate-800 bg-slate-100">
+<body class="h-full flex flex-col sm:flex-row antialiased text-slate-800 bg-slate-100">
 
-    <!-- STRICT SINGLE-ROW HEADER -->
-    <header class="w-full bg-slate-900 text-slate-100 shadow-md border-b border-slate-800 flex-none z-40 relative">
-        <div class="flex items-center justify-between gap-1 sm:gap-2 text-sm px-2 py-1.5 overflow-x-auto no-scrollbar whitespace-nowrap w-full">
-            
-            <!-- Left: Logo & Core Import -->
-            <div class="flex items-center gap-1 shrink-0">
-                <div class="flex items-center gap-1 font-bold text-white text-xs sm:text-base mr-0.5 sm:mr-1">
-                    <i data-lucide="music-4" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-400"></i>
-                    <span class="hidden sm:inline">HayNotes</span>
-                </div>
-                
-                <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors" title="Import Files">
-                    <i data-lucide="folder-plus" class="w-3.5 h-3.5 text-blue-400"></i>
-                    <span class="hidden sm:inline">Import</span>
-                    <input type="file" id="fileInput" accept=".abc,.txt,.pdf,image/*,.xml,.mxl,.musicxml" multiple class="hidden" />
-                </label>
-
-                <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors" title="Scan Document">
-                    <i data-lucide="camera" class="w-3.5 h-3.5 text-emerald-400"></i>
-                    <span class="hidden sm:inline">Scan</span>
-                    <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
-                </label>
-
-                <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors disabled:opacity-40" disabled title="Import from Google Drive HayNotes Folder">
-                    <i data-lucide="cloud-download" class="w-3.5 h-3.5 text-cyan-400"></i>
-                    <span class="hidden md:inline">Drive Library</span>
-                </button>
+    <!-- VERTICAL LEFT TOOLBAR -->
+    <aside class="w-full sm:w-16 bg-slate-900 text-slate-100 shadow-xl border-b sm:border-b-0 sm:border-r border-slate-800 flex-none z-40 relative flex sm:flex-col items-center justify-between p-2 gap-2 overflow-x-auto sm:overflow-y-auto">
+        
+        <!-- Top / App Brand -->
+        <div class="flex sm:flex-col items-center gap-2">
+            <div class="flex items-center justify-center p-2 rounded-xl bg-slate-800 text-blue-400 font-bold" title="HayNotes">
+                <i data-lucide="music-4" class="w-5 h-5"></i>
             </div>
-
-            <!-- Center: Pagination & Playback -->
-            <div class="flex items-center gap-1 shrink-0">
-                <div class="flex items-center gap-0.5 bg-slate-950/80 px-1 py-0.5 rounded-xl border border-slate-800">
-                    <button id="btnPrev" class="p-1 text-slate-400 hover:text-white rounded-lg transition-colors" title="Previous Page (Left Arrow)"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
-                    <span id="pageIndicator" class="text-xs font-mono text-slate-300 min-w-[2.2rem] text-center">0 / 0</span>
-                    <button id="btnNext" class="p-1 text-slate-400 hover:text-white rounded-lg transition-colors" title="Next Page (Right Arrow)"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
-                </div>
-
-                <div class="flex items-center gap-1.5 bg-slate-950/80 px-2 py-0.5 rounded-xl border border-slate-800 hidden md:flex">
-                    <button id="btnPlay" class="bg-blue-600 hover:bg-blue-500 text-white p-1 rounded-full transition-all disabled:opacity-40" disabled>
-                        <i id="playIcon" data-lucide="play" class="w-3 h-3 fill-current"></i>
-                    </button>
-                    <button id="btnStop" class="text-slate-400 hover:text-white p-0.5 rounded-lg disabled:opacity-30" disabled>
-                        <i data-lucide="square" class="w-3 h-3"></i>
-                    </button>
-                    <div class="h-3 w-px bg-slate-800 mx-0.5"></div>
-                    <input type="range" id="tempoSlider" min="40" max="240" value="120" class="w-14 accent-blue-500 bg-slate-800 h-1 rounded-lg cursor-pointer">
-                </div>
-            </div>
-
-            <!-- Right: Tools & Google Drive Controls -->
-            <div class="flex items-center gap-1 shrink-0">
-                
-                <!-- Google Drive Connect Button (Icon Only with Dynamic Green/Red Color) -->
-                <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 p-1.5 rounded-lg border border-slate-700 transition-colors flex items-center justify-center" title="Google Drive Disconnected - Click to connect">
-                    <i id="driveStatusIcon" data-lucide="cloud-off" class="w-3.5 h-3.5 text-red-500"></i>
-                </button>
-
-                <button id="btnSaveToDrive" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2 sm:py-1 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors disabled:opacity-40" disabled title="Save current page image to HayNotes folder">
-                    <i data-lucide="hard-drive-upload" class="w-3.5 h-3.5 text-emerald-400"></i>
-                    <span class="hidden lg:inline">Save Page</span>
-                </button>
-
-                <button id="btnSaveSetlist" class="bg-blue-600 hover:bg-blue-500 text-white p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-colors shadow-sm" title="Save setlist as a new Google Drive folder with images & metadata">
-                    <i data-lucide="folder-output" class="w-3.5 h-3.5"></i>
-                    <span class="hidden lg:inline">Save Setlist</span>
-                </button>
-
-                <!-- Zoom Controls -->
-                <div class="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 hidden sm:flex">
-                    <button id="btnZoomOut" class="p-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"><i data-lucide="minus" class="w-3 h-3"></i></button>
-                    <span id="zoomDisplay" class="text-xs font-mono text-slate-300 px-1.5 min-w-[2.2rem] text-center">100%</span>
-                    <button id="btnZoomIn" class="p-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                    <button id="btnFit" class="px-1.5 py-0.5 text-slate-300 hover:text-white hover:bg-slate-700 rounded text-xs font-medium border-l border-slate-700">Reset</button>
-                </div>
-                
-                <!-- Toggle Pencil Trigger -->
-                <button id="btnToggleDraw" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors" title="Draw & Annotate">
-                    <i data-lucide="pencil" class="w-3.5 h-3.5 text-pink-400"></i>
-                    <span class="hidden lg:inline">Draw</span>
-                </button>
-
-                <!-- Toggle Pages Drawer -->
-                <button id="btnTogglePages" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors" title="Rearrange Pages">
-                    <i data-lucide="gallery-vertical-end" class="w-3.5 h-3.5 text-amber-400"></i>
-                    <span class="hidden lg:inline">Pages</span>
-                </button>
-                
-                <!-- Fullscreen -->
-                <button id="btnFullscreen" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 sm:px-2.5 sm:py-1 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1 transition-colors" title="Toggle Fullscreen">
-                    <i id="fullscreenIcon" data-lucide="maximize" class="w-3.5 h-3.5 text-purple-400"></i>
-                </button>
-
-                <!-- Clear -->
-                <button id="btnClear" class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors" title="Clear All">
-                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                </button>
-            </div>
-            
+            <div class="h-px w-full bg-slate-800 hidden sm:block"></div>
         </div>
-    </header>
+
+        <!-- Middle Action Controls -->
+        <div class="flex sm:flex-col items-center gap-2">
+            
+            <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Import Files">
+                <i data-lucide="folder-plus" class="w-4 h-4 text-blue-400"></i>
+                <input type="file" id="fileInput" accept=".abc,.txt,.pdf,image/*,.xml,.mxl,.musicxml" multiple class="hidden" />
+            </label>
+
+            <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Scan Document">
+                <i data-lucide="camera" class="w-4 h-4 text-emerald-400"></i>
+                <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
+            </label>
+
+            <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors disabled:opacity-40" disabled title="Import from Google Drive Library">
+                <i data-lucide="cloud-download" class="w-4 h-4 text-cyan-400"></i>
+            </button>
+
+            <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 transition-colors flex items-center justify-center" title="Google Drive Disconnected - Click to connect">
+                <i id="driveStatusIcon" data-lucide="cloud-off" class="w-4 h-4 text-red-500"></i>
+            </button>
+
+            <button id="btnSaveToDrive" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors disabled:opacity-40" disabled title="Save Current Page Image">
+                <i data-lucide="hard-drive-upload" class="w-4 h-4 text-emerald-400"></i>
+            </button>
+
+            <button id="btnSaveSetlist" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-xl text-xs font-medium flex items-center justify-center transition-colors shadow-sm" title="Save Setlist to Drive Folder">
+                <i data-lucide="folder-output" class="w-4 h-4"></i>
+            </button>
+
+            <div class="h-px w-full bg-slate-800 hidden sm:block"></div>
+
+            <button id="btnToggleDraw" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Draw & Annotate">
+                <i data-lucide="pencil" class="w-4 h-4 text-pink-400"></i>
+            </button>
+
+            <button id="btnTogglePages" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Rearrange Pages">
+                <i data-lucide="gallery-vertical-end" class="w-4 h-4 text-amber-400"></i>
+            </button>
+        </div>
+
+        <!-- Bottom Controls -->
+        <div class="flex sm:flex-col items-center gap-2">
+            <button id="btnFullscreen" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Toggle Fullscreen">
+                <i id="fullscreenIcon" data-lucide="maximize" class="w-4 h-4 text-purple-400"></i>
+            </button>
+
+            <button id="btnClear" class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-xl transition-colors" title="Clear All Pages">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </aside>
 
     <!-- POPUP ANNOTATION TOOLBAR -->
-    <div id="annotationToolbar" class="fixed top-[75px] left-1/2 -translate-x-1/2 w-11/12 max-w-[680px] bg-white p-3 rounded-2xl shadow-2xl border border-slate-200 z-50 hidden flex-col sm:flex-row items-center justify-between gap-3">
+    <div id="annotationToolbar" class="fixed top-4 left-1/2 -translate-x-1/2 w-11/12 max-w-[680px] bg-white p-3 rounded-2xl shadow-2xl border border-slate-200 z-50 hidden flex-col sm:flex-row items-center justify-between gap-3">
         
         <!-- Tools Group -->
         <div class="flex items-center gap-1 sm:border-r border-slate-200 sm:pr-3 flex-wrap justify-center">
@@ -228,11 +185,30 @@
         </div>
     </div>
 
-    <!-- Main Workspace -->
-    <div class="flex-1 w-full relative flex overflow-hidden bg-slate-200">
+    <!-- Main Workspace Area -->
+    <div class="flex-1 w-full relative flex flex-col overflow-hidden bg-slate-200">
+        
+        <!-- Floating Page Indicator Header Overlay -->
+        <div class="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-800 text-white shadow-lg">
+            <button id="btnPrev" class="p-1 text-slate-400 hover:text-white rounded-full transition-colors"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <span id="pageIndicator" class="text-xs font-mono min-w-[3rem] text-center text-slate-200">0 / 0</span>
+            <button id="btnNext" class="p-1 text-slate-400 hover:text-white rounded-full transition-colors"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
 
-        <!-- Pages Manager Drawer -->
-        <div id="pagesDrawer" class="hidden absolute right-0 top-0 bottom-0 w-64 bg-slate-900 border-l border-slate-800 z-20 flex flex-col shadow-2xl transition-all">
+            <div class="h-3 w-px bg-slate-700 mx-1 hidden md:block"></div>
+
+            <div class="items-center gap-1.5 hidden md:flex">
+                <button id="btnPlay" class="bg-blue-600 hover:bg-blue-500 text-white p-1 rounded-full transition-all disabled:opacity-40" disabled>
+                    <i id="playIcon" data-lucide="play" class="w-3 h-3 fill-current"></i>
+                </button>
+                <button id="btnStop" class="text-slate-400 hover:text-white p-0.5 rounded-lg disabled:opacity-30" disabled>
+                    <i data-lucide="square" class="w-3 h-3"></i>
+                </button>
+                <input type="range" id="tempoSlider" min="40" max="240" value="120" class="w-14 accent-blue-500 bg-slate-800 h-1 rounded-lg cursor-pointer">
+            </div>
+        </div>
+
+        <!-- RIGHT-HAND SIDE PAGES MANAGER DRAWER -->
+        <div id="pagesDrawer" class="hidden absolute right-0 top-0 bottom-0 w-64 bg-slate-900 border-l border-slate-800 z-30 flex flex-col shadow-2xl transition-all">
             <div class="p-3 bg-slate-950 border-b border-slate-800 flex justify-between text-xs font-semibold text-slate-300">
                 <span class="flex items-center gap-1.5"><i data-lucide="arrow-up-down" class="w-4 h-4 text-amber-400"></i> Rearrange Pages</span>
                 <button id="btnClosePages" class="text-slate-400 hover:text-white p-1 rounded"><i data-lucide="x" class="w-4 h-4"></i></button>
@@ -241,8 +217,8 @@
             <ul id="pagesList" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-900"></ul>
         </div>
 
-        <!-- Document Viewer Area -->
-        <main class="flex-1 w-full h-full overflow-hidden">
+        <!-- Document Viewer Canvas (Touch Swipe Target) -->
+        <main class="flex-1 w-full h-full overflow-hidden" id="touchCanvasWrapper">
             <div id="paperWrapper" class="paper-canvas">
                 <!-- Empty State -->
                 <div id="dropZone" class="w-full max-w-2xl border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center p-12 text-center bg-white hover:bg-blue-50/50 transition-colors cursor-pointer shadow-sm">
@@ -309,7 +285,7 @@
         // ---------------------------------------------------------
         const DRIVE_CLIENT_ID = '1086834950344-qce6cl6d57ufu1hpkq1pq9th5quo19kg.apps.googleusercontent.com';
         const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file';
-        const ROOT_HAYNOTES_FOLDER_ID = '1oI8WlCZVE4rAui3Anw9YPzc4sPD6pA8W'; // LOCKED TO PARENT HAYNOTES FOLDER
+        const ROOT_HAYNOTES_FOLDER_ID = '1oI8WlCZVE4rAui3Anw9YPzc4sPD6pA8W';
 
         let tokenClient = null;
         let driveAccessToken = localStorage.getItem('haynotes_drive_token') || null;
@@ -320,7 +296,7 @@
             
             btn.title = "Google Drive Connected";
             icon.setAttribute('data-lucide', 'cloud');
-            icon.className = "w-3.5 h-3.5 text-emerald-400";
+            icon.className = "w-4 h-4 text-emerald-400";
             lucide.createIcons();
 
             document.getElementById('btnSaveToDrive').disabled = false;
@@ -333,7 +309,7 @@
 
             btn.title = "Google Drive Disconnected - Click to connect";
             icon.setAttribute('data-lucide', 'cloud-off');
-            icon.className = "w-3.5 h-3.5 text-red-500";
+            icon.className = "w-4 h-4 text-red-500";
             lucide.createIcons();
 
             document.getElementById('btnSaveToDrive').disabled = true;
@@ -365,7 +341,6 @@
                 },
             });
 
-            // Silent Auto-Connect Attempt on Load
             if (driveAccessToken) {
                 const isValid = await verifyToken(driveAccessToken);
                 if (isValid) {
@@ -394,7 +369,6 @@
             }
         });
 
-        // Helper to Create a New Subfolder inside parent HayNotes folder
         async function createDriveFolder(folderName, parentFolderId = ROOT_HAYNOTES_FOLDER_ID) {
             const metadata = {
                 name: folderName,
@@ -417,7 +391,6 @@
             return data.id;
         }
 
-        // Safe Image Blob Exporter
         async function getPageAsBlob(pageMeta) {
             return new Promise((resolve) => {
                 const wrapper = document.getElementById(`wrap-${pageMeta.id}`);
@@ -458,7 +431,6 @@
             });
         }
 
-        // Upload a single file to specified parent folder
         async function uploadFileToDrive(fileName, blob, mimeType, parentFolderId) {
             const metadata = {
                 name: fileName,
@@ -481,7 +453,6 @@
             return await response.json();
         }
 
-        // Upload single page image directly into root HayNotes folder
         document.getElementById('btnSaveToDrive').addEventListener('click', async () => {
             if (!driveAccessToken) {
                 alert('Please connect to Google Drive first.');
@@ -510,7 +481,6 @@
             }
         });
 
-        // Save Setlist Dual-Storage (Local + Google Drive Subfolder) with Timestamps
         document.getElementById('btnSaveSetlist').addEventListener('click', async () => {
             if (pagesData.length === 0) {
                 alert('Your setlist is currently empty.');
@@ -546,7 +516,6 @@
                 }))
             };
 
-            // 1. Instant Save to Local Cache for Fast Reads
             try {
                 localStorage.setItem(localKey, JSON.stringify(setlistPayload));
                 localStorage.setItem('haynotes_last_setlist', JSON.stringify(setlistPayload));
@@ -554,7 +523,6 @@
                 console.warn('LocalStorage save failed/exceeded size limit:', e);
             }
 
-            // 2. Non-blocking Cloud Save to Google Drive inside Subfolder
             if (driveAccessToken) {
                 try {
                     const setlistFolderId = await createDriveFolder(setlistName, ROOT_HAYNOTES_FOLDER_ID);
@@ -582,7 +550,6 @@
             }
         });
 
-        // Browse & Add Images or Folders from Google Drive HayNotes Folder with Local-First Strategy
         const driveLibraryModal = document.getElementById('driveLibraryModal');
         document.getElementById('btnOpenDriveLibrary').addEventListener('click', async () => {
             if (!driveAccessToken) {
@@ -648,19 +615,15 @@
             }
         }
 
-        // Cache-First Setlist Loader with Cloud Timestamp Sync Check
         async function loadSetlistFast(folderId, folderName) {
             const localKey = `haynotes_setlist_${folderName.replace(/\s+/g, '_')}`;
             const localDataStr = localStorage.getItem(localKey);
 
-            // 1. FAST PATH: Load instantly if stored in local cache
             if (localDataStr) {
                 try {
                     const localSetlist = JSON.parse(localDataStr);
                     await renderSetlistPayload(localSetlist);
                     driveLibraryModal.classList.add('hidden');
-
-                    // Background Check for Cloud Updates
                     syncSetlistFromCloudInBackground(folderId, localSetlist, localKey);
                     return;
                 } catch (e) {
@@ -668,7 +631,6 @@
                 }
             }
 
-            // 2. NETWORK PATH: Download from Google Drive if not present locally
             await importDriveSetlistFolder(folderId, folderName);
         }
 
@@ -698,7 +660,6 @@
                     });
                     const cloudSetlist = await res.json();
 
-                    // Compare Timestamps / Versioning
                     const localTime = new Date(localSetlist.updatedAt || 0).getTime();
                     const cloudTime = new Date(cloudSetlist.updatedAt || 0).getTime();
 
@@ -729,7 +690,6 @@
                     
                     await renderSetlistPayload(setlistData);
 
-                    // Update Local Storage Cache
                     const localKey = `haynotes_setlist_${folderName.replace(/\s+/g, '_')}`;
                     localStorage.setItem(localKey, JSON.stringify(setlistData));
                     
@@ -737,7 +697,6 @@
                     return;
                 }
 
-                // Fallback: fetch images in the folder directly
                 const filesQuery = `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`;
                 const filesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(filesQuery)}&fields=files(id,name,mimeType)&orderBy=name`, {
                     headers: { 'Authorization': `Bearer ${driveAccessToken}` }
@@ -773,9 +732,7 @@
             }
         }
 
-
         // Core App Globals
-        let currentScale = 1.0;
         let pagesData = [];
         let currentPageIndex = 0;
         let leftArrowTimer; let leftArrowPressed = false;
@@ -950,7 +907,7 @@
             }
         }
 
-        // Core Page Logic
+        // Core Page Navigation Logic
         function generateId() { return 'page-' + Math.random().toString(36).substr(2, 9); }
 
         function updatePageIndicator() {
@@ -982,6 +939,38 @@
         document.getElementById('btnNext').addEventListener('click', () => showPage(currentPageIndex + 1));
         document.getElementById('btnPrev').addEventListener('click', () => showPage(currentPageIndex - 1));
 
+        // Touch Swipe Gestures (Left = Next Page, Right = Previous Page in Navigate Mode)
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const touchWrapper = document.getElementById('touchCanvasWrapper');
+
+        touchWrapper.addEventListener('touchstart', (e) => {
+            if (activeTool !== 'navigate') return;
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        touchWrapper.addEventListener('touchend', (e) => {
+            if (activeTool !== 'navigate' || pagesData.length === 0) return;
+            const touchEndX = e.changedTouches[0].screenX;
+            const touchEndY = e.changedTouches[0].screenY;
+
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            // Horizontal Swipe threshold check (diffX > 50px & horizontal > vertical movement)
+            if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX < 0) {
+                    // Swiped Left -> Go Next Page
+                    showPage(currentPageIndex + 1);
+                } else {
+                    // Swiped Right -> Go Previous Page
+                    showPage(currentPageIndex - 1);
+                }
+            }
+        }, { passive: true });
+
+        // Keyboard Shortcut Navigation
         window.addEventListener('keydown', (e) => {
             const activeCanvas = fabricCanvases[pagesData[currentPageIndex]?.id];
             const isEditingCanvasText = activeCanvas && activeCanvas.getActiveObject()?.isEditing;
@@ -1186,16 +1175,7 @@
         window.addEventListener('drop', async (e) => { e.preventDefault(); if (e.dataTransfer.files.length) for(let f of e.dataTransfer.files) await processFile(f); });
         document.getElementById('dropZone').addEventListener('click', () => document.getElementById('fileInput').click());
 
-        // Zoom & Drawers
-        function updateZoom() {
-            document.getElementById('paperWrapper').style.transform = `scale(${currentScale})`;
-            document.getElementById('zoomDisplay').textContent = `${Math.round(currentScale * 100)}%`;
-        }
-        document.getElementById('btnZoomIn').addEventListener('click', () => { if (currentScale < 2.5) { currentScale += 0.1; updateZoom(); }});
-        document.getElementById('btnZoomOut').addEventListener('click', () => { if (currentScale > 0.4) { currentScale -= 0.1; updateZoom(); }});
-        document.getElementById('btnFit').addEventListener('click', () => { currentScale = 1.0; updateZoom(); });
-        document.getElementById('btnClear').addEventListener('click', () => { pagesData.forEach(p => removePage(p.id)); });
-
+        // Drawers Toggle Controls
         document.getElementById('btnTogglePages').addEventListener('click', () => { document.getElementById('pagesDrawer').classList.toggle('hidden'); });
         document.getElementById('btnClosePages').addEventListener('click', () => document.getElementById('pagesDrawer').classList.add('hidden'));
 
