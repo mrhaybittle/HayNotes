@@ -32,6 +32,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- PeerJS (WebRTC Band Leader Local Sync) -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <!-- Tesseract.js (Client-Side OCR for Title Auto-Detection) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <!-- Google Identity Services -->
     <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleDrive()"></script>
 
@@ -52,44 +54,22 @@
         .abcjs-highlight { fill: #2563eb !important; stroke: #1d4ed8 !important; }
         .abcjs-cursor { stroke: #dc2626; stroke-width: 2.5px; }
 
-        /* Custom scrollbar for main areas */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 
-        /* Strict Drag-and-Drop Handle Styles */
-        .drag-handle {
-            cursor: grab;
-            transition: color 0.15s ease, transform 0.15s ease;
-        }
-        .drag-handle:active {
-            cursor: grabbing;
-            color: #3b82f6 !important;
-            transform: scale(1.25);
-        }
+        .drag-handle { cursor: grab; transition: color 0.15s ease, transform 0.15s ease; }
+        .drag-handle:active { cursor: grabbing; color: #3b82f6 !important; transform: scale(1.25); }
         .sortable-ghost { opacity: 0.3; }
-        .sortable-chosen {
-            border-color: #3b82f6 !important;
-            background-color: #1e293b !important;
-        }
-        .sortable-drag {
-            cursor: grabbing !important;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
-            border-color: #3b82f6 !important;
-        }
+        .sortable-chosen { border-color: #3b82f6 !important; background-color: #1e293b !important; }
+        .sortable-drag { cursor: grabbing !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important; border-color: #3b82f6 !important; }
 
-        .page-thumb-container {
-            user-select: none;
-            touch-action: manipulation;
-        }
+        .page-thumb-container { user-select: none; touch-action: manipulation; }
 
         .tool-btn.active { background-color: #3b82f6; color: white; border-color: #2563eb; }
         .color-btn.active { transform: scale(1.3); outline: 2px solid #3b82f6; outline-offset: 2px; }
 
-        /* Scrubber Handle Enlarge & Red Styling */
-        .scrubber-handle {
-            transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease;
-        }
+        .scrubber-handle { transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s ease; }
         .scrubber-handle:active, .scrubber-handle.active-drag {
             transform: scale(4) !important;
             background-color: #ef4444 !important;
@@ -100,7 +80,6 @@
         .btn-delete-page { transition: color 0.15s ease, transform 0.15s ease; }
         .btn-delete-page.deleting { color: #ef4444 !important; transform: scale(1.25); }
 
-        /* Cropper Handles */
         .cropper-view-box { outline: 3px solid #3b82f6 !important; outline-color: rgba(59, 130, 246, 0.95) !important; }
         .cropper-line { background-color: #3b82f6 !important; opacity: 0.7 !important; }
         .cropper-line.line-e, .cropper-line.line-w { width: 12px !important; cursor: ew-resize !important; }
@@ -170,18 +149,15 @@
 
             <div class="h-px w-full bg-slate-800 hidden sm:block"></div>
 
-            <!-- Ensemble Tuner -->
             <button id="btnOpenTuner" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Ensemble & Guitar Tuner">
                 <i data-lucide="music-2" class="w-4 h-4 text-teal-400"></i>
             </button>
 
-            <!-- Band Leader Local Sync -->
             <button id="btnOpenSync" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors relative" title="Band Leader Sync (WebRTC)">
                 <i data-lucide="radio" class="w-4 h-4 text-indigo-400"></i>
                 <span id="syncBadgeDot" class="hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-900"></span>
             </button>
 
-            <!-- Screen Wake Lock -->
             <button id="btnWakeLock" class="bg-slate-800 hover:bg-slate-700 text-slate-400 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Screen Wake Lock (Keep Screen Awake)">
                 <i id="wakeLockIcon" data-lucide="sun-dim" class="w-4 h-4"></i>
             </button>
@@ -326,10 +302,8 @@
                 </div>
             </div>
 
-            <!-- BLACK HORIZONTAL PAGE SCRUBBER BAR WITH LIVE SONG TITLE DISPLAY -->
+            <!-- BLACK HORIZONTAL PAGE SCRUBBER BAR -->
             <div id="scrubberContainer" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-slate-950/95 border border-slate-800 shadow-2xl rounded-2xl p-2.5 z-30 flex-col gap-1 backdrop-blur-md">
-                
-                <!-- Floating Scrubber Tooltip Indicator -->
                 <div id="scrubberBadge" class="hidden absolute -top-9 bg-slate-900 border border-slate-700 text-white font-mono text-[11px] px-3 py-1 rounded-lg shadow-xl pointer-events-none -translate-x-1/2 whitespace-nowrap flex items-center gap-2">
                     <span id="badgePageNum" class="text-blue-400 font-bold">0 / 0</span>
                     <span class="text-slate-600">|</span>
@@ -368,7 +342,7 @@
         </div>
     </div>
 
-    <!-- SCAN & IMPORT POSITION + NAMING MODAL WITH CLEAR BUTTON -->
+    <!-- SCAN & IMPORT POSITION + NAMING MODAL WITH OCR AUTO-DETECTION -->
     <div id="scanInsertModal" class="hidden fixed inset-0 z-[60] bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
             <div class="flex items-center gap-3">
@@ -377,14 +351,19 @@
                 </div>
                 <div>
                     <h3 class="font-bold text-lg text-white">Add Page to Setlist</h3>
-                    <p class="text-xs text-slate-400">Name page and choose position</p>
+                    <p class="text-xs text-slate-400">Title auto-detecting via OCR...</p>
                 </div>
             </div>
 
             <div class="flex flex-col gap-1.5">
-                <label class="text-xs font-semibold text-slate-400">Page / Song Title:</label>
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-semibold text-slate-400">Page / Song Title:</label>
+                    <span id="ocrStatusBadge" class="text-[10px] font-mono text-cyan-400 hidden flex items-center gap-1">
+                        <i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> Reading title...
+                    </span>
+                </div>
                 <div class="flex items-center gap-2">
-                    <input type="text" id="inputScanPageTitle" placeholder="Enter page title..." class="flex-1 bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500">
+                    <input type="text" id="inputScanPageTitle" placeholder="Detecting title..." class="flex-1 bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500">
                     <button id="btnClearScanTitle" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-colors shrink-0 flex items-center gap-1" title="Clear text">
                         <i data-lucide="x-circle" class="w-4 h-4 text-rose-400"></i> Clear
                     </button>
@@ -397,7 +376,7 @@
                         <div class="text-xs font-bold text-emerald-300 group-hover:text-emerald-200 flex items-center gap-1.5">
                             <i data-lucide="between-horizontal-start" class="w-4 h-4"></i> INSERT at Current Position
                         </div>
-                        <div class="text-[11px] text-emerald-400/80" id="descInsertCurrent">Inserts right after page 1</div>
+                        <div class="text-[11px] text-emerald-400/80" id="descInsertCurrent">Inserts right after current page</div>
                     </div>
                     <i data-lucide="chevron-right" class="w-4 h-4 text-emerald-400"></i>
                 </button>
@@ -595,11 +574,57 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         lucide.createIcons();
 
-        // Global Last Used Page Name Tracking
         let lastUsedPageTitle = "Page 1";
 
         // ---------------------------------------------------------
-        // 1. INDEXEDDB LOCAL STORAGE MANAGER
+        // FAST TOP-REGION CROP OCR FOR TITLE DETECTION
+        // ---------------------------------------------------------
+        async function detectTitleFromImage(dataUrl) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = async () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Crop top 18% of sheet music (title location)
+                        const cropHeight = Math.floor(img.height * 0.18);
+                        canvas.width = img.width;
+                        canvas.height = cropHeight;
+
+                        ctx.drawImage(img, 0, 0, img.width, cropHeight, 0, 0, img.width, cropHeight);
+                        const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+                        // Run Tesseract OCR in background
+                        const worker = await Tesseract.createWorker('eng');
+                        const ret = await worker.recognize(croppedDataUrl);
+                        await worker.terminate();
+
+                        const lines = ret.data.text.split('\n')
+                            .map(l => l.trim())
+                            .filter(l => l.length > 2 && !/^(page|sheet|score|\d+|www)/i.test(l));
+
+                        if (lines.length > 0) {
+                            // Take largest/first meaningful text line
+                            const detected = lines[0].replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
+                            if (detected.length >= 2) {
+                                resolve(detected);
+                                return;
+                            }
+                        }
+                        resolve(null);
+                    } catch (e) {
+                        console.warn('OCR Auto-title detection error:', e);
+                        resolve(null);
+                    }
+                };
+                img.onerror = () => resolve(null);
+                img.src = dataUrl;
+            });
+        }
+
+        // ---------------------------------------------------------
+        // INDEXEDDB LOCAL STORAGE MANAGER
         // ---------------------------------------------------------
         const DB_NAME = 'HayNotesDB';
         const DB_VERSION = 1;
@@ -651,7 +676,7 @@
         }
 
         // ---------------------------------------------------------
-        // 2. SCREEN WAKE LOCK API INTEGRATION
+        // SCREEN WAKE LOCK
         // ---------------------------------------------------------
         let wakeLock = null;
         let isWakeLockActive = false;
@@ -708,7 +733,7 @@
         });
 
         // ---------------------------------------------------------
-        // 3. EXPORT SETLIST AS MERGED PDF (jsPDF)
+        // EXPORT MERGED PDF (jsPDF)
         // ---------------------------------------------------------
         document.getElementById('btnExportPDF').addEventListener('click', async () => {
             if (pagesData.length === 0) {
@@ -759,7 +784,7 @@
         });
 
         // ---------------------------------------------------------
-        // 4. WEB AUDIO INSTRUMENT TUNER
+        // WEB AUDIO INSTRUMENT TUNER
         // ---------------------------------------------------------
         let audioCtx = null;
         let tunerOsc = null;
@@ -814,7 +839,7 @@
         });
 
         // ---------------------------------------------------------
-        // 5. BAND LEADER P2P LOCAL SYNC
+        // BAND LEADER P2P LOCAL SYNC
         // ---------------------------------------------------------
         let peer = null;
         let isLeaderHost = false;
@@ -920,7 +945,7 @@
         }
 
         // ---------------------------------------------------------
-        // 6. MUSICAL NOTATION STAMPS & NAVIGATION JUMP LINKS
+        // MUSICAL NOTATION STAMPS & NAVIGATION JUMP LINKS
         // ---------------------------------------------------------
         let activeStampSymbol = null;
         let activeStampIsLink = false;
@@ -944,7 +969,7 @@
         });
 
         // ---------------------------------------------------------
-        // 7. AUTO-TRIM WHITESPACE EDGE DETECTION
+        // AUTO-TRIM WHITESPACE EDGE DETECTION
         // ---------------------------------------------------------
         function calculateAutoTrimBounds(imageElement) {
             const canvas = document.createElement('canvas');
@@ -1886,7 +1911,6 @@
         async function addPage(type, content, filename = "Page", insertIndex = null) {
             const pageId = generateId();
             
-            // Update last used title tracking
             if (filename) lastUsedPageTitle = filename;
 
             const pageObj = { id: pageId, type: type, content: content, filename: filename };
@@ -2054,16 +2078,16 @@
             if (cropResolve) { cropResolve(null); cropResolve = null; }
         });
 
-        // Prompt for Insertion Position + Title Naming Modal
-        function showScanInsertPositionModal(defaultTitle) {
+        // Prompt for Insertion Position + Title Naming Modal with OCR Auto-Detection
+        function showScanInsertPositionModal(dataUrlForOcr, defaultFallbackTitle) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('scanInsertModal');
                 const inputTitle = document.getElementById('inputScanPageTitle');
                 const btnClearTitle = document.getElementById('btnClearScanTitle');
+                const ocrBadge = document.getElementById('ocrStatusBadge');
+
+                inputTitle.value = defaultFallbackTitle;
                 
-                inputTitle.value = defaultTitle;
-                
-                // Clear button logic
                 btnClearTitle.onclick = () => {
                     inputTitle.value = '';
                     inputTitle.focus();
@@ -2075,12 +2099,24 @@
 
                 modal.classList.remove('hidden');
 
+                // Trigger Background OCR Auto-detection for title
+                if (dataUrlForOcr) {
+                    ocrBadge.classList.remove('hidden');
+                    detectTitleFromImage(dataUrlForOcr).then((detectedTitle) => {
+                        ocrBadge.classList.add('hidden');
+                        if (detectedTitle) {
+                            inputTitle.value = detectedTitle;
+                        }
+                    });
+                }
+
                 const btnInsert = document.getElementById('btnInsertCurrentPos');
                 const btnAppend = document.getElementById('btnAppendEndPos');
                 const btnCancel = document.getElementById('btnCancelScanInsert');
 
                 const cleanup = () => {
                     modal.classList.add('hidden');
+                    ocrBadge.classList.add('hidden');
                     btnInsert.onclick = null;
                     btnAppend.onclick = null;
                     btnCancel.onclick = null;
@@ -2088,13 +2124,13 @@
                 };
 
                 btnInsert.onclick = () => {
-                    const finalTitle = inputTitle.value.trim() || defaultTitle;
+                    const finalTitle = inputTitle.value.trim() || defaultFallbackTitle;
                     cleanup();
                     resolve({ position: 'insert', title: finalTitle });
                 };
 
                 btnAppend.onclick = () => {
-                    const finalTitle = inputTitle.value.trim() || defaultTitle;
+                    const finalTitle = inputTitle.value.trim() || defaultFallbackTitle;
                     cleanup();
                     resolve({ position: 'append', title: finalTitle });
                 };
@@ -2140,9 +2176,8 @@
                 } else {
                     const croppedDataUrl = await openCropper(dataUrl);
                     if (croppedDataUrl) {
-                        // Interactive Modal Popup for position and naming if workspace has pages
                         if (pagesData.length > 0) {
-                            const choice = await showScanInsertPositionModal(suggestedDefaultTitle);
+                            const choice = await showScanInsertPositionModal(croppedDataUrl, suggestedDefaultTitle);
                             if (choice) {
                                 const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
                                 await addPage('image', croppedDataUrl, choice.title, targetIdx);
