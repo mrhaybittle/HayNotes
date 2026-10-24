@@ -57,8 +57,8 @@
         }
 
         /* ==========================================================
-           TRANSPARENT SCREEN CUTOUT (Aligned over the image display)
-           ========================================================== */
+            TRANSPARENT SCREEN CUTOUT (Aligned over the image display)
+            ========================================================== */
         #screen-area {
             position: absolute;
             top: 7.0%;
@@ -178,8 +178,8 @@
         }
 
         /* ==========================================================
-           TRANSPARENT HITBOX OVERLAYS OVER KEYBOARD & TRACKPAD
-           ========================================================== */
+            TRANSPARENT HITBOX OVERLAYS OVER KEYBOARD & TRACKPAD
+            ========================================================== */
         #keyboard-hitbox {
             position: absolute;
             top: 55.4%;
@@ -725,7 +725,7 @@
                 if (k === '←') cx -= 4;
                 if (k === '→') cx += 4;
                 if (k === '↑') cy -= 4;
-                if (k === '↓') cy -= 4;
+                if (k === '↓') cy += 4; // Fixed to increment correctly
                 if (k === 'Enter') ctx.fillStyle = '#000', ctx.fillRect(cx, cy, 3, 3);
                 draw();
             };
