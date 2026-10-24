@@ -1,7 +1,7 @@
 {
   "name": "Panes XP",
   "short_name": "Panes XP",
-  "start_url": "./index.html",
+  "start_url": "./haymini.html",
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#000000",
