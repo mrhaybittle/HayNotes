@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- Fullscreen Standalone App Configuration (No Browser Chrome / Borders) -->
+    <!-- Fullscreen Standalone App Configuration -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Panes XP">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
 
-    <title>Panes XP Foldable Laptop</title>
+    <title>Panes XP</title>
 
     <style>
         * {
@@ -26,127 +26,72 @@
         html, body {
             width: 100vw;
             height: 100dvh;
+            margin: 0;
+            padding: 0;
             overflow: hidden;
             background-color: #000;
-            font-family: Tahoma, 'MS Sans Serif', monospace;
             touch-action: none;
+            font-family: monospace;
         }
 
-        /* 100% Phone Screen Shell */
-        #fold-chassis {
+        /* 100% Edge-to-Edge Container */
+        #device-wrapper {
             position: relative;
             width: 100vw;
             height: 100dvh;
-            background: linear-gradient(135deg, #ded9c8 0%, #cac3b0 50%, #b8b19e 100%);
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
+            background: #000;
         }
 
-        /* ==========================================================
-           TOP HALF: DISPLAY (EXACTLY 50% HEIGHT)
-           ========================================================== */
-        #top-lid {
-            position: relative;
-            width: 100%;
-            height: 50%;
-            background: radial-gradient(circle at 50% 40%, #e6e2d3 0%, #cecaa5 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 2.2% 4% 1.8% 4%;
-            box-shadow: inset 0 3px 6px rgba(255,255,255,0.7), inset 0 -3px 6px rgba(0,0,0,0.25);
-            z-index: 2;
-        }
-
-        /* Molded Screen Bezel Frame */
-        #screen-bezel {
-            position: relative;
-            width: 100%;
-            flex: 1;
-            background: #111;
-            border-radius: 8px;
-            border: 4px solid #b3ad99;
-            box-shadow: inset 0 2px 8px #000, 0 1px 2px rgba(255,255,255,0.6);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Windows XP Bliss Screen Canvas */
-        #bliss-screen {
+        /* The exact laptop graphic as the background */
+        #chassis-img {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(to bottom, #106fe6 0%, #5ca7f7 35%, #8ecdfd 55%, #18600d 56%, #3a9616 75%, #46aa1a 100%);
-            z-index: 1;
-            overflow: hidden;
-        }
-
-        .cloud {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 50px;
-            filter: blur(4px);
-        }
-
-        /* Desktop Icons Layer */
-        #desktop-icons {
-            position: absolute;
-            top: 6px;
-            left: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 2;
+            object-fit: fill; /* Fills screen completely edge-to-edge with the hinge at 50% */
             pointer-events: none;
+            z-index: 1;
         }
 
-        .desktop-icon {
+        /* ==========================================================
+           TRANSPARENT SCREEN CUTOUT (Aligned over the image display)
+           ========================================================== */
+        #screen-area {
+            position: absolute;
+            top: 7.0%;
+            left: 9.8%;
+            width: 80.4%;
+            height: 38.0%;
+            z-index: 2;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            width: 48px;
-            text-align: center;
-            font-size: 8px;
-            color: #fff;
-            text-shadow: 1px 1px 2px #000;
         }
 
-        .desktop-icon svg {
-            width: 20px;
-            height: 20px;
-            margin-bottom: 2px;
-        }
-
-        /* DOS Command Prompt Window (Overlaid over Bliss) */
+        /* Black DOS Command Prompt Window */
         #xp-window {
-            position: absolute;
-            top: 5%;
-            left: 5%;
-            width: 90%;
-            height: 86%;
-            background: #000;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
             border: 2px solid #0055ea;
             border-top: none;
-            border-radius: 4px 4px 0 0;
             display: flex;
             flex-direction: column;
-            z-index: 5;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+            z-index: 2;
         }
 
         .window-header {
-            background: linear-gradient(to bottom, #0058e6 0%, #3a93ff 10%, #0054e3 100%);
+            background: linear-gradient(to bottom, #0058e6 0%, #3a93ff 15%, #0054e3 100%);
             color: #fff;
-            padding: 3px 6px;
-            font-size: 9px;
+            padding: 2px 6px;
+            font-size: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-family: Tahoma, sans-serif;
             font-weight: bold;
         }
 
@@ -155,26 +100,18 @@
             border: 1px solid #707070;
             color: #000;
             font-size: 8px;
-            width: 14px;
-            height: 12px;
-            line-height: 10px;
+            width: 13px;
+            height: 11px;
+            line-height: 8px;
             cursor: pointer;
-            margin-left: 2px;
             font-weight: bold;
-        }
-
-        .window-controls button.close-btn {
-            background: #e81123;
-            color: white;
-            border-color: #aa0000;
         }
 
         .terminal-body {
             flex: 1;
             background: #000;
             color: #00ff66;
-            padding: 6px;
-            font-family: monospace;
+            padding: 5px;
             font-size: 10px;
             line-height: 1.25;
             overflow-y: auto;
@@ -182,610 +119,379 @@
 
         .app-link {
             color: #55ffff;
-            cursor: pointer;
             text-decoration: underline;
-        }
-
-        /* Top Bezel Branding Text */
-        .lid-branding {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 10px;
-            color: #444;
-            font-weight: 500;
-            padding-top: 3px;
-            letter-spacing: 0.5px;
-        }
-        .lid-branding .brand-quote {
-            font-style: italic;
-            color: #555;
-            font-size: 9px;
-        }
-        .lid-branding .model-badge {
-            font-weight: bold;
-            color: #222;
-        }
-
-        /* ==========================================================
-           EXACT CENTER HINGE: PINNED TO 50% VERTICAL FOLD CREASE
-           ========================================================== */
-        #fold-hinge {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            height: 14px;
-            transform: translateY(-50%);
-            background: linear-gradient(to bottom, 
-                #7a7465 0%, 
-                #504b3f 25%, 
-                #2a2720 50%, 
-                #504b3f 75%, 
-                #8a8373 100%
-            );
-            box-shadow: inset 0 2px 3px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 4%;
-            z-index: 10;
-        }
-
-        .hinge-segment {
-            width: 48px;
-            height: 100%;
-            background: linear-gradient(to bottom, #d2ccba 0%, #918b7a 50%, #444037 100%);
-            border-left: 1px solid #1a1a1a;
-            border-right: 1px solid #1a1a1a;
-        }
-
-        /* ==========================================================
-           BOTTOM HALF: KEYBOARD DECK (EXACTLY 50% HEIGHT)
-           ========================================================== */
-        #bottom-deck {
-            position: relative;
-            width: 100%;
-            height: 50%;
-            background: linear-gradient(to bottom, #cfc9b6 0%, #ded9c6 40%, #c4bda9 100%);
-            display: flex;
-            flex-direction: column;
-            padding: 1.5% 3.5% 2% 3.5%;
-            justify-content: space-between;
-            box-shadow: inset 0 4px 6px rgba(0,0,0,0.25);
-            z-index: 2;
-        }
-
-        /* Keyboard Well */
-        #keyboard-well {
-            position: relative;
-            width: 100%;
-            height: 56%;
-            background: #9b9583;
-            border-radius: 5px;
-            padding: 4px;
-            box-shadow: inset 0 2px 6px rgba(0,0,0,0.6), 0 1px 1px rgba(255,255,255,0.7);
-            display: grid;
-            grid-template-rows: repeat(5, 1fr);
-            gap: 2px;
-        }
-
-        .keyboard-row {
-            display: flex;
-            gap: 2px;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* Chiclet Keys */
-        .key {
-            flex: 1;
-            background: linear-gradient(to bottom, #ffffff 0%, #ebe8df 60%, #cac5b5 100%);
-            border: 1px solid #7c7769;
-            border-radius: 3px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            font-weight: bold;
-            color: #222;
-            cursor: pointer;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-            text-shadow: 0 1px 0 rgba(255,255,255,0.6);
-            touch-action: manipulation;
-        }
-
-        .key:active, .key.pressed {
-            background: #b5b0a0;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
-            transform: translateY(1px);
-        }
-
-        .key.k-fn { color: #0066cc; }
-        .key.k-power { background: #d7e8d6; color: #1b7e1b; }
-        .key.w-12 { flex: 1.25; }
-        .key.w-15 { flex: 1.5; }
-        .key.w-17 { flex: 1.75; }
-        .key.w-20 { flex: 2; }
-        .key.w-22 { flex: 2.25; }
-        .key.w-space { flex: 5.5; }
-
-        /* Palmrest Area with Trackpad & Badges */
-        #palmrest-zone {
-            position: relative;
-            width: 100%;
-            height: 40%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 2%;
-        }
-
-        /* Left Palmrest Inscription */
-        .palm-motto {
-            font-size: 8px;
-            color: #555;
-            font-style: italic;
-            max-width: 70px;
-            line-height: 1.1;
-        }
-
-        /* Central Touchpad Area */
-        #touchpad-container {
-            width: 44%;
-            height: 95%;
-            background: #b8b29f;
-            border-radius: 4px;
-            border: 1px solid #7c7665;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.35);
-            display: flex;
-            flex-direction: column;
-            padding: 3px;
-        }
-
-        #touchpad-surface {
-            flex: 1;
-            background: #cac3b0;
-            border-radius: 2px;
-            cursor: crosshair;
-        }
-
-        #touchpad-buttons {
-            display: flex;
-            gap: 3px;
-            height: 16px;
-            margin-top: 3px;
-        }
-
-        .t-btn {
-            flex: 1;
-            background: linear-gradient(to bottom, #d8d3c2 0%, #bcb6a4 100%);
-            border: 1px solid #7c7665;
-            border-radius: 2px;
             cursor: pointer;
         }
-        .t-btn:active {
-            background: #9d9685;
-        }
 
-        /* Right Palm Badges (Panes 95 & Tiny Inside) */
-        .badge-cluster {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-
-        .panes-badge {
-            width: 32px;
-            height: 32px;
-            background: #eee;
-            border: 1px solid #888;
-            border-radius: 3px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2px;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .panes-logo-grid {
-            width: 14px;
-            height: 14px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 1px;
-            margin-bottom: 2px;
-        }
-        .p-red { background: #e03d24; }
-        .p-green { background: #61b82d; }
-        .p-blue { background: #009ce4; }
-        .p-yellow { background: #fabc09; }
-
-        .panes-text { font-size: 5px; font-weight: bold; color: #222; }
-
-        .tiny-badge {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #a8d5ff 0%, #e0c3fc 50%, #8ec5fc 100%);
-            border: 1px solid #5a8ebb;
-            border-radius: 3px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 5.5px;
-            font-weight: bold;
-            color: #083c6c;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-
-        /* Virtual Cursor inside screen */
-        #screen-cursor {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            pointer-events: none;
-            z-index: 100;
-            display: none;
-            transform: translate(0, 0);
-        }
-
-        /* Fullscreen Game Overlay Container */
-        #game-overlay {
+        /* App / Game Runner Screen */
+        #app-view {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: #000;
-            z-index: 20;
+            z-index: 10;
             display: none;
             flex-direction: column;
         }
 
-        #game-header {
+        #app-header {
             background: #222;
             color: #fff;
-            padding: 3px 8px;
-            font-size: 9px;
+            padding: 3px 6px;
+            font-size: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #444;
         }
 
-        #game-header button {
-            background: #cc0000;
-            color: white;
+        #app-header button {
+            background: #c00;
+            color: #fff;
             border: none;
             padding: 2px 6px;
-            font-size: 8px;
-            font-weight: bold;
+            font-size: 9px;
             border-radius: 2px;
             cursor: pointer;
         }
 
-        #game-canvas-area {
+        #app-content {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             background: #000;
         }
+
+        /* Virtual Mouse Pointer */
+        #screen-cursor {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+            transform: translate(0, 0);
+        }
+
+        /* ==========================================================
+           TRANSPARENT HITBOX OVERLAYS OVER KEYBOARD & TRACKPAD
+           ========================================================== */
+        #keyboard-hitbox {
+            position: absolute;
+            top: 55.4%;
+            left: 5.2%;
+            width: 82.2%;
+            height: 25.0%;
+            display: grid;
+            grid-template-rows: repeat(5, 1fr);
+            gap: 1.5px;
+            z-index: 5;
+        }
+
+        .k-row {
+            display: flex;
+            gap: 1.5px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .hit-key {
+            flex: 1;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        /* Subtle tactile flash on keypress */
+        .hit-key:active, .hit-key.pressed {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* Key Width Ratios to match the graphic */
+        .w-backspace { flex: 2.1; }
+        .w-tab { flex: 1.4; }
+        .w-caps { flex: 1.6; }
+        .w-enter { flex: 2.1; }
+        .w-shift-l { flex: 2.1; }
+        .w-shift-r { flex: 1.8; }
+        .w-space { flex: 5.8; }
+
+        /* Power Button Hitbox */
+        #power-hitbox {
+            position: absolute;
+            top: 55.6%;
+            left: 79.5%;
+            width: 7.2%;
+            height: 4.0%;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            z-index: 6;
+        }
+        #power-hitbox:active {
+            background: rgba(0, 255, 0, 0.3);
+        }
+
+        /* Trackpad Hitbox */
+        #trackpad-hitbox {
+            position: absolute;
+            top: 80.5%;
+            left: 33.5%;
+            width: 32.5%;
+            height: 14.5%;
+            background: transparent;
+            z-index: 5;
+            cursor: crosshair;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Complete Foldable Phone Shell -->
-    <div id="fold-chassis">
+    <div id="device-wrapper">
+        <!-- EXACT GRAPHIC AS BACKGROUND -->
+        <img id="chassis-img" src="laptop.jpg" alt="Panes XP Chassis">
 
-        <!-- ================= TOP HALF (SCREEN) ================= -->
-        <div id="top-lid">
-            <div id="screen-bezel">
-                <!-- XP Bliss Scene -->
-                <div id="bliss-screen">
-                    <div class="cloud" style="top: 15%; left: 10%; width: 70px; height: 18px;"></div>
-                    <div class="cloud" style="top: 25%; left: 55%; width: 100px; height: 22px;"></div>
-                    <div class="cloud" style="top: 10%; left: 75%; width: 50px; height: 14px;"></div>
-
-                    <!-- Desktop Icons -->
-                    <div id="desktop-icons">
-                        <div class="desktop-icon">
-                            <svg viewBox="0 0 24 24"><path fill="#0af" d="M4 4h16v12H4z"/><path fill="#888" d="M8 18h8v2H8z"/></svg>
-                            My Computer
-                        </div>
-                        <div class="desktop-icon">
-                            <svg viewBox="0 0 24 24"><path fill="#ccc" d="M6 6h12v14H6z"/><path fill="#888" d="M4 4h16v2H4z"/></svg>
-                            Recycle Bin
-                        </div>
+        <!-- SCREEN DISPLAY AREA -->
+        <div id="screen-area">
+            <!-- DOS Terminal Window -->
+            <div id="xp-window">
+                <div class="window-header">
+                    <span>C:\WINDOWS\system32\cmd.exe</span>
+                    <div class="window-controls">
+                        <button onclick="termReset()">_</button>
+                        <button onclick="termReset()">[]</button>
+                        <button onclick="termReset()" style="background:#e81123;color:white;">X</button>
                     </div>
-
-                    <!-- DOS CMD Window -->
-                    <div id="xp-window">
-                        <div class="window-header">
-                            <span>C:\WINDOWS\system32\cmd.exe</span>
-                            <div class="window-controls">
-                                <button onclick="windowRestart()">_</button>
-                                <button onclick="windowRestart()">[]</button>
-                                <button class="close-btn" onclick="windowRestart()">X</button>
-                            </div>
-                        </div>
-                        <div class="terminal-body" id="term-content">
-                            Microsoft Windows XP [Version 5.1.2600]<br>
-                            (C) Copyright 1985-2001 Microsoft Corp.<br><br>
-                            Device: Panes XP Handheld (Fold Edition)<br>
-                            Select Program to Launch:<br><br>
-                            [1] <span class="app-link" onclick="runApp(1)">Snake</span><br>
-                            [2] <span class="app-link" onclick="runApp(2)">Tetris</span><br>
-                            [3] <span class="app-link" onclick="runApp(3)">Pong</span><br>
-                            [4] <span class="app-link" onclick="runApp(4)">Flappy Block</span><br>
-                            [5] <span class="app-link" onclick="runApp(5)">Tic-Tac-Toe</span><br>
-                            [6] <span class="app-link" onclick="runApp(6)">Breakout</span><br>
-                            [7] <span class="app-link" onclick="runApp(7)">Calculator</span><br>
-                            [8] <span class="app-link" onclick="runApp(8)">Paint</span><br>
-                            [9] <span class="app-link" onclick="runApp(9)">Memory Match</span><br>
-                            [10] <span class="app-link" onclick="runApp(10)">Minesweeper</span><br>
-                            [11] <span class="app-link" onclick="runApp(11)">Word Guess</span><br>
-                            [12] <span class="app-link" onclick="runApp(12)">2048</span><br>
-                            [13] <span class="app-link" onclick="runApp(13)">Dice Roller</span><br><br>
-                            <span id="cli-line">C:\&gt; <span id="cmd-buffer"></span><span style="animation: blink 1s infinite">_</span></span>
-                        </div>
-                    </div>
-
-                    <!-- Running Game Canvas Overlay -->
-                    <div id="game-overlay">
-                        <div id="game-header">
-                            <span id="game-title">Running</span>
-                            <button onclick="closeApp()">Exit [Esc]</button>
-                        </div>
-                        <div id="game-canvas-area"></div>
-                    </div>
-
-                    <!-- Virtual Screen Mouse Cursor -->
-                    <svg id="screen-cursor" viewBox="0 0 24 24">
-                        <polygon points="0,0 0,18 5,13 11,20 14,18 8,11 15,11" fill="white" stroke="black" stroke-width="1.2"/>
-                    </svg>
+                </div>
+                <div class="terminal-body" id="term-text">
+                    Microsoft Windows XP [Version 5.1.2600]<br>
+                    (C) Copyright 1985-2001 Microsoft Corp.<br><br>
+                    Select Program:<br>
+                    [1] <span class="app-link" onclick="startApp(1)">Snake</span><br>
+                    [2] <span class="app-link" onclick="startApp(2)">Tetris</span><br>
+                    [3] <span class="app-link" onclick="startApp(3)">Pong</span><br>
+                    [4] <span class="app-link" onclick="startApp(4)">Flappy Block</span><br>
+                    [5] <span class="app-link" onclick="startApp(5)">Tic-Tac-Toe</span><br>
+                    [6] <span class="app-link" onclick="startApp(6)">Breakout</span><br>
+                    [7] <span class="app-link" onclick="startApp(7)">Calculator</span><br>
+                    [8] <span class="app-link" onclick="startApp(8)">Paint</span><br>
+                    [9] <span class="app-link" onclick="startApp(9)">Memory Match</span><br>
+                    [10] <span class="app-link" onclick="startApp(10)">Minesweeper</span><br>
+                    [11] <span class="app-link" onclick="startApp(11)">Word Guess</span><br>
+                    [12] <span class="app-link" onclick="startApp(12)">2048</span><br>
+                    [13] <span class="app-link" onclick="startApp(13)">Dice Roller</span><br><br>
+                    <span id="prompt-line">C:\&gt; <span id="cmd-buffer"></span><span style="animation: blink 1s infinite">_</span></span>
                 </div>
             </div>
 
-            <!-- Lid Inscriptions -->
-            <div class="lid-branding">
-                <span class="brand-quote">Good ideas go further.</span>
-                <span class="model-badge">Panes XP</span>
+            <!-- Running App / Game View -->
+            <div id="app-view">
+                <div id="app-header">
+                    <span id="app-title">Program</span>
+                    <button onclick="exitApp()">Exit [Esc]</button>
+                </div>
+                <div id="app-content"></div>
+            </div>
+
+            <!-- Virtual Mouse Cursor -->
+            <svg id="screen-cursor" viewBox="0 0 24 24">
+                <polygon points="0,0 0,18 5,13 11,20 14,18 8,11 15,11" fill="white" stroke="black" stroke-width="1.2"/>
+            </svg>
+        </div>
+
+        <!-- TRANSPARENT KEYBOARD OVERLAY (Exact Key Alignment) -->
+        <div id="keyboard-hitbox">
+            <!-- Row 1 -->
+            <div class="k-row">
+                <button class="hit-key" data-k="Esc"></button>
+                <button class="hit-key" data-k="F1"></button>
+                <button class="hit-key" data-k="F2"></button>
+                <button class="hit-key" data-k="F3"></button>
+                <button class="hit-key" data-k="F4"></button>
+                <button class="hit-key" data-k="F5"></button>
+                <button class="hit-key" data-k="F6"></button>
+                <button class="hit-key" data-k="F7"></button>
+                <button class="hit-key" data-k="F8"></button>
+                <button class="hit-key" data-k="F9"></button>
+                <button class="hit-key" data-k="F10"></button>
+                <button class="hit-key" data-k="F11"></button>
+                <button class="hit-key" data-k="F12"></button>
+            </div>
+            <!-- Row 2 -->
+            <div class="k-row">
+                <button class="hit-key" data-k="`"></button>
+                <button class="hit-key" data-k="1"></button>
+                <button class="hit-key" data-k="2"></button>
+                <button class="hit-key" data-k="3"></button>
+                <button class="hit-key" data-k="4"></button>
+                <button class="hit-key" data-k="5"></button>
+                <button class="hit-key" data-k="6"></button>
+                <button class="hit-key" data-k="7"></button>
+                <button class="hit-key" data-k="8"></button>
+                <button class="hit-key" data-k="9"></button>
+                <button class="hit-key" data-k="0"></button>
+                <button class="hit-key" data-k="-"></button>
+                <button class="hit-key" data-k="="></button>
+                <button class="hit-key w-backspace" data-k="Backspace"></button>
+            </div>
+            <!-- Row 3 -->
+            <div class="k-row">
+                <button class="hit-key w-tab" data-k="Tab"></button>
+                <button class="hit-key" data-k="q"></button>
+                <button class="hit-key" data-k="w"></button>
+                <button class="hit-key" data-k="e"></button>
+                <button class="hit-key" data-k="r"></button>
+                <button class="hit-key" data-k="t"></button>
+                <button class="hit-key" data-k="y"></button>
+                <button class="hit-key" data-k="u"></button>
+                <button class="hit-key" data-k="i"></button>
+                <button class="hit-key" data-k="o"></button>
+                <button class="hit-key" data-k="p"></button>
+                <button class="hit-key" data-k="["></button>
+                <button class="hit-key" data-k="]"></button>
+                <button class="hit-key" data-k="\\"></button>
+            </div>
+            <!-- Row 4 -->
+            <div class="k-row">
+                <button class="hit-key w-caps" data-k="Caps"></button>
+                <button class="hit-key" data-k="a"></button>
+                <button class="hit-key" data-k="s"></button>
+                <button class="hit-key" data-k="d"></button>
+                <button class="hit-key" data-k="f"></button>
+                <button class="hit-key" data-k="g"></button>
+                <button class="hit-key" data-k="h"></button>
+                <button class="hit-key" data-k="j"></button>
+                <button class="hit-key" data-k="k"></button>
+                <button class="hit-key" data-k="l"></button>
+                <button class="hit-key" data-k=";"></button>
+                <button class="hit-key" data-k="'"></button>
+                <button class="hit-key w-enter" data-k="Enter"></button>
+            </div>
+            <!-- Row 5 -->
+            <div class="k-row">
+                <button class="hit-key w-shift-l" data-k="Shift"></button>
+                <button class="hit-key" data-k="z"></button>
+                <button class="hit-key" data-k="x"></button>
+                <button class="hit-key" data-k="c"></button>
+                <button class="hit-key" data-k="v"></button>
+                <button class="hit-key" data-k="b"></button>
+                <button class="hit-key" data-k="n"></button>
+                <button class="hit-key" data-k="m"></button>
+                <button class="hit-key" data-k=","></button>
+                <button class="hit-key" data-k="."></button>
+                <button class="hit-key" data-k="/"></button>
+                <button class="hit-key w-shift-r" data-k="Shift"></button>
             </div>
         </div>
 
-        <!-- ================= EXACT 50% FOLD CREASE HINGE ================= -->
-        <div id="fold-hinge">
-            <div class="hinge-segment"></div>
-            <div class="hinge-segment"></div>
-        </div>
+        <!-- POWER BUTTON HITBOX -->
+        <button id="power-hitbox" data-k="Power"></button>
 
-        <!-- ================= BOTTOM HALF (KEYBOARD & TRACKPAD) ================= -->
-        <div id="bottom-deck">
-            <!-- Full Chicklet Keyboard Grid -->
-            <div id="keyboard-well">
-                <!-- Row 1 -->
-                <div class="keyboard-row">
-                    <button class="key" data-k="Esc">Esc</button>
-                    <button class="key" data-k="F1">F1</button>
-                    <button class="key" data-k="F2">F2</button>
-                    <button class="key" data-k="F3">F3</button>
-                    <button class="key" data-k="F4">F4</button>
-                    <button class="key" data-k="F5">F5</button>
-                    <button class="key" data-k="F6">F6</button>
-                    <button class="key" data-k="F7">F7</button>
-                    <button class="key" data-k="F8">F8</button>
-                    <button class="key" data-k="F9">F9</button>
-                    <button class="key" data-k="F10">F10</button>
-                    <button class="key" data-k="F11">F11</button>
-                    <button class="key" data-k="F12">F12</button>
-                    <button class="key k-power" data-k="Power">⏻</button>
-                </div>
-                <!-- Row 2 -->
-                <div class="keyboard-row">
-                    <button class="key" data-k="`">~</button>
-                    <button class="key" data-k="1">1</button>
-                    <button class="key" data-k="2">2</button>
-                    <button class="key" data-k="3">3</button>
-                    <button class="key" data-k="4">4</button>
-                    <button class="key" data-k="5">5</button>
-                    <button class="key" data-k="6">6</button>
-                    <button class="key" data-k="7">7</button>
-                    <button class="key" data-k="8">8</button>
-                    <button class="key" data-k="9">9</button>
-                    <button class="key" data-k="0">0</button>
-                    <button class="key" data-k="-">-</button>
-                    <button class="key" data-k="=">=</button>
-                    <button class="key w-15" data-k="Backspace">⌫</button>
-                </div>
-                <!-- Row 3 -->
-                <div class="keyboard-row">
-                    <button class="key w-12" data-k="Tab">Tab</button>
-                    <button class="key" data-k="q">Q</button>
-                    <button class="key" data-k="w">W</button>
-                    <button class="key" data-k="e">E</button>
-                    <button class="key" data-k="r">R</button>
-                    <button class="key" data-k="t">T</button>
-                    <button class="key" data-k="y">Y</button>
-                    <button class="key" data-k="u">U</button>
-                    <button class="key" data-k="i">I</button>
-                    <button class="key" data-k="o">O</button>
-                    <button class="key" data-k="p">P</button>
-                    <button class="key" data-k="[">[</button>
-                    <button class="key" data-k="]">]</button>
-                    <button class="key" data-k="\">\</button>
-                </div>
-                <!-- Row 4 -->
-                <div class="keyboard-row">
-                    <button class="key w-15" data-k="Caps">Caps</button>
-                    <button class="key" data-k="a">A</button>
-                    <button class="key" data-k="s">S</button>
-                    <button class="key" data-k="d">D</button>
-                    <button class="key" data-k="f">F</button>
-                    <button class="key" data-k="g">G</button>
-                    <button class="key" data-k="h">H</button>
-                    <button class="key" data-k="j">J</button>
-                    <button class="key" data-k="k">K</button>
-                    <button class="key" data-k="l">L</button>
-                    <button class="key" data-k=";">;</button>
-                    <button class="key" data-k="'">'</button>
-                    <button class="key w-17" data-k="Enter">↵ Enter</button>
-                </div>
-                <!-- Row 5 -->
-                <div class="keyboard-row">
-                    <button class="key w-17" data-k="Shift">Shift</button>
-                    <button class="key" data-k="z">Z</button>
-                    <button class="key" data-k="x">X</button>
-                    <button class="key" data-k="c">C</button>
-                    <button class="key" data-k="v">V</button>
-                    <button class="key" data-k="b">B</button>
-                    <button class="key" data-k="n">N</button>
-                    <button class="key" data-k="m">M</button>
-                    <button class="key w-space" data-k=" ">Space</button>
-                    <button class="key" data-k="←">←</button>
-                    <button class="key" data-k="↑">↑</button>
-                    <button class="key" data-k="↓">↓</button>
-                    <button class="key" data-k="→">→</button>
-                </div>
-            </div>
-
-            <!-- Palmrest Area: Inscription, Touchpad & Collector Badges -->
-            <div id="palmrest-zone">
-                <div class="palm-motto">
-                    Designed for what's next.
-                </div>
-
-                <div id="touchpad-container">
-                    <div id="touchpad-surface"></div>
-                    <div id="touchpad-buttons">
-                        <button class="t-btn" id="t-btn-l"></button>
-                        <button class="t-btn" id="t-btn-r"></button>
-                    </div>
-                </div>
-
-                <div class="badge-cluster">
-                    <div class="panes-badge">
-                        <div class="panes-logo-grid">
-                            <div class="p-red"></div>
-                            <div class="p-green"></div>
-                            <div class="p-blue"></div>
-                            <div class="p-yellow"></div>
-                        </div>
-                        <span class="panes-text">Panes 95</span>
-                    </div>
-
-                    <div class="tiny-badge">
-                        Tiny<br>inside
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- TRACKPAD HITBOX -->
+        <div id="trackpad-hitbox"></div>
     </div>
 
-    <script>
-        // Synthesizer Audio Engine
-        let audioCtx = null;
-        function getAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            return audioCtx;
-        }
+    <style>
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    </style>
 
-        function clickSound() {
+    <script>
+        // Audio Synthesizer
+        let audioCtx = null;
+        function playKeySound() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             try {
-                let ctx = getAudio();
-                let osc = ctx.createOscillator();
-                let gain = ctx.createGain();
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(140, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.025);
-                gain.gain.setValueAtTime(0.2, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.025);
+                osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.025);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.025);
                 osc.connect(gain);
-                gain.connect(ctx.destination);
+                gain.connect(audioCtx.destination);
                 osc.start();
-                osc.stop(ctx.currentTime + 0.025);
+                osc.stop(audioCtx.currentTime + 0.025);
             } catch(e) {}
         }
 
-        // Terminal State & Logic
-        let buffer = "";
-        let runningApp = null;
+        // Terminal Input Handling
+        let inputBuffer = "";
+        let activeApp = null;
         let appCleanup = null;
         let appKeyHandler = null;
 
-        const cmdBuf = document.getElementById('cmd-buffer');
-        const term = document.getElementById('term-content');
+        const cmdBufferEl = document.getElementById('cmd-buffer');
+        const termTextEl = document.getElementById('term-text');
 
-        function appendCmd(text) {
-            term.innerHTML += `<br>C:\\&gt; ${text}<br>`;
-            term.scrollTop = term.scrollHeight;
-        }
-
-        function handleInput(k) {
-            clickSound();
+        function handleKey(k) {
+            playKeySound();
 
             if (k === 'Esc') {
-                closeApp();
+                exitApp();
                 return;
             }
             if (k === 'Power') {
-                windowRestart();
+                termReset();
                 return;
             }
-            if (runningApp && appKeyHandler) {
+            if (activeApp && appKeyHandler) {
                 appKeyHandler(k);
                 return;
             }
 
             if (k === 'Backspace') {
-                buffer = buffer.slice(0, -1);
+                inputBuffer = inputBuffer.slice(0, -1);
             } else if (k === 'Enter') {
-                executeCmd(buffer.trim());
-                buffer = "";
+                runCommand(inputBuffer.trim());
+                inputBuffer = "";
             } else if (k.length === 1) {
-                buffer += k.toLowerCase();
+                inputBuffer += k.toLowerCase();
             }
-            cmdBuf.textContent = buffer;
+            cmdBufferEl.textContent = inputBuffer;
         }
 
-        function executeCmd(cmd) {
-            appendCmd(cmd);
-            if (cmd === '1' || cmd === 'snake') runApp(1);
-            else if (cmd === '2' || cmd === 'tetris') runApp(2);
-            else if (cmd === '3' || cmd === 'pong') runApp(3);
-            else if (cmd === '4' || cmd === 'flappy') runApp(4);
-            else if (cmd === '5' || cmd === 'tictactoe') runApp(5);
-            else if (cmd === '6' || cmd === 'breakout') runApp(6);
-            else if (cmd === '7' || cmd === 'calc') runApp(7);
-            else if (cmd === '8' || cmd === 'paint') runApp(8);
-            else if (cmd === '9' || cmd === 'memory') runApp(9);
-            else if (cmd === '10' || cmd === 'minesweeper') runApp(10);
-            else if (cmd === '11' || cmd === 'word') runApp(11);
-            else if (cmd === '12' || cmd === '2048') runApp(12);
-            else if (cmd === '13' || cmd === 'dice') runApp(13);
+        function runCommand(cmd) {
+            termTextEl.innerHTML += `<br>C:\\&gt; ${cmd}<br>`;
+            if (cmd === '1' || cmd === 'snake') startApp(1);
+            else if (cmd === '2' || cmd === 'tetris') startApp(2);
+            else if (cmd === '3' || cmd === 'pong') startApp(3);
+            else if (cmd === '4' || cmd === 'flappy') startApp(4);
+            else if (cmd === '5' || cmd === 'tictactoe') startApp(5);
+            else if (cmd === '6' || cmd === 'breakout') startApp(6);
+            else if (cmd === '7' || cmd === 'calc') startApp(7);
+            else if (cmd === '8' || cmd === 'paint') startApp(8);
+            else if (cmd === '9' || cmd === 'memory') startApp(9);
+            else if (cmd === '10' || cmd === 'minesweeper') startApp(10);
+            else if (cmd === '11' || cmd === 'word') startApp(11);
+            else if (cmd === '12' || cmd === '2048') startApp(12);
+            else if (cmd === '13' || cmd === 'dice') startApp(13);
             else if (cmd) {
-                term.innerHTML += `Bad command or file name.<br>`;
-                term.scrollTop = term.scrollHeight;
+                termTextEl.innerHTML += `Bad command or file name.<br>`;
             }
+            termTextEl.scrollTop = termTextEl.scrollHeight;
         }
 
-        // Virtual Key Click Listeners
-        document.querySelectorAll('.key').forEach(btn => {
+        function termReset() {
+            termTextEl.innerHTML += `<br>System Restarting...<br>OK.<br>`;
+            termTextEl.scrollTop = termTextEl.scrollHeight;
+        }
+
+        // Attach listeners to hitboxes
+        document.querySelectorAll('.hit-key, #power-hitbox').forEach(btn => {
             btn.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
                 btn.classList.add('pressed');
-                handleInput(btn.dataset.k);
+                handleKey(btn.dataset.k);
             });
             btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
             btn.addEventListener('pointerleave', () => btn.classList.remove('pressed'));
         });
 
-        // Physical Keyboard Support
         window.addEventListener('keydown', (e) => {
             let k = e.key;
             if (k === 'ArrowLeft') k = '←';
@@ -793,55 +499,50 @@
             else if (k === 'ArrowUp') k = '↑';
             else if (k === 'ArrowDown') k = '↓';
             else if (k === 'Escape') k = 'Esc';
-            handleInput(k);
+            handleKey(k);
         });
 
-        // App Launch Management
-        function runApp(id) {
-            closeApp();
-            runningApp = id;
-            const overlay = document.getElementById('game-overlay');
-            const title = document.getElementById('game-title');
-            const area = document.getElementById('game-canvas-area');
-            area.innerHTML = '';
-            overlay.style.display = 'flex';
+        // App Manager
+        function startApp(id) {
+            exitApp();
+            activeApp = id;
+            const view = document.getElementById('app-view');
+            const title = document.getElementById('app-title');
+            const content = document.getElementById('app-content');
+            content.innerHTML = '';
+            view.style.display = 'flex';
 
             switch(id) {
-                case 1: title.textContent = "Snake"; startSnake(area); break;
-                case 2: title.textContent = "Tetris"; startTetris(area); break;
-                case 3: title.textContent = "Pong"; startPong(area); break;
-                case 4: title.textContent = "Flappy Block"; startFlappy(area); break;
-                case 5: title.textContent = "Tic-Tac-Toe"; startTicTacToe(area); break;
-                case 6: title.textContent = "Breakout"; startBreakout(area); break;
-                case 7: title.textContent = "Calculator"; startCalc(area); break;
-                case 8: title.textContent = "Paint"; startPaint(area); break;
-                case 9: title.textContent = "Memory Match"; startMemory(area); break;
-                case 10: title.textContent = "Minesweeper"; startMines(area); break;
-                case 11: title.textContent = "Word Guess"; startWord(area); break;
-                case 12: title.textContent = "2048"; start2048(area); break;
-                case 13: title.textContent = "Dice Roller"; startDice(area); break;
+                case 1: title.textContent = "Snake"; initSnake(content); break;
+                case 2: title.textContent = "Tetris"; initTetris(content); break;
+                case 3: title.textContent = "Pong"; initPong(content); break;
+                case 4: title.textContent = "Flappy Block"; initFlappy(content); break;
+                case 5: title.textContent = "Tic-Tac-Toe"; initTicTacToe(content); break;
+                case 6: title.textContent = "Breakout"; initBreakout(content); break;
+                case 7: title.textContent = "Calculator"; initCalc(content); break;
+                case 8: title.textContent = "Paint"; initPaint(content); break;
+                case 9: title.textContent = "Memory Match"; initMemory(content); break;
+                case 10: title.textContent = "Minesweeper"; initMines(content); break;
+                case 11: title.textContent = "Word Guess"; initWord(content); break;
+                case 12: title.textContent = "2048"; init2048(content); break;
+                case 13: title.textContent = "Dice Roller"; initDice(content); break;
             }
         }
 
-        function closeApp() {
+        function exitApp() {
             if (appCleanup) appCleanup();
             appCleanup = null;
             appKeyHandler = null;
-            runningApp = null;
-            document.getElementById('game-overlay').style.display = 'none';
+            activeApp = null;
+            document.getElementById('app-view').style.display = 'none';
         }
 
-        function windowRestart() {
-            term.innerHTML += `<br>System Restarting...<br>OK.<br>`;
-            term.scrollTop = term.scrollHeight;
-        }
-
-        // ================= GAME IMPLEMENTATIONS =================
+        // ================= GAMES =================
 
         // 1. Snake
-        function startSnake(container) {
+        function initSnake(container) {
             const canvas = document.createElement('canvas');
-            canvas.width = 240; canvas.height = 160;
+            canvas.width = 240; canvas.height = 150;
             container.appendChild(canvas);
             const ctx = canvas.getContext('2d');
             let snake = [{x: 10, y: 8}];
@@ -849,23 +550,23 @@
             let dx = 1, dy = 0, score = 0;
 
             function foodGen() {
-                food = {x: Math.floor(Math.random()*24), y: Math.floor(Math.random()*16)};
+                food = {x: Math.floor(Math.random()*24), y: Math.floor(Math.random()*15)};
             }
 
             let loop = setInterval(() => {
                 let head = {x: snake[0].x + dx, y: snake[0].y + dy};
-                if (head.x < 0 || head.x >= 24 || head.y < 0 || head.y >= 16 || snake.some(s=>s.x===head.x && s.y===head.y)) {
+                if (head.x < 0 || head.x >= 24 || head.y < 0 || head.y >= 15 || snake.some(s=>s.x===head.x && s.y===head.y)) {
                     clearInterval(loop);
                     ctx.fillStyle = '#fff';
                     ctx.font = '14px monospace';
-                    ctx.fillText("GAME OVER", 80, 85);
+                    ctx.fillText("GAME OVER", 80, 80);
                     return;
                 }
                 snake.unshift(head);
                 if (head.x === food.x && head.y === food.y) { score += 10; foodGen(); }
                 else snake.pop();
 
-                ctx.fillStyle = '#000'; ctx.fillRect(0,0,240,160);
+                ctx.fillStyle = '#000'; ctx.fillRect(0,0,240,150);
                 ctx.fillStyle = '#0f0'; snake.forEach(s=>ctx.fillRect(s.x*10, s.y*10, 9, 9));
                 ctx.fillStyle = '#f00'; ctx.fillRect(food.x*10, food.y*10, 9, 9);
                 ctx.fillStyle = '#fff'; ctx.font = '10px monospace'; ctx.fillText(`Score: ${score}`, 6, 12);
@@ -881,17 +582,17 @@
         }
 
         // 2. Tetris
-        function startTetris(container) {
+        function initTetris(container) {
             const canvas = document.createElement('canvas');
-            canvas.width = 120; canvas.height = 160;
+            canvas.width = 120; canvas.height = 150;
             container.appendChild(canvas);
             const ctx = canvas.getContext('2d');
-            let board = Array(16).fill(0).map(()=>Array(10).fill(0));
+            let board = Array(15).fill(0).map(()=>Array(10).fill(0));
             let shapes = [[[1,1,1,1]], [[1,1],[1,1]], [[0,1,0],[1,1,1]]];
             let p = {x: 4, y: 0, s: shapes[0]};
 
             function collide() {
-                return p.s.some((r, dy) => r.some((v, dx) => v && (board[p.y+dy]?.[p.x+dx] !== 0 || p.x+dx < 0 || p.x+dx >= 10 || p.y+dy >= 16)));
+                return p.s.some((r, dy) => r.some((v, dx) => v && (board[p.y+dy]?.[p.x+dx] !== 0 || p.x+dx < 0 || p.x+dx >= 10 || p.y+dy >= 15)));
             }
 
             let loop = setInterval(() => {
@@ -902,7 +603,7 @@
                     p = {x: 4, y: 0, s: shapes[Math.floor(Math.random()*shapes.length)]};
                     if (collide()) clearInterval(loop);
                 }
-                ctx.fillStyle = '#000'; ctx.fillRect(0,0,120,160);
+                ctx.fillStyle = '#000'; ctx.fillRect(0,0,120,150);
                 board.forEach((r, y) => r.forEach((v, x) => { if (v) { ctx.fillStyle = '#0ff'; ctx.fillRect(x*12, y*10, 11, 9); }}));
                 ctx.fillStyle = '#ff0';
                 p.s.forEach((r, dy) => r.forEach((v, dx) => { if (v) ctx.fillRect((p.x+dx)*12, (p.y+dy)*10, 11, 9); }));
@@ -917,50 +618,48 @@
         }
 
         // 3. Pong
-        function startPong(container) {
+        function initPong(container) {
             const canvas = document.createElement('canvas');
-            canvas.width = 240; canvas.height = 160;
+            canvas.width = 240; canvas.height = 150;
             container.appendChild(canvas);
             const ctx = canvas.getContext('2d');
-            let py = 60, bx = 120, by = 80, dx = 2, dy = 2;
+            let py = 60, bx = 120, by = 75, dx = 2, dy = 2;
 
             let loop = setInterval(() => {
                 bx += dx; by += dy;
-                if (by <= 0 || by >= 155) dy *= -1;
+                if (by <= 0 || by >= 145) dy *= -1;
                 if (bx <= 10 && by >= py && by <= py + 35) dx *= -1;
                 if (bx >= 235) dx *= -1;
-                if (bx < 0) { bx = 120; by = 80; }
+                if (bx < 0) { bx = 120; by = 75; }
 
-                ctx.fillStyle = '#000'; ctx.fillRect(0,0,240,160);
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(4, py, 6, 35);
-                ctx.fillRect(bx, by, 5, 5);
+                ctx.fillStyle = '#000'; ctx.fillRect(0,0,240,150);
+                ctx.fillStyle = '#fff'; ctx.fillRect(4, py, 6, 35); ctx.fillRect(bx, by, 5, 5);
             }, 30);
 
             appKeyHandler = (k) => {
                 if (k === '↑' && py > 0) py -= 10;
-                if (k === '↓' && py < 125) py += 10;
+                if (k === '↓' && py < 115) py += 10;
             };
             appCleanup = () => clearInterval(loop);
         }
 
         // 4. Flappy Block
-        function startFlappy(container) {
+        function initFlappy(container) {
             const canvas = document.createElement('canvas');
-            canvas.width = 240; canvas.height = 160;
+            canvas.width = 240; canvas.height = 150;
             container.appendChild(canvas);
             const ctx = canvas.getContext('2d');
-            let y = 80, vy = 0, px = 240, ph = 50;
+            let y = 75, vy = 0, px = 240, ph = 45;
 
             let loop = setInterval(() => {
                 vy += 0.45; y += vy; px -= 3;
-                if (px < -20) { px = 240; ph = Math.random()*70 + 30; }
-                if (y > 155 || (px < 35 && px > 5 && (y < ph || y > ph + 45))) {
+                if (px < -20) { px = 240; ph = Math.random()*60 + 25; }
+                if (y > 145 || (px < 35 && px > 5 && (y < ph || y > ph + 45))) {
                     clearInterval(loop);
                 }
-                ctx.fillStyle = '#111'; ctx.fillRect(0,0,240,160);
+                ctx.fillStyle = '#111'; ctx.fillRect(0,0,240,150);
                 ctx.fillStyle = '#ff0'; ctx.fillRect(20, y, 10, 10);
-                ctx.fillStyle = '#0c0'; ctx.fillRect(px, 0, 18, ph); ctx.fillRect(px, ph + 45, 18, 160);
+                ctx.fillStyle = '#0c0'; ctx.fillRect(px, 0, 18, ph); ctx.fillRect(px, ph + 45, 18, 150);
             }, 30);
 
             appKeyHandler = (k) => { if (k === ' ' || k === 'Enter' || k === '↑') vy = -5; };
@@ -968,7 +667,7 @@
         }
 
         // 5. Tic-Tac-Toe
-        function startTicTacToe(container) {
+        function initTicTacToe(container) {
             container.innerHTML = `<div style="color:white;text-align:center;font-size:12px;">
                 <p>Tic-Tac-Toe</p>
                 <p style="color:#0f0;margin-top:10px;font-size:16px;">X | O | X<br>--+---+--<br>O | X | -<br>--+---+--<br>O | - | X</p>
@@ -976,22 +675,22 @@
         }
 
         // 6. Breakout
-        function startBreakout(container) {
+        function initBreakout(container) {
             const canvas = document.createElement('canvas');
-            canvas.width = 240; canvas.height = 160;
+            canvas.width = 240; canvas.height = 150;
             container.appendChild(canvas);
             const ctx = canvas.getContext('2d');
-            let rx = 100, bx = 120, by = 80, dx = 2, dy = -2;
+            let rx = 100, bx = 120, by = 75, dx = 2, dy = -2;
 
             let loop = setInterval(() => {
                 bx += dx; by += dy;
                 if (bx <= 0 || bx >= 235) dx *= -1;
                 if (by <= 0) dy *= -1;
-                if (by >= 148 && bx >= rx && bx <= rx + 40) dy *= -1;
-                if (by > 160) { bx = 120; by = 80; dy = -2; }
+                if (by >= 138 && bx >= rx && bx <= rx + 40) dy *= -1;
+                if (by > 150) { bx = 120; by = 75; dy = -2; }
 
-                ctx.fillStyle = '#000'; ctx.fillRect(0,0,240,160);
-                ctx.fillStyle = '#fff'; ctx.fillRect(rx, 152, 40, 5);
+                ctx.fillStyle = '#000'; ctx.fillRect(0,0,240,150);
+                ctx.fillStyle = '#fff'; ctx.fillRect(rx, 142, 40, 5);
                 ctx.fillStyle = '#0ff'; ctx.fillRect(bx, by, 5, 5);
             }, 30);
 
@@ -1003,20 +702,20 @@
         }
 
         // 7. Calculator
-        function startCalc(container) {
+        function initCalc(container) {
             container.innerHTML = `<div style="color:#fff;text-align:center;font-size:11px;">
                 <div style="background:#222;padding:8px;border:1px solid #666;width:150px;margin:auto;">3.14159 * 2 = 6.28318</div>
             </div>`;
         }
 
         // 8. Paint
-        function startPaint(container) {
+        function initPaint(container) {
             const canvas = document.createElement('canvas');
-            canvas.width = 240; canvas.height = 160;
+            canvas.width = 240; canvas.height = 150;
             container.appendChild(canvas);
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#fff'; ctx.fillRect(0,0,240,160);
-            let cx = 120, cy = 80;
+            ctx.fillStyle = '#fff'; ctx.fillRect(0,0,240,150);
+            let cx = 120, cy = 75;
 
             function draw() { ctx.fillStyle = '#f00'; ctx.fillRect(cx, cy, 3, 3); }
             draw();
@@ -1025,14 +724,14 @@
                 if (k === '←') cx -= 4;
                 if (k === '→') cx += 4;
                 if (k === '↑') cy -= 4;
-                if (k === '↓') cy += 4;
+                if (k === '↓') cy -= 4;
                 if (k === 'Enter') ctx.fillStyle = '#000', ctx.fillRect(cx, cy, 3, 3);
                 draw();
             };
         }
 
         // 9. Memory Match
-        function startMemory(container) {
+        function initMemory(container) {
             container.innerHTML = `<div style="color:#fff;text-align:center;font-size:11px;">
                 <p>Memory Match</p>
                 <p style="color:#0f0;margin-top:10px;">[ ♥ ] [ ♦ ] [ ♥ ] [ ♦ ]<br>Matched 2/2</p>
@@ -1040,7 +739,7 @@
         }
 
         // 10. Minesweeper
-        function startMines(container) {
+        function initMines(container) {
             container.innerHTML = `<div style="color:#fff;text-align:center;font-size:11px;">
                 <p>Minesweeper</p>
                 <p style="color:#ff0;margin-top:8px;">[ 1 ] [ * ] [ 1 ]<br>[ 1 ] [ 2 ] [ 1 ]<br>[ 0 ] [ 0 ] [ 0 ]</p>
@@ -1048,7 +747,7 @@
         }
 
         // 11. Word Guess
-        function startWord(container) {
+        function initWord(container) {
             container.innerHTML = `<div style="color:#fff;text-align:center;font-size:11px;">
                 <p>Word Guess: P A N _ S</p>
                 <p style="color:#0f0;margin-top:8px;">Solved: PANES</p>
@@ -1056,7 +755,7 @@
         }
 
         // 12. 2048
-        function start2048(container) {
+        function init2048(container) {
             container.innerHTML = `<div style="color:#fff;text-align:center;font-size:11px;">
                 <p>2048 Handheld</p>
                 <p style="color:#ff0;margin-top:8px;">[ 2 ] [ 4 ] [ 8 ]<br>[ 16 ] [ 32 ] [ 64 ]</p>
@@ -1064,37 +763,34 @@
         }
 
         // 13. Dice Roller
-        function startDice(container) {
+        function initDice(container) {
             container.innerHTML = `<div style="color:#fff;text-align:center;font-size:12px;">
                 <p>Dice Roller</p>
                 <p id="dice-val" style="font-size:32px;color:#0ff;margin:8px;">⚅ 6</p>
-                <p style="font-size:9px;color:#aaa;">Press Enter or Space</p>
+                <p style="font-size:9px;color:#aaa;">Press Enter</p>
             </div>`;
             appKeyHandler = (k) => {
-                if (k === 'Enter' || k === ' ') {
+                if (k === 'Enter') {
                     let r = Math.floor(Math.random()*6) + 1;
                     document.getElementById('dice-val').textContent = `🎲 ${r}`;
                 }
             };
         }
 
-        // Touchpad Cursor Steering inside Virtual Bezel
-        const tSurface = document.getElementById('touchpad-surface');
-        const vCursor = document.getElementById('screen-cursor');
+        // Touchpad Pointer Steering inside Screen
+        const trackpad = document.getElementById('trackpad-hitbox');
+        const cursor = document.getElementById('screen-cursor');
         let curX = 120, curY = 60;
 
-        tSurface.addEventListener('pointermove', (e) => {
-            vCursor.style.display = 'block';
+        trackpad.addEventListener('pointermove', (e) => {
+            cursor.style.display = 'block';
             curX += e.movementX * 0.9;
             curY += e.movementY * 0.9;
-            curX = Math.max(10, Math.min(260, curX));
-            curY = Math.max(10, Math.min(150, curY));
-            vCursor.style.left = curX + 'px';
-            vCursor.style.top = curY + 'px';
+            curX = Math.max(5, Math.min(235, curX));
+            curY = Math.max(5, Math.min(145, curY));
+            cursor.style.left = curX + 'px';
+            cursor.style.top = curY + 'px';
         });
-
-        document.getElementById('t-btn-l').addEventListener('click', clickSound);
-        document.getElementById('t-btn-r').addEventListener('click', clickSound);
     </script>
 </body>
 </html>
