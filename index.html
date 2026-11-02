@@ -73,6 +73,10 @@
         .scrubber-handle:active, .scrubber-handle.active-drag { transform: scale(4) !important; background-color: #ef4444 !important; box-shadow: 0 0 12px rgba(239, 68, 68, 0.8) !important; z-index: 50 !important; }
         .btn-delete-page { transition: color 0.15s ease, transform 0.15s ease; }
         .btn-delete-page.deleting { color: #ef4444 !important; transform: scale(1.25); }
+
+        /* Pedal UI Graphic Styles */
+        .pedal-pad { transition: all 0.15s ease-out; }
+        .pedal-pad.active { background-color: #ef4444 !important; border-color: #f87171 !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.9) !important; transform: scale(0.95); }
     </style>
 </head>
 <body class="h-full flex flex-col sm:flex-row antialiased text-slate-800 bg-slate-100 relative">
@@ -293,6 +297,18 @@
                 </div>
             </div>
 
+            <!-- AIRTURN PEDAL GRAPHIC INDICATOR -->
+            <div id="airturnIndicator" class="fixed bottom-6 right-6 z-50 w-24 h-14 bg-slate-900 rounded-t-xl rounded-b-md shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-slate-700 opacity-30 flex justify-between items-end p-2 transition-opacity duration-300 pointer-events-none">
+                <!-- U-Shape Cutout representation -->
+                <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-200 rounded-t-full shadow-inner border-t border-slate-700 mix-blend-overlay"></div>
+                
+                <!-- Left Pedal -->
+                <div id="ui-pedal-left" class="pedal-pad w-7 h-10 bg-slate-800 border border-slate-600 rounded flex items-center justify-center z-10"></div>
+                
+                <!-- Right Pedal -->
+                <div id="ui-pedal-right" class="pedal-pad w-7 h-10 bg-slate-800 border border-slate-600 rounded flex items-center justify-center z-10"></div>
+            </div>
+
             <!-- BLACK HORIZONTAL PAGE SCRUBBER BAR -->
             <div id="scrubberContainer" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-slate-950/95 border border-slate-800 shadow-2xl rounded-2xl p-2.5 z-30 flex-col gap-1 backdrop-blur-md opacity-15 hover:opacity-100 transition-opacity duration-300">
                 
@@ -314,7 +330,7 @@
     </div>
 
     <!-- Floating Exit Performance Mode Button -->
-    <button id="btnExitPerformance" class="hidden fixed bottom-6 right-6 z-50 bg-slate-900/90 hover:bg-slate-800 text-white pl-3 pr-4 py-3 rounded-full shadow-2xl backdrop-blur-md border border-slate-700 flex items-center gap-2 transition-transform transform hover:scale-105 active:scale-95">
+    <button id="btnExitPerformance" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 hover:bg-slate-800 text-white pl-3 pr-4 py-3 rounded-full shadow-2xl backdrop-blur-md border border-slate-700 flex items-center gap-2 transition-transform transform hover:scale-105 active:scale-95">
         <i data-lucide="stop-circle" class="w-5 h-5 text-rose-400"></i>
         <span class="text-sm font-bold">Exit Performance</span>
     </button>
@@ -1977,8 +1993,8 @@
         }
 
         document.getElementById('btnHome').addEventListener('click', () => showPage(0));
-        document.getElementById('btnNext').addEventListener('click', () => showPage(currentPageIndex + 1));
-        document.getElementById('btnPrev').addEventListener('click', () => showPage(currentPageIndex - 1));
+        document.getElementById('btnNext').addEventListener('click', () => { showPage(currentPageIndex + 1); flashPedal('right'); });
+        document.getElementById('btnPrev').addEventListener('click', () => { showPage(currentPageIndex - 1); flashPedal('left'); });
 
         // Horizontal Scrubber Logic
         const scrubberTrack = document.getElementById('scrubberTrack');
@@ -2107,10 +2123,25 @@
             const diffY = touchEndY - touchStartY;
 
             if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
-                if (diffX < 0) showPage(currentPageIndex + 1);
-                else showPage(currentPageIndex - 1);
+                if (diffX < 0) {
+                    showPage(currentPageIndex + 1);
+                    flashPedal('right');
+                } else {
+                    showPage(currentPageIndex - 1);
+                    flashPedal('left');
+                }
             }
         }, { passive: true });
+
+        // Pedal Visual Feedback Logic
+        function flashPedal(side) {
+            const pedalId = side === 'left' ? 'ui-pedal-left' : 'ui-pedal-right';
+            const pedalEl = document.getElementById(pedalId);
+            if (pedalEl) {
+                pedalEl.classList.add('active');
+                setTimeout(() => pedalEl.classList.remove('active'), 200);
+            }
+        }
 
         // Keyboard Shortcut Navigation
         window.addEventListener('keydown', (e) => {
@@ -2118,9 +2149,14 @@
             const isEditingCanvasText = activeCanvas && activeCanvas.getActiveObject()?.isEditing;
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || isEditingCanvasText) return;
 
-            if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); showPage(currentPageIndex + 1); } 
-            else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'ArrowDown') { 
+                e.preventDefault(); 
+                showPage(currentPageIndex + 1); 
+                flashPedal('right');
+            } 
+            else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') {
                 e.preventDefault();
+                flashPedal('left');
                 if (!leftArrowPressed) {
                     leftArrowPressed = true;
                     leftArrowTimer = setTimeout(() => { showPage(0); leftArrowPressed = false; }, 500);
@@ -2129,7 +2165,7 @@
         });
 
         window.addEventListener('keyup', (e) => {
-            if ((e.key === 'ArrowLeft' || e.key === 'PageUp') && leftArrowPressed) {
+            if ((e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') && leftArrowPressed) {
                 clearTimeout(leftArrowTimer);
                 showPage(currentPageIndex - 1);
                 leftArrowPressed = false;
