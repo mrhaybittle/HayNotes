@@ -84,7 +84,7 @@
     <!-- VERTICAL LEFT TOOLBAR -->
     <aside id="leftToolbar" class="w-full sm:w-16 bg-slate-900 text-slate-100 shadow-xl border-b sm:border-b-0 sm:border-r border-slate-800 flex-none z-40 relative flex sm:flex-col items-center justify-between p-2 gap-2 overflow-x-auto sm:overflow-y-auto">
         
-        <!-- Top: Logo & Home -->
+        <!-- Top: Logo, Home & Key Dropdown -->
         <div class="flex sm:flex-col items-center gap-2">
             <div class="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-slate-800 text-blue-400 font-bold" title="HayNotes">
                 <i data-lucide="music-4" class="w-5 h-5 text-blue-400 shrink-0"></i>
@@ -95,6 +95,16 @@
             <button id="btnHome" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Home (First Page)">
                 <i data-lucide="home" class="w-4 h-4 text-amber-400"></i>
             </button>
+
+            <!-- DROPDOWN SELECTION: INSTRUMENT PART / KEY -->
+            <div class="relative flex flex-col items-center" title="Select Instrument Key">
+                <select id="instrumentKeySelect" class="bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[11px] p-1.5 rounded-xl border border-slate-700 text-center cursor-pointer focus:outline-none focus:border-amber-400 transition-colors w-12 sm:w-full appearance-none">
+                    <option value="C" selected>C</option>
+                    <option value="Bb">B♭</option>
+                    <option value="Eb">E♭</option>
+                </select>
+                <div class="text-[9px] font-mono font-bold text-slate-400 pointer-events-none mt-0.5 uppercase hidden sm:block">Key</div>
+            </div>
         </div>
 
         <!-- Middle Action Controls -->
@@ -205,7 +215,7 @@
             </button>
         </div>
 
-        <!-- NEW: Stroke Width Selector Control -->
+        <!-- Stroke Width Selector Control -->
         <div id="strokeWidthControl" class="flex items-center gap-1.5 sm:border-r border-slate-200 sm:pr-3 py-1">
             <span class="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
                 <i data-lucide="minus" class="w-3.5 h-3.5"></i> Width:
@@ -264,7 +274,6 @@
             <button id="btnCloseFingering" class="text-slate-400 hover:text-white p-0.5 rounded"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
         </div>
 
-        <!-- Category 1: Piano & Standard Fingering -->
         <div>
             <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                 <span>Piano & Generic Fingerings</span>
@@ -281,7 +290,6 @@
             </div>
         </div>
 
-        <!-- Category 2: Guitar Strings, Frets & Positions -->
         <div>
             <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Guitar Strings & Frets / Positions</div>
             <div class="grid grid-cols-8 gap-1 text-center font-mono text-xs">
@@ -305,7 +313,6 @@
             </div>
         </div>
 
-        <!-- Category 3: Brass Valve Combinations -->
         <div>
             <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Brass Valve Combinations</div>
             <div class="grid grid-cols-4 gap-1 text-center font-mono text-xs">
@@ -361,7 +368,7 @@
                 <button id="btnClosePages" class="text-slate-400 hover:text-white p-1 rounded"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div class="p-2 text-[10px] text-slate-400 text-center border-b border-slate-800 bg-slate-900/50 uppercase tracking-wide">
-                Click chain icon to unlink • Drag to reorder
+                Linked parts move together • Drag to reorder
             </div>
             <ul id="pagesList" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-900"></ul>
         </div>
@@ -383,20 +390,14 @@
 
             <!-- AIRTURN PEDAL GRAPHIC INDICATOR -->
             <div id="airturnIndicator" class="fixed bottom-6 right-6 z-50 w-24 h-14 bg-slate-900 rounded-t-xl rounded-b-md shadow-[0_4px_15px_rgba(0,0,0,0.5)] border border-slate-700 opacity-30 flex justify-between items-end p-2 transition-opacity duration-300 pointer-events-none">
-                <!-- U-Shape Cutout representation -->
                 <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-8 bg-slate-200 rounded-t-full shadow-inner border-t border-slate-700 mix-blend-overlay"></div>
-                
-                <!-- Left Pedal -->
                 <div id="ui-pedal-left" class="pedal-pad w-7 h-10 bg-slate-800 border border-slate-600 rounded flex items-center justify-center z-10"></div>
-                
-                <!-- Right Pedal -->
                 <div id="ui-pedal-right" class="pedal-pad w-7 h-10 bg-slate-800 border border-slate-600 rounded flex items-center justify-center z-10"></div>
             </div>
 
             <!-- BLACK HORIZONTAL PAGE SCRUBBER BAR -->
             <div id="scrubberContainer" class="hidden absolute bottom-3 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl bg-slate-950/95 border border-slate-800 shadow-2xl rounded-2xl p-2.5 z-30 flex-col gap-1 backdrop-blur-md opacity-15 hover:opacity-100 transition-opacity duration-300">
                 
-                <!-- Floating Scrubber Tooltip Indicator -->
                 <div id="scrubberBadge" class="hidden absolute -top-9 bg-slate-900 border border-slate-700 text-white font-mono text-[11px] px-3 py-1 rounded-lg shadow-xl pointer-events-none -translate-x-1/2 whitespace-nowrap flex items-center gap-2">
                     <span id="badgePageNum" class="text-blue-400 font-bold">0 / 0</span>
                     <span class="text-slate-600">|</span>
@@ -676,6 +677,76 @@
         let lastUsedPageTitle = "Page 1";
         let activeSetlistName = "Main Setlist";
 
+        // Current Instrument Key Filter ("C", "Bb", or "Eb")
+        let selectedInstrumentKey = "C";
+
+        // ---------------------------------------------------------
+        // INSTRUMENT KEY & PART DETECTION HELPERS
+        // ---------------------------------------------------------
+        function detectInstrumentKey(filename) {
+            if (!filename) return "C";
+            if (/\(Eb\)/i.test(filename) || /\(E♭\)/i.test(filename)) return "Eb";
+            if (/\(Bb\)/i.test(filename) || /\(B♭\)/i.test(filename)) return "Bb";
+            return "C";
+        }
+
+        function extractSongRootTitle(filename) {
+            if (!filename) return "";
+            return filename
+                .replace(/\((Eb|E♭|Bb|B♭|TAB)\)/gi, '')
+                .replace(/[_\s\(-]*p\.?\s*\d+\)?$/i, '')
+                .trim();
+        }
+
+        function getActivePages() {
+            if (pagesData.length === 0) return [];
+
+            // Group by root song title
+            const songGroups = {};
+            pagesData.forEach(p => {
+                const root = extractSongRootTitle(p.filename).toLowerCase() || p.id;
+                if (!songGroups[root]) songGroups[root] = [];
+                songGroups[root].push(p);
+            });
+
+            const activeList = [];
+            pagesData.forEach(p => {
+                const root = extractSongRootTitle(p.filename).toLowerCase() || p.id;
+                const members = songGroups[root];
+                const key = detectInstrumentKey(p.filename);
+
+                const hasExplicitMatch = members.some(m => detectInstrumentKey(m.filename) === selectedInstrumentKey);
+
+                if (hasExplicitMatch) {
+                    if (key === selectedInstrumentKey) activeList.push(p);
+                } else {
+                    if (key === 'C') activeList.push(p);
+                }
+            });
+
+            return activeList;
+        }
+
+        // Instrument Dropdown Listener
+        const instrumentKeySelect = document.getElementById('instrumentKeySelect');
+        instrumentKeySelect.addEventListener('change', (e) => {
+            selectedInstrumentKey = e.target.value;
+            const activePages = getActivePages();
+            
+            if (activePages.length > 0) {
+                const currentObj = pagesData[currentPageIndex];
+                const newIdx = activePages.findIndex(p => p.id === currentObj?.id);
+                if (newIdx !== -1) {
+                    showPage(pagesData.indexOf(activePages[newIdx]), true);
+                } else {
+                    showPage(pagesData.indexOf(activePages[0]), true);
+                }
+            } else {
+                updatePageIndicator();
+            }
+            renderPagesListDrawer();
+        });
+
         // ---------------------------------------------------------
         // HEADER SONG JUMP DROPDOWN ENGINE
         // ---------------------------------------------------------
@@ -709,30 +780,36 @@
 
         function renderSongJumpList(filterText = '') {
             songJumpList.innerHTML = '';
-            if (pagesData.length === 0) {
-                songJumpList.innerHTML = `<li class="p-3 text-center text-slate-500 text-xs">No pages in setlist</li>`;
+            const activePages = getActivePages();
+
+            if (activePages.length === 0) {
+                songJumpList.innerHTML = `<li class="p-3 text-center text-slate-500 text-xs">No pages available for (${selectedInstrumentKey})</li>`;
                 return;
             }
 
-            pagesData.forEach((page, idx) => {
-                const title = page.filename || `Page ${idx + 1}`;
+            activePages.forEach((page, displayIdx) => {
+                const title = page.filename || `Page ${displayIdx + 1}`;
                 if (filterText && !title.toLowerCase().includes(filterText)) return;
 
-                const isCurrent = idx === currentPageIndex;
+                const globalIdx = pagesData.findIndex(p => p.id === page.id);
+                const isCurrent = globalIdx === currentPageIndex;
                 const isLinked = isPageLinkedToParent(page);
+                const key = detectInstrumentKey(page.filename);
+
                 const li = document.createElement('li');
                 li.className = `p-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition-colors ${isCurrent ? 'bg-blue-600 text-white font-bold' : 'text-slate-200 hover:bg-slate-800'}`;
                 
                 li.innerHTML = `
                     <div class="flex items-center gap-2 truncate">
-                        <span class="font-mono text-[10px] ${isCurrent ? 'text-blue-200' : 'text-slate-500'} w-6 text-right">${idx + 1}.</span>
+                        <span class="font-mono text-[10px] ${isCurrent ? 'text-blue-200' : 'text-slate-500'} w-6 text-right">${displayIdx + 1}.</span>
                         <span class="truncate ${isLinked ? 'pl-2 text-slate-300' : ''}">${title}</span>
+                        <span class="text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700">${key}</span>
                     </div>
                     ${isCurrent ? `<i data-lucide="check" class="w-3.5 h-3.5 text-white shrink-0"></i>` : ''}
                 `;
 
                 li.onclick = () => {
-                    showPage(idx);
+                    showPage(globalIdx);
                     songJumpDropdown.classList.add('hidden');
                 };
 
@@ -785,26 +862,15 @@
             const targetObj = pagesData.find(p => p.id === targetPageId);
             if (!targetObj) return [targetPageId];
 
-            const info = parsePageGroupInfo(targetObj.filename);
-            
-            const parentObj = pagesData.find(p => {
-                const pInfo = parsePageGroupInfo(p.filename);
-                return pInfo.baseTitle.toLowerCase() === info.baseTitle.toLowerCase() && !isPageLinkedToParent(p);
-            });
+            const rootTitle = extractSongRootTitle(targetObj.filename).toLowerCase();
 
-            const baseObj = parentObj || targetObj;
-            const baseInfo = parsePageGroupInfo(baseObj.filename);
-
+            // Lock all variants (C, Bb, Eb, Tab and sub-pages) sharing the same root title
             const groupMembers = pagesData.filter(p => {
-                const pInfo = parsePageGroupInfo(p.filename);
-                return pInfo.baseTitle.toLowerCase() === baseInfo.baseTitle.toLowerCase();
-            }).sort((a, b) => {
-                const numA = parsePageGroupInfo(a.filename).pageNum || 1;
-                const numB = parsePageGroupInfo(b.filename).pageNum || 1;
-                return numA - numB;
+                const curRoot = extractSongRootTitle(p.filename).toLowerCase();
+                return curRoot === rootTitle;
             });
 
-            return groupMembers.map(p => p.id);
+            return groupMembers.length > 0 ? groupMembers.map(p => p.id) : [targetPageId];
         }
 
         // ---------------------------------------------------------
@@ -1003,8 +1069,9 @@
         // EXPORT MERGED PDF (jsPDF)
         // ---------------------------------------------------------
         document.getElementById('btnExportPDF').addEventListener('click', async () => {
-            if (pagesData.length === 0) {
-                alert('Your setlist is empty. Add pages before exporting.');
+            const activePages = getActivePages();
+            if (activePages.length === 0) {
+                alert('Your setlist has no pages for the selected instrument key.');
                 return;
             }
 
@@ -1017,8 +1084,8 @@
                 const { jsPDF } = window.jspdf;
                 let pdfDoc = null;
 
-                for (let i = 0; i < pagesData.length; i++) {
-                    const blob = await getPageAsBlob(pagesData[i]);
+                for (let i = 0; i < activePages.length; i++) {
+                    const blob = await getPageAsBlob(activePages[i]);
                     if (!blob) continue;
 
                     const dataUrl = await new Promise((res) => {
@@ -1040,7 +1107,7 @@
                 }
 
                 if (pdfDoc) {
-                    pdfDoc.save(`HayNotes_Setlist_${Date.now()}.pdf`);
+                    pdfDoc.save(`HayNotes_${selectedInstrumentKey}_Setlist_${Date.now()}.pdf`);
                 }
             } catch (err) {
                 alert(`PDF export failed: ${err.message}`);
@@ -1931,7 +1998,7 @@
         let activeTool = 'navigate';
         let activeColor = '#ef4444';
 
-        // Custom Tool Width States (Pen is thinner now: 3px default)
+        // Custom Tool Width States
         let penStrokeWidth = 3;
         let highlightStrokeWidth = 28;
 
@@ -1958,14 +2025,12 @@
                 penStrokeWidth = newWidth;
             }
 
-            // Dynamically update brush width on all canvas instances
             Object.values(fabricCanvases).forEach(canvas => {
                 if (canvas.freeDrawingBrush) {
                     canvas.freeDrawingBrush.width = newWidth;
                 }
             });
 
-            // If a stroke object is currently selected, adjust its stroke width live
             const activeCanvas = fabricCanvases[pagesData[currentPageIndex]?.id];
             if (activeCanvas) {
                 const activeObj = activeCanvas.getActiveObject();
@@ -2268,9 +2333,14 @@
         function generateId() { return 'page-' + Math.random().toString(36).substr(2, 9); }
 
         function updatePageIndicator() {
-            const total = pagesData.length;
-            document.getElementById('pageIndicator').textContent = `${total === 0 ? 0 : currentPageIndex + 1} / ${total}`;
-            document.getElementById('dropZone').style.display = total === 0 ? 'flex' : 'none';
+            const activePages = getActivePages();
+            const total = activePages.length;
+            const currentObj = pagesData[currentPageIndex];
+            const activePos = activePages.findIndex(p => p.id === currentObj?.id);
+            const currentDisplayNum = activePos !== -1 ? activePos + 1 : (total > 0 ? 1 : 0);
+
+            document.getElementById('pageIndicator').textContent = `${total === 0 ? 0 : currentDisplayNum} / ${total}`;
+            document.getElementById('dropZone').style.display = pagesData.length === 0 ? 'flex' : 'none';
 
             const scrubberContainer = document.getElementById('scrubberContainer');
             if (isPerformanceMode) {
@@ -2288,19 +2358,39 @@
 
         function showPage(index, broadcast = true) {
             if (pagesData.length === 0) { updatePageIndicator(); return; }
-            index = Math.max(0, Math.min(index, pagesData.length - 1));
+            
+            const activePages = getActivePages();
+            if (activePages.length === 0) {
+                pagesData.forEach(p => {
+                    const el = document.getElementById(p.id);
+                    if (el) el.classList.remove('active');
+                });
+                updatePageIndicator();
+                return;
+            }
+
+            // If target index isn't in activePages, select nearest valid active page
+            let targetPage = pagesData[index];
+            if (!activePages.includes(targetPage)) {
+                // Find next closest active page
+                let nextActive = activePages.find(p => pagesData.indexOf(p) >= index);
+                if (!nextActive) nextActive = activePages[activePages.length - 1];
+                targetPage = nextActive;
+                index = pagesData.indexOf(targetPage);
+            }
+
             currentPageIndex = index;
             
             pagesData.forEach((p, i) => {
                 const el = document.getElementById(p.id);
-                if (el) el.classList.toggle('active', i === index);
+                if (el) el.classList.toggle('active', i === currentPageIndex);
                 
                 const li = document.querySelector(`li[data-id="${p.id}"]`);
                 if(li) {
-                    li.classList.toggle('border-red-500', i === index);
-                    li.classList.toggle('bg-red-950/40', i === index);
-                    li.classList.toggle('border-slate-700', i !== index);
-                    li.classList.toggle('bg-slate-800', i !== index);
+                    li.classList.toggle('border-red-500', i === currentPageIndex);
+                    li.classList.toggle('bg-red-950/40', i === currentPageIndex);
+                    li.classList.toggle('border-slate-700', i !== currentPageIndex);
+                    li.classList.toggle('bg-slate-800', i !== currentPageIndex);
                 }
             });
             updatePageIndicator();
@@ -2310,9 +2400,35 @@
             }
         }
 
-        document.getElementById('btnHome').addEventListener('click', () => showPage(0));
-        document.getElementById('btnNext').addEventListener('click', () => { showPage(currentPageIndex + 1); flashPedal('right'); });
-        document.getElementById('btnPrev').addEventListener('click', () => { showPage(currentPageIndex - 1); flashPedal('left'); });
+        function getNextActivePageIndex(direction) {
+            const activePages = getActivePages();
+            if (activePages.length === 0) return currentPageIndex;
+
+            const currentObj = pagesData[currentPageIndex];
+            let activeIdx = activePages.findIndex(p => p.id === currentObj?.id);
+
+            if (activeIdx === -1) {
+                activeIdx = 0;
+            } else {
+                activeIdx += direction;
+            }
+
+            activeIdx = Math.max(0, Math.min(activeIdx, activePages.length - 1));
+            return pagesData.indexOf(activePages[activeIdx]);
+        }
+
+        document.getElementById('btnHome').addEventListener('click', () => {
+            const activePages = getActivePages();
+            if (activePages.length > 0) showPage(pagesData.indexOf(activePages[0]));
+        });
+        document.getElementById('btnNext').addEventListener('click', () => { 
+            showPage(getNextActivePageIndex(1)); 
+            flashPedal('right'); 
+        });
+        document.getElementById('btnPrev').addEventListener('click', () => { 
+            showPage(getNextActivePageIndex(-1)); 
+            flashPedal('left'); 
+        });
 
         // Horizontal Scrubber Logic
         const scrubberTrack = document.getElementById('scrubberTrack');
@@ -2326,10 +2442,14 @@
         let isScrubbing = false;
 
         function updateScrubberUI() {
-            const total = pagesData.length;
+            const activePages = getActivePages();
+            const total = activePages.length;
             if (total <= 1) return;
 
-            const ratio = currentPageIndex / (total - 1);
+            const currentObj = pagesData[currentPageIndex];
+            const activeIdx = Math.max(0, activePages.findIndex(p => p.id === currentObj?.id));
+
+            const ratio = activeIdx / (total - 1);
             const trackWidth = scrubberTrack.clientWidth;
             const handleLeft = ratio * trackWidth;
 
@@ -2347,25 +2467,28 @@
         }
 
         function handleScrubberMove(clientX) {
-            const total = pagesData.length;
+            const activePages = getActivePages();
+            const total = activePages.length;
             if (total <= 1) return;
 
             const rect = scrubberTrack.getBoundingClientRect();
             let offsetX = Math.max(0, Math.min(clientX - rect.left, rect.width));
             const ratio = offsetX / rect.width;
-            const targetIndex = Math.round(ratio * (total - 1));
+            const targetActiveIndex = Math.round(ratio * (total - 1));
+            const targetPageObj = activePages[targetActiveIndex];
+            const targetGlobalIndex = pagesData.indexOf(targetPageObj);
 
             scrubberHandle.style.left = `${offsetX}px`;
             scrubberProgress.style.width = `${offsetX}px`;
 
-            const currentTitle = pagesData[targetIndex]?.filename || 'Page';
-            badgePageNum.textContent = `${targetIndex + 1} / ${total}`;
+            const currentTitle = targetPageObj?.filename || 'Page';
+            badgePageNum.textContent = `${targetActiveIndex + 1} / ${total}`;
             badgeTitle.textContent = currentTitle;
             scrubberBadge.style.left = `${offsetX}px`;
             scrubberBadge.classList.remove('hidden');
 
-            if (targetIndex !== currentPageIndex) {
-                showPage(targetIndex);
+            if (targetGlobalIndex !== currentPageIndex) {
+                showPage(targetGlobalIndex);
             }
         }
 
@@ -2442,10 +2565,10 @@
 
             if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX < 0) {
-                    showPage(currentPageIndex + 1);
+                    showPage(getNextActivePageIndex(1));
                     flashPedal('right');
                 } else {
-                    showPage(currentPageIndex - 1);
+                    showPage(getNextActivePageIndex(-1));
                     flashPedal('left');
                 }
             }
@@ -2465,19 +2588,23 @@
         window.addEventListener('keydown', (e) => {
             const activeCanvas = fabricCanvases[pagesData[currentPageIndex]?.id];
             const isEditingCanvasText = activeCanvas && activeCanvas.getActiveObject()?.isEditing;
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || isEditingCanvasText) return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || isEditingCanvasText) return;
 
             if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'ArrowDown') { 
                 e.preventDefault(); 
-                showPage(currentPageIndex + 1); 
-                flashPedal('right');
+                showPage(getNextActivePageIndex(1)); 
+                flashPedal('right'); 
             } 
             else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') {
                 e.preventDefault();
                 flashPedal('left');
                 if (!leftArrowPressed) {
                     leftArrowPressed = true;
-                    leftArrowTimer = setTimeout(() => { showPage(0); leftArrowPressed = false; }, 500);
+                    leftArrowTimer = setTimeout(() => { 
+                        const activePages = getActivePages();
+                        if (activePages.length > 0) showPage(pagesData.indexOf(activePages[0]));
+                        leftArrowPressed = false; 
+                    }, 500);
                 }
             }
         });
@@ -2485,7 +2612,7 @@
         window.addEventListener('keyup', (e) => {
             if ((e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') && leftArrowPressed) {
                 clearTimeout(leftArrowTimer);
-                showPage(currentPageIndex - 1);
+                showPage(getNextActivePageIndex(-1));
                 leftArrowPressed = false;
             }
         });
@@ -2500,6 +2627,7 @@
                 const type = pageObj.type;
                 const groupInfo = parsePageGroupInfo(filename);
                 const isLinked = isPageLinkedToParent(pageObj);
+                const key = detectInstrumentKey(filename);
 
                 const li = document.createElement('li');
                 li.className = `page-thumb-container bg-slate-800 p-2 rounded-xl border flex items-center gap-2 hover:bg-slate-750 transition-all ${isLinked ? 'ml-4 border-amber-800/60 bg-slate-850' : 'border-slate-700'}`;
@@ -2508,7 +2636,7 @@
                 let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
 
                 li.innerHTML = `
-                    <div class="drag-handle p-1 text-slate-500 hover:text-emerald-400 shrink-0" title="Drag to reorder song group">
+                    <div class="drag-handle p-1 text-slate-500 hover:text-emerald-400 shrink-0" title="Drag to reorder locked song group">
                         <i data-lucide="grip-vertical" class="w-4 h-4"></i>
                     </div>
                     <div onclick="${isLinked ? `unlinkPageGroup('${pageId}')` : ''}" class="w-7 h-7 rounded-lg ${isLinked ? 'bg-amber-950/60 border border-amber-700/50 hover:bg-amber-900/80 cursor-pointer' : 'bg-slate-900 border border-slate-800'} flex items-center justify-center shrink-0" title="${isLinked ? 'Click to UNLINK page' : ''}">
@@ -2517,6 +2645,7 @@
                     <div class="flex-1 overflow-hidden cursor-pointer" onclick="jumpToPageById('${pageId}')" ondblclick="renamePageTitle('${pageId}')" title="Single tap to jump • Double tap to rename">
                         <div id="thumb-title-${pageId}" class="text-xs text-slate-200 truncate font-semibold flex items-center gap-1">
                             <span class="truncate">${filename}</span>
+                            <span class="px-1 py-0.2 ${key==='Eb'?'bg-purple-500/20 text-purple-300 border-purple-800':key==='Bb'?'bg-cyan-500/20 text-cyan-300 border-cyan-800':'bg-blue-500/20 text-blue-300 border-blue-800'} border text-[9px] font-mono rounded shrink-0">${key}</span>
                             ${isLinked ? `<span class="px-1 py-0.2 bg-amber-500/20 text-amber-300 text-[9px] font-mono rounded shrink-0">p.${groupInfo.pageNum}</span>` : ''}
                         </div>
                         <div class="text-[10px] text-slate-500 uppercase">${isLinked ? 'Linked Sub-Page' : type}</div>
@@ -2638,7 +2767,7 @@
         }
 
         // ---------------------------------------------------------
-        // LOCKED SONG GROUP REARRANGE ENGINE WITH GREEN DROP ZONE
+        // LOCKED SONG GROUP REARRANGE ENGINE
         // ---------------------------------------------------------
         new Sortable(document.getElementById('pagesList'), {
             handle: '.drag-handle',
@@ -2654,6 +2783,7 @@
                 const groupMemberIds = getGroupMemberIds(draggedId);
                 const memberObjects = groupMemberIds.map(id => pagesData.find(p => p.id === id)).filter(Boolean);
 
+                // Preserve relative ordering within the locked group
                 pagesData = pagesData.filter(p => !groupMemberIds.includes(p.id));
 
                 const listChildren = Array.from(document.getElementById('pagesList').children);
