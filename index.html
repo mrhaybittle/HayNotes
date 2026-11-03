@@ -698,33 +698,10 @@
                 .trim();
         }
 
+        // Strict instrument filtering: only pages matching the selected key are displayed
         function getActivePages() {
             if (pagesData.length === 0) return [];
-
-            // Group by root song title
-            const songGroups = {};
-            pagesData.forEach(p => {
-                const root = extractSongRootTitle(p.filename).toLowerCase() || p.id;
-                if (!songGroups[root]) songGroups[root] = [];
-                songGroups[root].push(p);
-            });
-
-            const activeList = [];
-            pagesData.forEach(p => {
-                const root = extractSongRootTitle(p.filename).toLowerCase() || p.id;
-                const members = songGroups[root];
-                const key = detectInstrumentKey(p.filename);
-
-                const hasExplicitMatch = members.some(m => detectInstrumentKey(m.filename) === selectedInstrumentKey);
-
-                if (hasExplicitMatch) {
-                    if (key === selectedInstrumentKey) activeList.push(p);
-                } else {
-                    if (key === 'C') activeList.push(p);
-                }
-            });
-
-            return activeList;
+            return pagesData.filter(p => detectInstrumentKey(p.filename) === selectedInstrumentKey);
         }
 
         // Instrument Dropdown Listener
@@ -2369,10 +2346,9 @@
                 return;
             }
 
-            // If target index isn't in activePages, select nearest valid active page
+            // Ensure selected page matches active filter
             let targetPage = pagesData[index];
             if (!activePages.includes(targetPage)) {
-                // Find next closest active page
                 let nextActive = activePages.find(p => pagesData.indexOf(p) >= index);
                 if (!nextActive) nextActive = activePages[activePages.length - 1];
                 targetPage = nextActive;
