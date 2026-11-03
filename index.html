@@ -2659,15 +2659,33 @@
             const suggestedDefaultTitle = (lastUsedPageTitle && lastUsedPageTitle !== 'Page 1') ? lastUsedPageTitle : originalName;
 
             if (['abc', 'txt'].includes(ext)) { 
-                const name = isDirectDriveImport ? originalName : (prompt("Score name:", suggestedDefaultTitle) || suggestedDefaultTitle);
-                await addPage('abc', await file.text(), name); 
+                if (isDirectDriveImport) {
+                    await addPage('abc', await file.text(), originalName); 
+                } else {
+                    const choice = await showScanInsertPositionModal(null, suggestedDefaultTitle);
+                    if (choice) {
+                        const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
+                        await addPage('abc', await file.text(), choice.title, targetIdx, choice.parts);
+                    }
+                }
             } 
             else if (['xml', 'mxl', 'musicxml'].includes(ext)) { 
-                const name = isDirectDriveImport ? originalName : (prompt("Score name:", suggestedDefaultTitle) || suggestedDefaultTitle);
-                await addPage('musicxml', await file.text(), name); 
+                if (isDirectDriveImport) {
+                    await addPage('musicxml', await file.text(), originalName); 
+                } else {
+                    const choice = await showScanInsertPositionModal(null, suggestedDefaultTitle);
+                    if (choice) {
+                        const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
+                        await addPage('musicxml', await file.text(), choice.title, targetIdx, choice.parts);
+                    }
+                }
             }
             else if (file.type === 'application/pdf' || ext === 'pdf') {
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+                let pdfInsertIdx = null;
+                let pdfParts = null;
+                let pdfBaseTitle = suggestedDefaultTitle;
+                
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const viewport = page.getViewport({ scale: 2.0 }); 
@@ -2681,19 +2699,23 @@
                         const pageSuffix = i > 1 ? ` p${i}` : '';
                         await addPage('pdf', pageDataUrl, `${originalName}${pageSuffix}`);
                     } else {
-                        const detected = await detectTitleFromImage(pageDataUrl);
-                        const baseTitle = detected || suggestedDefaultTitle;
-                        const pageSuffix = i > 1 ? ` p${i}` : '';
-                        
-                        // We pop modal for first page only or if doing multiple we could just infer. For PDF, let's pop once.
-                        if (i === 1 && pagesData.length > 0) {
-                            const choice = await showScanInsertPositionModal(pageDataUrl, `${baseTitle}${pageSuffix}`);
+                        if (i === 1) {
+                            const detected = await detectTitleFromImage(pageDataUrl);
+                            pdfBaseTitle = detected || suggestedDefaultTitle;
+                            
+                            const choice = await showScanInsertPositionModal(pageDataUrl, pdfBaseTitle);
                             if (choice) {
-                                const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
-                                await addPage('pdf', pageDataUrl, choice.title, targetIdx, choice.parts);
+                                pdfParts = choice.parts;
+                                pdfInsertIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
+                                pdfBaseTitle = choice.title;
+                                await addPage('pdf', pageDataUrl, pdfBaseTitle, pdfInsertIdx, pdfParts);
+                            } else {
+                                break; // Cancelled importing the PDF
                             }
                         } else {
-                           await addPage('pdf', pageDataUrl, `${baseTitle}${pageSuffix}`);
+                            const pageSuffix = ` p${i}`;
+                            if (pdfInsertIdx !== null) pdfInsertIdx++; // increment sequentially
+                            await addPage('pdf', pageDataUrl, `${pdfBaseTitle}${pageSuffix}`, pdfInsertIdx !== null ? pdfInsertIdx : undefined, pdfParts);
                         }
                     }
                 }
@@ -2706,19 +2728,12 @@
                 } else {
                     const croppedDataUrl = await openCropper(dataUrl);
                     if (croppedDataUrl) {
-                        if (pagesData.length > 0) {
-                            const choice = await showScanInsertPositionModal(croppedDataUrl, suggestedDefaultTitle);
-                            if (choice) {
-                                const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
-                                await addPage('image', croppedDataUrl, choice.title, targetIdx, choice.parts);
-                            }
-                        } else {
-                            const detectedTitle = await detectTitleFromImage(croppedDataUrl);
-                            const finalFallback = detectedTitle || suggestedDefaultTitle;
-                            const choice = await showScanInsertPositionModal(croppedDataUrl, finalFallback);
-                            if(choice) {
-                                await addPage('image', croppedDataUrl, choice.title, pagesData.length, choice.parts);
-                            }
+                        const detectedTitle = await detectTitleFromImage(croppedDataUrl);
+                        const finalFallback = detectedTitle || suggestedDefaultTitle;
+                        const choice = await showScanInsertPositionModal(croppedDataUrl, finalFallback);
+                        if(choice) {
+                            const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
+                            await addPage('image', croppedDataUrl, choice.title, targetIdx, choice.parts);
                         }
                     }
                 }
