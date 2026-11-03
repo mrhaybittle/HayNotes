@@ -1135,15 +1135,24 @@
             syncModal.classList.add('hidden');
         });
 
-        function makeShortCode(len = 5) {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let res = '';
-            for (let i = 0; i < len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
-            return res;
+        function makeShortCode() {
+            const words = [
+                'ABBA', 'ACDC', 'BACH', 'BASS', 'BEAT', 'BECK', 'BIRD', 'BLOW', 'CAGE', 'CHER', 
+                'CLEF', 'CLUB', 'CODA', 'CROW', 'DEAN', 'DEVO', 'DIRE', 'DOVE', 'DRUM', 'DUET', 
+                'ECHO', 'EDGE', 'ENYA', 'EPIC', 'FAME', 'FAST', 'FIRE', 'FLOW', 'FOLK', 'FUNK', 
+                'GAGA', 'GIGS', 'GONG', 'HALL', 'HITS', 'HOOK', 'HORN', 'HOWL', 'INXS', 'JAMS', 
+                'JAZZ', 'JOAN', 'JUMP', 'KEYS', 'KICK', 'KISS', 'KORN', 'LEAD', 'LION', 'LOUD', 
+                'LOVE', 'LUTE', 'LYRE', 'MACK', 'MIDI', 'MIKE', 'MOOG', 'MOON', 'MUSE', 'NINE', 
+                'NOTE', 'OAKS', 'OBOE', 'OPUS', 'PINK', 'PLAY', 'PLUG', 'PUNK', 'REED', 'REST', 
+                'RIFF', 'RING', 'ROCK', 'ROSE', 'RUSH', 'SADE', 'SEAL', 'SHOW', 'SING', 'SOLO', 
+                'SONG', 'SOUL', 'SPIN', 'STAR', 'STEP', 'SYNC', 'TALK', 'TOTO', 'TOUR', 'TOWN', 
+                'TRAP', 'TUNE', 'VAMP', 'WALK', 'WHAM', 'WIND', 'WIRE', 'WOLF', 'WOOD', 'ZINC'
+            ];
+            return words[Math.floor(Math.random() * words.length)];
         }
 
         document.getElementById('btnStartHost').addEventListener('click', () => {
-            const shortId = 'HN-' + makeShortCode(4);
+            const shortId = makeShortCode();
             if (peer) peer.destroy();
 
             peer = new Peer(shortId);
@@ -1178,7 +1187,7 @@
         });
 
         document.getElementById('btnJoinLeader').addEventListener('click', () => {
-            const code = document.getElementById('inputLeaderCode').value.trim();
+            const code = document.getElementById('inputLeaderCode').value.trim().toUpperCase();
             if (!code) return;
 
             if (peer) peer.destroy();
