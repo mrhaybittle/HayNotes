@@ -226,6 +226,209 @@
         </div>
     </div>
 
+    <!-- MUSICAL STAMP PALETTE SUBMENU -->
+    <div id="stampPaletteModal" class="hidden fixed top-20 left-1/2 -translate-x-1/2 bg-slate-900 text-white p-3 rounded-2xl shadow-2xl border border-slate-800 z-50 flex-col gap-2 w-11/12 max-w-md">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-300 pb-1.5 border-b border-slate-800">
+            <span class="flex items-center gap-1.5"><i data-lucide="stamp" class="w-4 h-4 text-purple-400"></i> Musical Symbols & Navigation Links</span>
+            <button id="btnCloseStamps" class="text-slate-400 hover:text-white p-0.5 rounded"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+        </div>
+        <div class="text-[10px] text-slate-400">Select a stamp, then tap on the sheet music to place it.</div>
+        
+        <div class="grid grid-cols-6 gap-1.5 text-center text-sm font-serif">
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="p">p</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="pp">pp</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="mp">mp</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="mf">mf</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="f">f</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="ff">ff</button>
+            
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="𝄐" title="Fermata">𝄐</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="’" title="Breath Mark">’</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp=">" title="Accent">&gt;</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="^" title="Marcato">^</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="♯" title="Sharp">♯</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="♭" title="Flat">♭</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="♮" title="Natural">♮</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="𝄋" title="Segno" data-link="true">𝄋</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="𝄌" title="Coda" data-link="true">𝄌</button>
+            
+            <button class="stamp-btn p-2 bg-rose-950/70 border border-rose-800 hover:bg-rose-700 rounded-lg font-bold text-lg text-rose-300" data-stamp="←" title="Left Jump Arrow" data-link="true">←</button>
+            <button class="stamp-btn p-2 bg-blue-950/70 border border-blue-800 hover:bg-blue-700 rounded-lg font-bold text-lg text-blue-300" data-stamp="→" title="Right Jump Arrow" data-link="true">→</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="D.S." title="Dal Segno" data-link="true">D.S.</button>
+        </div>
+    </div>
+
+    <!-- FINGERING & FRETBOARD NUMBER GENERATOR MODAL -->
+    <div id="fingeringPaletteModal" class="hidden fixed top-20 left-1/2 -translate-x-1/2 bg-slate-900 text-white p-3.5 rounded-2xl shadow-2xl border border-slate-800 z-50 flex flex-col gap-3 w-11/12 max-w-md">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-300 pb-2 border-b border-slate-800">
+            <span class="flex items-center gap-1.5"><i data-lucide="hash" class="w-4 h-4 text-emerald-400"></i> Fingering & Fretboard Generator</span>
+            <button id="btnCloseFingering" class="text-slate-400 hover:text-white p-0.5 rounded"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+        </div>
+
+        <div>
+            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>Piano & Generic Fingerings</span>
+                <span class="text-emerald-400 font-mono text-[9px]">Tap score to place</span>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center font-mono text-sm">
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1">1</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="2">2</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="3">3</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="4">4</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="5">5</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-xs" data-symbol="LH">LH</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-xs" data-symbol="RH">RH</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Guitar Strings & Frets / Positions</div>
+            <div class="grid grid-cols-8 gap-1 text-center font-mono text-xs">
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="①">①</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="②">②</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="③">③</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="④">④</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="⑤">⑤</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="⑥">⑥</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="T">T</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="0">0</button>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center font-serif text-xs mt-1">
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="I">I</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="II">II</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="III">III</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="IV">IV</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="V">V</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="VII">VII</button>
+                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="IX">IX</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Brass Valve Combinations</div>
+            <div class="grid grid-cols-4 gap-1 text-center font-mono text-xs">
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="0 (open)">0 (open)</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1">1</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="2">2</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="3">3</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1-2">1-2</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="2-3">2-3</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1-3">1-3</button>
+                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1-2-3">1-2-3</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ENSEMBLE & GUITAR TUNER MODAL -->
+    <div id="tunerModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="music-2" class="w-5 h-5 text-teal-400"></i>
+                    <h3 class="font-bold text-lg text-white">Instrument Tuner</h3>
+                </div>
+                <button id="btnCloseTuner" class="p-1 rounded text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <div>
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Ensemble Reference Tones</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button class="tuner-btn p-3 rounded-xl bg-teal-950/60 border border-teal-800 text-teal-300 font-bold hover:bg-teal-900 transition-colors active:scale-95 flex flex-col items-center" data-freq="466.16">
+                        <span class="text-base">Concert B♭</span>
+                        <span class="text-[10px] text-teal-400/80">466.16 Hz</span>
+                    </button>
+                    <button class="tuner-btn p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold transition-colors active:scale-95 flex flex-col items-center" data-freq="440.00">
+                        <span class="text-base">Concert A</span>
+                        <span class="text-[10px] text-slate-400">440.00 Hz</span>
+                    </button>
+                    <button class="tuner-btn p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold transition-colors active:scale-95 flex flex-col items-center" data-freq="349.23">
+                        <span class="text-base">Concert F</span>
+                        <span class="text-[10px] text-slate-400">349.23 Hz</span>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Guitar Tuner (Standard 6-String)</label>
+                <div class="grid grid-cols-6 gap-1.5 font-mono text-center">
+                    <button class="tuner-btn p-2 rounded-lg bg-slate-800 hover:bg-blue-600 border border-slate-700 font-bold transition-colors" data-freq="82.41">E2</button>
+                    <button class="tuner-btn p-2 rounded-lg bg-slate-800 hover:bg-blue-600 border border-slate-700 font-bold transition-colors" data-freq="110.00">A2</button>
+                    <button class="tuner-btn p-2 rounded-lg bg-slate-800 hover:bg-blue-600 border border-slate-700 font-bold transition-colors" data-freq="146.83">D3</button>
+                    <button class="tuner-btn p-2 rounded-lg bg-slate-800 hover:bg-blue-600 border border-slate-700 font-bold transition-colors" data-freq="196.00">G3</button>
+                    <button class="tuner-btn p-2 rounded-lg bg-slate-800 hover:bg-blue-600 border border-slate-700 font-bold transition-colors" data-freq="246.94">B3</button>
+                    <button class="tuner-btn p-2 rounded-lg bg-slate-800 hover:bg-blue-600 border border-slate-700 font-bold transition-colors" data-freq="329.63">E4</button>
+                </div>
+            </div>
+
+            <div class="pt-2 flex items-center justify-between border-t border-slate-800">
+                <span id="activeToneDisplay" class="text-xs text-slate-400 font-mono">Status: Idle</span>
+                <button id="btnStopTuner" class="px-4 py-1.5 rounded-lg bg-red-950 border border-red-800 text-red-300 text-xs font-bold hover:bg-red-900 transition-colors">
+                    Stop Tone
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BAND LEADER LOCAL SYNC MODAL -->
+    <div id="syncModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="radio" class="w-5 h-5 text-indigo-400"></i>
+                    <h3 class="font-bold text-lg text-white">Band Leader Local Sync</h3>
+                </div>
+                <button id="btnCloseSync" class="p-1 rounded text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <p class="text-xs text-slate-300">
+                Turn pages for your whole band in real time over peer-to-peer WebRTC without a server.
+            </p>
+
+            <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-col gap-2">
+                <div class="text-xs font-bold text-indigo-300">Band Leader Mode (Host)</div>
+                <p class="text-[11px] text-slate-400">Host a session and share this code with ensemble players:</p>
+                <div class="flex items-center gap-2">
+                    <div id="hostPeerId" class="flex-1 bg-slate-900 border border-slate-800 p-2 rounded-lg font-mono text-center text-sm text-emerald-400 select-all">Generating code...</div>
+                    <button id="btnStartHost" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-bold transition-colors">Start Host</button>
+                </div>
+                <div id="connectedMembersCount" class="text-[11px] text-slate-400">Connected musicians: 0</div>
+            </div>
+
+            <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-col gap-2">
+                <div class="text-xs font-bold text-cyan-300">Musician Mode (Follower)</div>
+                <p class="text-[11px] text-slate-400">Enter the Band Leader's 5-letter or Peer ID code:</p>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="inputLeaderCode" placeholder="Enter Leader Code..." class="flex-1 bg-slate-900 border border-slate-800 p-2 rounded-lg text-xs font-mono uppercase text-white focus:outline-none focus:border-cyan-500">
+                    <button id="btnJoinLeader" class="px-3 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-xs font-bold transition-colors">Connect</button>
+                </div>
+                <div id="syncMemberStatus" class="text-[11px] text-slate-400">Status: Disconnected</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clear / New Setlist Confirmation Modal -->
+    <div id="clearConfirmModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center gap-3 text-amber-400">
+                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                <h3 class="font-bold text-lg text-white">Start New File?</h3>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">
+                Are you ready to start a new setlist? Any unsaved changes on the active canvas will be cleared.
+            </p>
+            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400 flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                <span>Current setlist will be automatically backed up in IndexedDB.</span>
+            </div>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button id="btnCancelClear" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors">Cancel</button>
+                <button id="btnConfirmClear" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-lg">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear & Start New
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Workspace Area -->
     <div class="flex-1 w-full relative flex flex-col overflow-hidden bg-slate-200">
         
@@ -934,6 +1137,851 @@
         });
 
         // ---------------------------------------------------------
+        // FULLSCREEN LOGIC
+        // ---------------------------------------------------------
+        const btnFullscreen = document.getElementById('btnFullscreen');
+        const fullscreenIcon = document.getElementById('fullscreenIcon');
+
+        btnFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch((err) => { console.log(err); });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        });
+        document.addEventListener('fullscreenchange', () => {
+            fullscreenIcon.setAttribute('data-lucide', document.fullscreenElement ? 'minimize' : 'maximize');
+            lucide.createIcons();
+        });
+
+        // ---------------------------------------------------------
+        // PERFORMANCE MODE LOGIC
+        // ---------------------------------------------------------
+        let isPerformanceMode = false;
+        const leftToolbar = document.getElementById('leftToolbar');
+        const topPageIndicator = document.getElementById('topPageIndicator');
+        const btnExitPerformance = document.getElementById('btnExitPerformance');
+
+        document.getElementById('btnPerformanceMode').addEventListener('click', togglePerformanceMode);
+        btnExitPerformance.addEventListener('click', togglePerformanceMode);
+
+        function togglePerformanceMode() {
+            isPerformanceMode = !isPerformanceMode;
+            if (isPerformanceMode) {
+                leftToolbar.style.display = 'none';
+                topPageIndicator.style.display = 'none';
+                document.getElementById('scrubberContainer').style.display = 'none';
+                btnExitPerformance.classList.remove('hidden');
+                document.querySelector('[data-tool="navigate"]')?.click();
+            } else {
+                leftToolbar.style.display = '';
+                topPageIndicator.style.display = '';
+                btnExitPerformance.classList.add('hidden');
+                updatePageIndicator();
+            }
+        }
+
+        // ---------------------------------------------------------
+        // SCREEN WAKE LOCK
+        // ---------------------------------------------------------
+        let wakeLock = null;
+        let isWakeLockActive = false;
+
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    isWakeLockActive = true;
+                    updateWakeLockUI(true);
+                    wakeLock.addEventListener('release', () => {
+                        isWakeLockActive = false;
+                        updateWakeLockUI(false);
+                    });
+                } catch (err) {
+                    console.warn(`Wake Lock error: ${err.message}`);
+                }
+            }
+        }
+
+        async function releaseWakeLock() {
+            if (wakeLock) {
+                await wakeLock.release();
+                wakeLock = null;
+                isWakeLockActive = false;
+                updateWakeLockUI(false);
+            }
+        }
+
+        function updateWakeLockUI(active) {
+            const btn = document.getElementById('btnWakeLock');
+            const icon = document.getElementById('wakeLockIcon');
+            if (active) {
+                btn.classList.replace('text-slate-400', 'text-amber-400');
+                btn.classList.add('bg-amber-950/40', 'border-amber-600');
+                icon.setAttribute('data-lucide', 'sun');
+            } else {
+                btn.classList.replace('text-amber-400', 'text-slate-400');
+                btn.classList.remove('bg-amber-950/40', 'border-amber-600');
+                icon.setAttribute('data-lucide', 'sun-dim');
+            }
+            lucide.createIcons();
+        }
+
+        document.getElementById('btnWakeLock').addEventListener('click', () => {
+            if (isWakeLockActive) releaseWakeLock();
+            else requestWakeLock();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (isWakeLockActive && document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        });
+
+        // ---------------------------------------------------------
+        // EXPORT MERGED PDF (jsPDF)
+        // ---------------------------------------------------------
+        document.getElementById('btnExportPDF').addEventListener('click', async () => {
+            const activePages = getActivePages();
+            if (activePages.length === 0) {
+                alert('Your setlist has no pages for the selected instrument key.');
+                return;
+            }
+
+            const btn = document.getElementById('btnExportPDF');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 text-rose-400 animate-spin"></i>`;
+            lucide.createIcons();
+
+            try {
+                const { jsPDF } = window.jspdf;
+                let pdfDoc = null;
+
+                for (let i = 0; i < activePages.length; i++) {
+                    const blob = await getPageAsBlob(activePages[i]);
+                    if (!blob) continue;
+
+                    const dataUrl = await new Promise((res) => {
+                        const reader = new FileReader();
+                        reader.onload = e => res(e.target.result);
+                        reader.readAsDataURL(blob);
+                    });
+
+                    const tempImg = new Image();
+                    await new Promise(r => { tempImg.onload = r; tempImg.src = dataUrl; });
+
+                    const orientation = tempImg.width > tempImg.height ? 'l' : 'p';
+                    if (!pdfDoc) {
+                        pdfDoc = new jsPDF({ orientation: orientation, unit: 'px', format: [tempImg.width, tempImg.height] });
+                    } else {
+                        pdfDoc.addPage([tempImg.width, tempImg.height], orientation);
+                    }
+                    pdfDoc.addImage(dataUrl, 'JPEG', 0, 0, tempImg.width, tempImg.height);
+                }
+
+                if (pdfDoc) {
+                    pdfDoc.save(`HayNotes_${selectedInstrumentKey}_Setlist_${Date.now()}.pdf`);
+                }
+            } catch (err) {
+                alert(`PDF export failed: ${err.message}`);
+            } finally {
+                btn.innerHTML = originalContent;
+                lucide.createIcons();
+            }
+        });
+
+        // ---------------------------------------------------------
+        // WEB AUDIO INSTRUMENT TUNER
+        // ---------------------------------------------------------
+        let audioCtx = null;
+        let tunerOsc = null;
+        let tunerGain = null;
+
+        function playReferenceTone(frequency, label) {
+            stopReferenceTone();
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            tunerOsc = audioCtx.createOscillator();
+            tunerGain = audioCtx.createGain();
+
+            tunerOsc.type = 'sine';
+            tunerOsc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+            tunerGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+            tunerOsc.connect(tunerGain);
+            tunerGain.connect(audioCtx.destination);
+            tunerOsc.start();
+
+            document.getElementById('activeToneDisplay').textContent = `Tone: ${label} (${frequency.toFixed(2)} Hz)`;
+        }
+
+        function stopReferenceTone() {
+            if (tunerOsc) {
+                try {
+                    tunerOsc.stop();
+                    tunerOsc.disconnect();
+                } catch(e){}
+                tunerOsc = null;
+            }
+            document.getElementById('activeToneDisplay').textContent = 'Status: Idle';
+        }
+
+        document.getElementById('btnOpenTuner').addEventListener('click', () => {
+            document.getElementById('tunerModal').classList.remove('hidden');
+        });
+        document.getElementById('btnCloseTuner').addEventListener('click', () => {
+            stopReferenceTone();
+            document.getElementById('tunerModal').classList.add('hidden');
+        });
+        document.getElementById('btnStopTuner').addEventListener('click', stopReferenceTone);
+
+        document.querySelectorAll('.tuner-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget;
+                const freq = parseFloat(target.dataset.freq);
+                const label = target.innerText.split('\n')[0].trim();
+                playReferenceTone(freq, label);
+            });
+        });
+
+        // ---------------------------------------------------------
+        // BAND LEADER P2P LOCAL SYNC
+        // ---------------------------------------------------------
+        let peer = null;
+        let isLeaderHost = false;
+        let hostConnections = [];
+        let memberConn = null;
+
+        const syncModal = document.getElementById('syncModal');
+        const syncBadgeDot = document.getElementById('syncBadgeDot');
+
+        document.getElementById('btnOpenSync').addEventListener('click', () => {
+            syncModal.classList.remove('hidden');
+        });
+        document.getElementById('btnCloseSync').addEventListener('click', () => {
+            syncModal.classList.add('hidden');
+        });
+
+        function makeShortCode(len = 5) {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let res = '';
+            for (let i = 0; i < len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
+            return res;
+        }
+
+        document.getElementById('btnStartHost').addEventListener('click', () => {
+            const shortId = 'HN-' + makeShortCode(4);
+            if (peer) peer.destroy();
+
+            peer = new Peer(shortId);
+            document.getElementById('hostPeerId').textContent = 'Connecting...';
+
+            peer.on('open', (id) => {
+                isLeaderHost = true;
+                document.getElementById('hostPeerId').textContent = id;
+                syncBadgeDot.classList.remove('hidden');
+                document.getElementById('btnStartHost').textContent = 'Hosting Active';
+                document.getElementById('btnStartHost').classList.replace('bg-indigo-600', 'bg-emerald-600');
+            });
+
+            peer.on('connection', (conn) => {
+                hostConnections.push(conn);
+                document.getElementById('connectedMembersCount').textContent = `Connected musicians: ${hostConnections.length}`;
+                
+                conn.on('open', () => {
+                    conn.send({ type: 'SYNC_PAGE', pageIndex: currentPageIndex });
+                });
+
+                conn.on('close', () => {
+                    hostConnections = hostConnections.filter(c => c !== conn);
+                    document.getElementById('connectedMembersCount').textContent = `Connected musicians: ${hostConnections.length}`;
+                });
+            });
+
+            peer.on('error', (err) => {
+                console.warn('Peer host error:', err);
+                document.getElementById('hostPeerId').textContent = 'Error starting host';
+            });
+        });
+
+        document.getElementById('btnJoinLeader').addEventListener('click', () => {
+            const code = document.getElementById('inputLeaderCode').value.trim();
+            if (!code) return;
+
+            if (peer) peer.destroy();
+            peer = new Peer();
+
+            document.getElementById('syncMemberStatus').textContent = 'Connecting to leader...';
+
+            peer.on('open', () => {
+                memberConn = peer.connect(code);
+                memberConn.on('open', () => {
+                    isLeaderHost = false;
+                    document.getElementById('syncMemberStatus').textContent = `Connected to ${code}`;
+                    document.getElementById('syncMemberStatus').className = 'text-[11px] text-emerald-400 font-bold';
+                    syncBadgeDot.classList.remove('hidden');
+                });
+
+                memberConn.on('data', (data) => {
+                    if (data && data.type === 'SYNC_PAGE' && typeof data.pageIndex === 'number') {
+                        showPage(data.pageIndex, false);
+                    }
+                });
+
+                memberConn.on('close', () => {
+                    document.getElementById('syncMemberStatus').textContent = 'Disconnected';
+                    document.getElementById('syncMemberStatus').className = 'text-[11px] text-slate-400';
+                    syncBadgeDot.classList.add('hidden');
+                });
+            });
+
+            peer.on('error', (err) => {
+                document.getElementById('syncMemberStatus').textContent = 'Connection failed: ' + err.type;
+            });
+        });
+
+        function broadcastPageToBand(index) {
+            if (isLeaderHost && hostConnections.length > 0) {
+                hostConnections.forEach(conn => {
+                    if (conn.open) {
+                        conn.send({ type: 'SYNC_PAGE', pageIndex: index });
+                    }
+                });
+            }
+        }
+
+        // ---------------------------------------------------------
+        // ANNOTATION ENGINE, PALETTES & DRAWING TOOLS
+        // ---------------------------------------------------------
+        const colors = [
+            '#000000', '#4b5563', '#9ca3af', '#ffffff', 
+            '#ef4444', '#f97316', '#eab308', '#22c55e',
+            '#3b82f6', '#06b6d4', '#a855f7', '#ec4899',
+            '#78350f', '#14b8a6', '#1e3a8a', '#d946ef'
+        ];
+
+        const paletteContainer = document.getElementById('colorPalette');
+        colors.forEach(hex => {
+            const btn = document.createElement('button');
+            btn.className = `color-btn w-5 h-5 rounded-full shadow-sm transition-transform ${hex === activeColor ? 'active' : ''}`;
+            btn.style.backgroundColor = hex;
+            btn.dataset.color = hex;
+            if (hex === '#ffffff') btn.style.border = '1px solid #e2e8f0';
+            btn.onclick = () => selectColor(hex, btn);
+            paletteContainer.appendChild(btn);
+        });
+
+        const annotationToolbar = document.getElementById('annotationToolbar');
+        const btnToggleDraw = document.getElementById('btnToggleDraw');
+        const btnCloseDraw = document.getElementById('btnCloseDraw');
+
+        btnToggleDraw.addEventListener('click', () => {
+            annotationToolbar.classList.remove('hidden');
+            annotationToolbar.style.display = 'flex';
+            if (activeTool === 'navigate') {
+                document.querySelector('[data-tool="pen"]')?.click();
+            }
+        });
+
+        btnCloseDraw.addEventListener('click', () => {
+            annotationToolbar.classList.add('hidden');
+            annotationToolbar.style.display = '';
+            
+            Object.values(fabricCanvases).forEach(canvas => {
+                canvas.discardActiveObject();
+                canvas.requestRenderAll();
+            });
+            
+            document.querySelector('[data-tool="navigate"]')?.click();
+        });
+
+        const toolWidthSlider = document.getElementById('toolWidthSlider');
+        const toolWidthValue = document.getElementById('toolWidthValue');
+
+        function getCurrentToolWidth() {
+            return activeTool === 'highlight' ? highlightStrokeWidth : penStrokeWidth;
+        }
+
+        function updateWidthSliderUI() {
+            const currentW = getCurrentToolWidth();
+            toolWidthSlider.value = currentW;
+            toolWidthValue.textContent = `${currentW}px`;
+        }
+
+        toolWidthSlider.addEventListener('input', (e) => {
+            const newWidth = parseInt(e.target.value, 10);
+            toolWidthValue.textContent = `${newWidth}px`;
+            
+            if (activeTool === 'highlight') {
+                highlightStrokeWidth = newWidth;
+            } else {
+                penStrokeWidth = newWidth;
+            }
+
+            Object.values(fabricCanvases).forEach(canvas => {
+                if (canvas.freeDrawingBrush) {
+                    canvas.freeDrawingBrush.width = newWidth;
+                }
+            });
+
+            const activeCanvas = fabricCanvases[pagesData[currentPageIndex]?.id];
+            if (activeCanvas) {
+                const activeObj = activeCanvas.getActiveObject();
+                if (activeObj && activeObj.strokeWidth !== undefined) {
+                    activeObj.set('strokeWidth', newWidth);
+                    activeCanvas.renderAll();
+                }
+            }
+        });
+
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                activeTool = e.currentTarget.dataset.tool;
+                updateWidthSliderUI();
+                updateAllCanvasesMode();
+            });
+        });
+
+        document.getElementById('btnUndo').addEventListener('click', () => {
+            if (pagesData.length === 0) return;
+            const pageId = pagesData[currentPageIndex].id;
+            const canvas = fabricCanvases[pageId];
+            if (!canvas) return;
+            const objects = canvas.getObjects();
+            if (objects.length > 0) {
+                canvas.remove(objects[objects.length - 1]);
+                canvas.renderAll();
+            }
+        });
+
+        function selectColor(hex, btnElement) {
+            activeColor = hex;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            const activeCanvas = fabricCanvases[pagesData[currentPageIndex]?.id];
+            if (activeCanvas && activeCanvas.getActiveObject()) {
+                activeCanvas.getActiveObject().set('fill', activeColor);
+                activeCanvas.renderAll();
+            }
+            updateAllCanvasesMode();
+        }
+
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function updateAllCanvasesMode() {
+            Object.values(fabricCanvases).forEach(canvas => {
+                canvas.isDrawingMode = false;
+                canvas.selection = false;
+                canvas.forEachObject(o => o.selectable = (activeTool === 'navigate'));
+                canvas.defaultCursor = 'default';
+                canvas.hoverCursor = 'default';
+
+                canvas.off('mouse:down', eraserHandler);
+                canvas.off('mouse:down', textHandler);
+                canvas.off('mouse:down', stampHandler);
+                canvas.off('mouse:down', fingeringPlacementHandler);
+                canvas.off('mouse:down', linkNavigationHandler);
+                canvas.off('mouse:down', hotspotMouseDownHandler);
+                canvas.off('mouse:move', hotspotMouseMoveHandler);
+                canvas.off('mouse:up', hotspotMouseUpHandler);
+
+                if (activeTool !== 'navigate') {
+                    canvas.discardActiveObject();
+                    canvas.requestRenderAll();
+                }
+
+                if (activeTool === 'navigate') {
+                    canvas.allowTouchScrolling = true;
+                    canvas.on('mouse:down', linkNavigationHandler);
+                } 
+                else if (activeTool === 'pen') {
+                    canvas.allowTouchScrolling = false;
+                    canvas.isDrawingMode = true;
+                    canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+                    canvas.freeDrawingBrush.color = activeColor;
+                    canvas.freeDrawingBrush.width = penStrokeWidth;
+                } 
+                else if (activeTool === 'highlight') {
+                    canvas.allowTouchScrolling = false;
+                    canvas.isDrawingMode = true;
+                    canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+                    canvas.freeDrawingBrush.color = hexToRgba(activeColor, 0.35);
+                    canvas.freeDrawingBrush.width = highlightStrokeWidth;
+                } 
+                else if (activeTool === 'text') {
+                    canvas.allowTouchScrolling = false;
+                    canvas.defaultCursor = 'text';
+                    canvas.hoverCursor = 'text';
+                    canvas.on('mouse:down', textHandler);
+                } 
+                else if (activeTool === 'stamp') {
+                    canvas.allowTouchScrolling = false;
+                    canvas.defaultCursor = 'crosshair';
+                    canvas.hoverCursor = 'crosshair';
+                    canvas.on('mouse:down', stampHandler);
+                }
+                else if (activeTool === 'fingering') {
+                    canvas.allowTouchScrolling = false;
+                    canvas.defaultCursor = 'crosshair';
+                    canvas.hoverCursor = 'crosshair';
+                    canvas.on('mouse:down', fingeringPlacementHandler);
+                }
+                else if (activeTool === 'hotspot') {
+                    canvas.allowTouchScrolling = false;
+                    canvas.defaultCursor = 'crosshair';
+                    canvas.hoverCursor = 'crosshair';
+                    canvas.on('mouse:down', hotspotMouseDownHandler);
+                    canvas.on('mouse:move', hotspotMouseMoveHandler);
+                    canvas.on('mouse:up', hotspotMouseUpHandler);
+                }
+                else if (activeTool === 'erase') {
+                    canvas.allowTouchScrolling = false;
+                    canvas.defaultCursor = 'cell';
+                    canvas.hoverCursor = 'not-allowed';
+                    canvas.on('mouse:down', eraserHandler);
+                }
+            });
+        }
+
+        function textHandler(options) {
+            if (activeTool !== 'text' || options.target) return;
+            const canvas = this;
+            const pointer = canvas.getPointer(options.e);
+            const text = new fabric.IText('Type here...', {
+                left: pointer.x,
+                top: pointer.y,
+                fontFamily: 'sans-serif',
+                fontSize: 24,
+                fill: activeColor,
+                selectable: true
+            });
+            canvas.add(text);
+            canvas.setActiveObject(text);
+            text.enterEditing();
+            text.selectAll();
+            canvas.renderAll();
+        }
+
+        // Stamps & Navigation Links
+        let activeStampSymbol = null;
+        let activeStampIsLink = false;
+        const stampPaletteModal = document.getElementById('stampPaletteModal');
+
+        document.querySelector('[data-tool="stamp"]').addEventListener('click', () => {
+            stampPaletteModal.classList.remove('hidden');
+        });
+        document.getElementById('btnCloseStamps').addEventListener('click', () => {
+            stampPaletteModal.classList.add('hidden');
+        });
+
+        document.querySelectorAll('.stamp-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget;
+                activeStampSymbol = target.dataset.stamp;
+                activeStampIsLink = target.dataset.link === 'true';
+                stampPaletteModal.classList.add('hidden');
+                document.querySelector('[data-tool="stamp"]').classList.add('active');
+            });
+        });
+
+        function stampHandler(options) {
+            if (activeTool !== 'stamp' || !activeStampSymbol || options.target) return;
+            const canvas = this;
+            const pointer = canvas.getPointer(options.e);
+
+            let jumpTarget = null;
+            if (activeStampIsLink) {
+                let promptMsg = `Enter page number to jump to when clicking this "${activeStampSymbol}":`;
+                if (activeStampSymbol === '←') {
+                    promptMsg = `Enter target page to jump back to when clicking this Left Arrow (←):`;
+                }
+                const defaultTarget = activeStampSymbol === '←' ? Math.max(1, currentPageIndex) : Math.min(pagesData.length, currentPageIndex + 2);
+                const entered = prompt(promptMsg, defaultTarget);
+                if (entered && !isNaN(parseInt(entered))) {
+                    jumpTarget = parseInt(entered);
+                }
+            }
+
+            const isArrow = (activeStampSymbol === '←' || activeStampSymbol === '→');
+            
+            if (isArrow && jumpTarget !== null) {
+                const targetPageObj = pagesData[jumpTarget - 1];
+                const pageName = targetPageObj ? targetPageObj.filename : `Page ${jumpTarget}`;
+                const labelString = `p.${jumpTarget} - ${pageName}`;
+
+                const labelText = new fabric.Text(labelString, {
+                    left: 0,
+                    top: 0,
+                    fontSize: 32,
+                    fontWeight: 'bold',
+                    fill: activeColor,
+                    fontFamily: 'sans-serif',
+                    originX: 'center',
+                    originY: 'bottom'
+                });
+
+                const arrowText = new fabric.Text(activeStampSymbol, {
+                    left: 0,
+                    top: 10,
+                    fontSize: 480,
+                    fontWeight: 'bold',
+                    fill: activeColor,
+                    fontFamily: 'serif',
+                    originX: 'center',
+                    originY: 'top'
+                });
+
+                const arrowGroup = new fabric.Group([labelText, arrowText], {
+                    left: pointer.x,
+                    top: pointer.y,
+                    selectable: true,
+                    hasControls: true
+                });
+                
+                arrowGroup.set('targetPage', jumpTarget);
+                canvas.add(arrowGroup);
+            } else {
+                const stampText = new fabric.Text(activeStampSymbol, {
+                    left: pointer.x,
+                    top: pointer.y,
+                    fontSize: isArrow ? 480 : 36,
+                    fontWeight: isArrow ? 'bold' : 'normal',
+                    fill: activeColor,
+                    fontFamily: 'serif',
+                    selectable: true,
+                    hasControls: true
+                });
+                
+                if (jumpTarget !== null) {
+                    stampText.set('targetPage', jumpTarget);
+                }
+                canvas.add(stampText);
+            }
+
+            canvas.renderAll();
+        }
+
+        // Fingerings
+        let activeFingeringSymbol = null;
+        const fingeringPaletteModal = document.getElementById('fingeringPaletteModal');
+
+        document.querySelector('[data-tool="fingering"]').addEventListener('click', () => {
+            fingeringPaletteModal.classList.remove('hidden');
+        });
+        document.getElementById('btnCloseFingering').addEventListener('click', () => {
+            fingeringPaletteModal.classList.add('hidden');
+        });
+
+        document.querySelectorAll('.fingering-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget;
+                activeFingeringSymbol = target.dataset.symbol;
+                fingeringPaletteModal.classList.add('hidden');
+                document.querySelector('[data-tool="fingering"]').classList.add('active');
+            });
+        });
+
+        function fingeringPlacementHandler(options) {
+            if (activeTool !== 'fingering' || !activeFingeringSymbol || options.target) return;
+            const canvas = this;
+            const pointer = canvas.getPointer(options.e);
+
+            const isCircled = /^[①-⑥]$/.test(activeFingeringSymbol);
+            const isRoman = /^[IVXLCDM]+$/.test(activeFingeringSymbol);
+            const fontSize = isCircled ? 38 : isRoman ? 30 : 34;
+
+            const fingerText = new fabric.Text(activeFingeringSymbol, {
+                left: pointer.x,
+                top: pointer.y,
+                fontSize: fontSize,
+                fontWeight: 'bold',
+                fill: activeColor,
+                fontFamily: isRoman ? 'serif' : 'sans-serif',
+                selectable: true,
+                hasControls: true,
+                originX: 'center',
+                originY: 'center',
+                shadow: new fabric.Shadow({
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    blur: 6,
+                    offsetX: 0,
+                    offsetY: 0
+                })
+            });
+
+            canvas.add(fingerText);
+            canvas.renderAll();
+        }
+
+        // Hotspots
+        let isDrawingHotspot = false;
+        let hotspotOrigX = 0;
+        let hotspotOrigY = 0;
+        let activeHotspotRect = null;
+
+        function hotspotMouseDownHandler(o) {
+            if (activeTool !== 'hotspot') return;
+            const canvas = this;
+            isDrawingHotspot = true;
+            const pointer = canvas.getPointer(o.e);
+            hotspotOrigX = pointer.x;
+            hotspotOrigY = pointer.y;
+
+            activeHotspotRect = new fabric.Rect({
+                left: hotspotOrigX,
+                top: hotspotOrigY,
+                originX: 'left',
+                originY: 'top',
+                width: 0,
+                height: 0,
+                fill: 'rgba(245, 158, 11, 0.28)',
+                stroke: '#f59e0b',
+                strokeWidth: 2,
+                strokeDashArray: [6, 4],
+                selectable: false,
+                isSmartHotspot: true
+            });
+            canvas.add(activeHotspotRect);
+        }
+
+        function hotspotMouseMoveHandler(o) {
+            if (!isDrawingHotspot || !activeHotspotRect) return;
+            const canvas = this;
+            const pointer = canvas.getPointer(o.e);
+
+            if (hotspotOrigX > pointer.x) {
+                activeHotspotRect.set({ left: Math.abs(pointer.x) });
+            }
+            if (hotspotOrigY > pointer.y) {
+                activeHotspotRect.set({ top: Math.abs(pointer.y) });
+            }
+
+            activeHotspotRect.set({
+                width: Math.abs(hotspotOrigX - pointer.x),
+                height: Math.abs(hotspotOrigY - pointer.y)
+            });
+
+            canvas.renderAll();
+        }
+
+        function hotspotMouseUpHandler(o) {
+            if (!isDrawingHotspot || !activeHotspotRect) return;
+            isDrawingHotspot = false;
+            const canvas = this;
+
+            if (activeHotspotRect.width < 24 || activeHotspotRect.height < 24) {
+                canvas.remove(activeHotspotRect);
+                activeHotspotRect = null;
+                canvas.renderAll();
+                return;
+            }
+
+            const promptMsg = `Smart Jump Hotspot: Enter target page number to jump to when tapping this area:`;
+            const defaultTarget = Math.min(pagesData.length, currentPageIndex + 2);
+            const entered = prompt(promptMsg, defaultTarget);
+
+            if (entered && !isNaN(parseInt(entered))) {
+                const targetPage = parseInt(entered);
+                activeHotspotRect.set({
+                    targetPage: targetPage,
+                    selectable: false,
+                    hasControls: false,
+                    hoverCursor: 'pointer'
+                });
+
+                const badgeText = new fabric.Text(`Jump to p.${targetPage}`, {
+                    left: activeHotspotRect.left + 4,
+                    top: activeHotspotRect.top + 4,
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    fontFamily: 'sans-serif',
+                    fill: '#b45309',
+                    backgroundColor: 'rgba(254, 243, 199, 0.85)',
+                    padding: 2,
+                    selectable: false,
+                    evented: false
+                });
+
+                const hotspotGroup = new fabric.Group([activeHotspotRect, badgeText], {
+                    left: activeHotspotRect.left,
+                    top: activeHotspotRect.top,
+                    selectable: (activeTool === 'navigate'),
+                    targetPage: targetPage,
+                    isSmartHotspot: true
+                });
+
+                canvas.remove(activeHotspotRect);
+                canvas.add(hotspotGroup);
+                canvas.renderAll();
+            } else {
+                canvas.remove(activeHotspotRect);
+                canvas.renderAll();
+            }
+            activeHotspotRect = null;
+        }
+
+        function linkNavigationHandler(options) {
+            if (activeTool !== 'navigate' || !options.target) return;
+            
+            if (options.target.targetPage) {
+                const targetIdx = options.target.targetPage - 1;
+                
+                if (options.target.isSmartHotspot) {
+                    const canvas = this;
+                    const origOpacity = options.target.opacity || 1;
+                    options.target.set({ opacity: 0.1 });
+                    canvas.requestRenderAll();
+                    
+                    setTimeout(() => {
+                        options.target.set({ opacity: origOpacity });
+                        canvas.requestRenderAll();
+                        if (targetIdx >= 0 && targetIdx < pagesData.length) {
+                            showPage(targetIdx);
+                        }
+                    }, 120);
+                    return;
+                }
+
+                if (targetIdx >= 0 && targetIdx < pagesData.length) {
+                    showPage(targetIdx);
+                }
+            }
+        }
+
+        function eraserHandler(options) {
+            if (activeTool === 'erase' && options.target) {
+                this.remove(options.target);
+                this.renderAll();
+            }
+        }
+
+        // ---------------------------------------------------------
+        // CLEAR SETLIST CONFIRMATION MODAL LOGIC
+        // ---------------------------------------------------------
+        const clearConfirmModal = document.getElementById('clearConfirmModal');
+        document.getElementById('btnClear').addEventListener('click', () => {
+            if (pagesData.length === 0) return;
+            clearConfirmModal.classList.remove('hidden');
+        });
+        document.getElementById('btnCancelClear').addEventListener('click', () => {
+            clearConfirmModal.classList.add('hidden');
+        });
+        document.getElementById('btnConfirmClear').addEventListener('click', () => {
+            clearConfirmModal.classList.add('hidden');
+            [...pagesData].forEach(p => triggerRemovePageWithFeedback(p.id));
+            pagesData = [];
+            currentPageIndex = 0;
+            updatePageIndicator();
+        });
+
+        // ---------------------------------------------------------
         // GOOGLE DRIVE API & PUBLIC SETLIST SAVER (NO NUMBER PREFIXES)
         // ---------------------------------------------------------
         const DRIVE_CLIENT_ID = '1086834950344-qce6cl6d57ufu1hpkq1pq9th5quo19kg.apps.googleusercontent.com';
@@ -1146,14 +2194,12 @@
             }
         }
 
-        // Downloads directly from Google Drive without prompting for parts
         async function importDirectFile(fileId, fileName, mimeType) {
             try {
                 const headers = driveAccessToken ? { 'Authorization': `Bearer ${driveAccessToken}` } : {};
                 const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, { headers });
                 const blob = await res.blob();
                 const file = new File([blob], fileName, { type: mimeType });
-                // Pass skipPartPrompt = true to suppress part selection modal
                 await processFile(file, true);
                 driveLibraryModal.classList.add('hidden');
             } catch (e) {
@@ -1459,10 +2505,8 @@
                     const defaultName = `${originalName}${pageSuffix}`;
 
                     if (skipPartPrompt) {
-                        // Direct import: Keep name as-is from Drive
                         await addPage('pdf', canvas.toDataURL('image/jpeg', 0.8), defaultName);
                     } else {
-                        // Manual local upload: prompt for part selection
                         const selection = await showImportPartSelectionModal(defaultName, i, pdf.numPages);
                         if (selection) {
                             const targetIdx = (selection.position === 'current') ? currentPageIndex + 1 : pagesData.length;
@@ -1474,17 +2518,15 @@
                 const dataUrl = await new Promise((r) => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
                 
                 if (skipPartPrompt) {
-                    // Direct import: Keep name as-is from Drive
                     await addPage('image', dataUrl, originalName);
                 } else {
                     let finalDataUrl = dataUrl;
                     if (typeof openCropper === 'function') {
                         const cropped = await openCropper(dataUrl);
-                        if (!cropped) return; // user cancelled crop
+                        if (!cropped) return;
                         finalDataUrl = cropped;
                     }
 
-                    // Manual local upload: prompt for part selection
                     const selection = await showImportPartSelectionModal(originalName);
                     if (selection) {
                         const targetIdx = (selection.position === 'current') ? currentPageIndex + 1 : pagesData.length;
@@ -1537,17 +2579,6 @@
             e.target.value = ''; 
         });
         document.getElementById('dropZone').addEventListener('click', () => document.getElementById('fileInput').click());
-
-        // Clear Setlist
-        document.getElementById('btnClear').addEventListener('click', () => {
-            if (pagesData.length === 0) return;
-            if (confirm("Clear all pages in the current setlist?")) {
-                [...pagesData].forEach(p => triggerRemovePageWithFeedback(p.id));
-                pagesData = [];
-                currentPageIndex = 0;
-                updatePageIndicator();
-            }
-        });
 
         // Keyboard navigation
         window.addEventListener('keydown', (e) => {
