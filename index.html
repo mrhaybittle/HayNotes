@@ -552,7 +552,6 @@
                     subtitle.textContent = `Select the instrument part(s) on this page`;
                 }
 
-                // Reset options: Concert C checked by default, multi-parts disabled
                 multiToggle.checked = false;
                 chosenInsertPosition = 'end';
 
@@ -591,7 +590,6 @@
             lucide.createIcons();
         }
 
-        // Click handler for part selection cards
         document.querySelectorAll('.part-select-card').forEach(card => {
             card.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -613,7 +611,6 @@
             });
         });
 
-        // Toggle multi-part behavior
         document.getElementById('toggleMultiParts').addEventListener('change', (e) => {
             if (!e.target.checked) {
                 const currentSelected = Array.from(document.querySelectorAll('.part-select-card input:checked')).map(i => i.value);
@@ -637,7 +634,6 @@
             const selectedKeys = Array.from(document.querySelectorAll('.part-select-card input:checked')).map(i => i.value);
             const rawTitle = document.getElementById('inputImportSongTitle').value.trim() || "Song";
             
-            // Build title string with tags: e.g., "Espresso (Bb)" or "Espresso (C) (Bb)"
             let formattedTitle = rawTitle;
             const nonConcertKeys = selectedKeys.filter(k => k !== 'C');
             if (nonConcertKeys.length > 0) {
@@ -769,7 +765,6 @@
                 }
 
                 const group = groups.get(rootKey);
-                // If it has a C part and group hasn't assigned a parent yet, make it parent
                 if (keys.includes('C') && !group.parent) {
                     group.parent = page;
                 } else {
@@ -1059,6 +1054,7 @@
             driveLibraryModal.classList.add('hidden');
         });
 
+        // Universal Public Fetch with Auth Fallback
         async function fetchDriveLibraryFiles() {
             const fileListEl = document.getElementById('driveFileList');
             fileListEl.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs"><i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto mb-2 text-cyan-400"></i> Loading HayNotes public scores...</div>`;
@@ -1150,13 +1146,15 @@
             }
         }
 
+        // Downloads directly from Google Drive without prompting for parts
         async function importDirectFile(fileId, fileName, mimeType) {
             try {
                 const headers = driveAccessToken ? { 'Authorization': `Bearer ${driveAccessToken}` } : {};
                 const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, { headers });
                 const blob = await res.blob();
                 const file = new File([blob], fileName, { type: mimeType });
-                await processFile(file);
+                // Pass skipPartPrompt = true to suppress part selection modal
+                await processFile(file, true);
                 driveLibraryModal.classList.add('hidden');
             } catch (e) {
                 alert(`Could not download file: ${e.message}`);
@@ -1438,9 +1436,9 @@
         });
 
         // ---------------------------------------------------------
-        // FILE IMPORT PROCESSING WITH PART SELECTION PROMPT
+        // FILE IMPORT PROCESSING (SKIP PART PROMPT ON DRIVE DOWNLOAD)
         // ---------------------------------------------------------
-        async function processFile(file) {
+        async function processFile(file, skipPartPrompt = false) {
             if (!file) return;
             const ext = file.name.split('.').pop().toLowerCase();
             const rawName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
@@ -1460,29 +1458,38 @@
                     const pageSuffix = pdf.numPages > 1 ? ` p${i}` : '';
                     const defaultName = `${originalName}${pageSuffix}`;
 
-                    // Prompt user for instrument parts for this PDF page
-                    const selection = await showImportPartSelectionModal(defaultName, i, pdf.numPages);
-                    if (selection) {
-                        const targetIdx = (selection.position === 'current') ? currentPageIndex + 1 : pagesData.length;
-                        await addPage('pdf', canvas.toDataURL('image/jpeg', 0.8), selection.title, targetIdx);
+                    if (skipPartPrompt) {
+                        // Direct import: Keep name as-is from Drive
+                        await addPage('pdf', canvas.toDataURL('image/jpeg', 0.8), defaultName);
+                    } else {
+                        // Manual local upload: prompt for part selection
+                        const selection = await showImportPartSelectionModal(defaultName, i, pdf.numPages);
+                        if (selection) {
+                            const targetIdx = (selection.position === 'current') ? currentPageIndex + 1 : pagesData.length;
+                            await addPage('pdf', canvas.toDataURL('image/jpeg', 0.8), selection.title, targetIdx);
+                        }
                     }
                 }
             } else if (file.type.startsWith('image/')) {
                 const dataUrl = await new Promise((r) => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
                 
-                // Crop dialog if available
-                let finalDataUrl = dataUrl;
-                if (typeof openCropper === 'function') {
-                    const cropped = await openCropper(dataUrl);
-                    if (!cropped) return; // cancelled
-                    finalDataUrl = cropped;
-                }
+                if (skipPartPrompt) {
+                    // Direct import: Keep name as-is from Drive
+                    await addPage('image', dataUrl, originalName);
+                } else {
+                    let finalDataUrl = dataUrl;
+                    if (typeof openCropper === 'function') {
+                        const cropped = await openCropper(dataUrl);
+                        if (!cropped) return; // user cancelled crop
+                        finalDataUrl = cropped;
+                    }
 
-                // Prompt user for instrument parts for this photo
-                const selection = await showImportPartSelectionModal(originalName);
-                if (selection) {
-                    const targetIdx = (selection.position === 'current') ? currentPageIndex + 1 : pagesData.length;
-                    await addPage('image', finalDataUrl, selection.title, targetIdx);
+                    // Manual local upload: prompt for part selection
+                    const selection = await showImportPartSelectionModal(originalName);
+                    if (selection) {
+                        const targetIdx = (selection.position === 'current') ? currentPageIndex + 1 : pagesData.length;
+                        await addPage('image', finalDataUrl, selection.title, targetIdx);
+                    }
                 }
             }
         }
@@ -1522,11 +1529,11 @@
         });
 
         document.getElementById('fileInput').addEventListener('change', async (e) => { 
-            for(let f of e.target.files) await processFile(f); 
+            for(let f of e.target.files) await processFile(f, false); 
             e.target.value = ''; 
         });
         document.getElementById('cameraInput').addEventListener('change', async (e) => { 
-            if(e.target.files[0]) await processFile(e.target.files[0]); 
+            if(e.target.files[0]) await processFile(e.target.files[0], false); 
             e.target.value = ''; 
         });
         document.getElementById('dropZone').addEventListener('click', () => document.getElementById('fileInput').click());
