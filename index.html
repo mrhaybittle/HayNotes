@@ -74,17 +74,6 @@
         .btn-delete-page { transition: color 0.15s ease, transform 0.15s ease; }
         .btn-delete-page.deleting { color: #ef4444 !important; transform: scale(1.25); }
 
-        /* Tree link connection graphics */
-        .chain-branch-line {
-            width: 14px;
-            height: 24px;
-            border-left: 2px dashed #f59e0b;
-            border-bottom: 2px dashed #f59e0b;
-            border-bottom-left-radius: 6px;
-            margin-right: 4px;
-            flex-shrink: 0;
-        }
-
         /* Pedal UI Graphic Styles */
         .pedal-pad { transition: all 0.15s ease-out; }
         .pedal-pad.active { background-color: #ef4444 !important; border-color: #f87171 !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.9) !important; transform: scale(0.95); }
@@ -352,7 +341,7 @@
         </div>
     </div>
 
-    <!-- Google Drive Library Browser Modal (Accessible to Anyone Online) -->
+    <!-- Google Drive Library Browser Modal -->
     <div id="driveLibraryModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
             <div class="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
@@ -383,22 +372,49 @@
         let selectedInstrumentKey = "C";
 
         // ---------------------------------------------------------
-        // INSTRUMENT KEY & CASE-INSENSITIVE PARSING HELPERS
+        // TITLE CLEANING, NORMALIZATION & KEY DETECTION HELPERS
         // ---------------------------------------------------------
+        
+        // Strip prefixes like "01_", "08 - ", "12. " and clean excessive underscores/spaces
+        function sanitizeTitle(rawName) {
+            if (!rawName) return "Page";
+            let name = rawName.trim();
+            // Remove leading numerical ordering prefixes (e.g., 01_, 02-, 14. )
+            name = name.replace(/^\d+[\s._-]+/, '');
+            // Replace double/multiple underscores with spaces
+            name = name.replace(/_{2,}/g, ' ');
+            // Replace remaining single underscores with spaces for clean display
+            name = name.replace(/_/g, ' ');
+            // Collapse multiple spaces
+            name = name.replace(/\s+/g, ' ').trim();
+            return name || rawName;
+        }
+
+        // Case-insensitive detection of key tags: (Eb), (E♭), __Eb__, _Eb_, (Bb), (B♭), __Bb__, _Bb_
         function detectInstrumentKey(filename) {
             if (!filename) return "C";
-            // Case-insensitive detection of instrument markers
-            if (/\(\s*eb\s*\)/i.test(filename) || /\(\s*e♭\s*\)/i.test(filename)) return "Eb";
-            if (/\(\s*bb\s*\)/i.test(filename) || /\(\s*b♭\s*\)/i.test(filename)) return "Bb";
+            const name = filename.trim();
+            if (/\(?\b(eb|e♭|alto)\b\)?/i.test(name) || /[\s_\[\(](eb|e♭|alto)[\s_\]\)]/i.test(name)) return "Eb";
+            if (/\(?\b(bb|b♭)\b\)?/i.test(name) || /[\s_\[\(](bb|b♭)[\s_\]\)]/i.test(name)) return "Bb";
             return "C";
         }
 
+        // Extracts base root name by removing prefixes, part identifiers, and page suffixes
         function extractSongRootTitle(filename) {
             if (!filename) return "";
-            return filename
-                .replace(/\(\s*(eb|e♭|bb|b♭|tab|alto)\s*\)/gi, '')
-                .replace(/[_\s\(-]*p\.?\s*\d+\)?$/i, '')
-                .trim();
+            let name = sanitizeTitle(filename);
+            
+            // Remove instrument tags
+            name = name.replace(/\(?\b(eb|e♭|bb|b♭|tab|alto)\b\)?/gi, '');
+            name = name.replace(/[\s_\[\(]+(eb|e♭|bb|b♭|tab|alto)[\s_\]\)]+/gi, ' ');
+            
+            // Remove page suffixes like p1, p.2, - 1, etc.
+            name = name.replace(/[_\s\(-]*p\.?\s*\d+\)?$/i, '');
+            
+            // Final cleanup of extra separators or trailing dashes
+            name = name.replace(/[-_\s]+$/, '').trim();
+            name = name.replace(/\s+/g, ' ').trim();
+            return name;
         }
 
         // Strict instrument filtering for performance/score viewing
@@ -482,7 +498,11 @@
                     <div class="flex items-center gap-2 truncate">
                         <span class="font-mono text-[10px] ${isCurrent ? 'text-blue-200' : 'text-slate-500'} w-6 text-right">${displayIdx + 1}.</span>
                         <span class="truncate">${title}</span>
-                        <span class="text-[9px] font-mono px-1 py-0.5 rounded bg-slate-800 text-amber-300 border border-slate-700">${key}</span>
+                        <span class="text-[9px] font-mono px-1 py-0.5 rounded ${
+                            key === 'Eb' ? 'bg-sky-950/60 text-sky-300 border border-sky-500' :
+                            key === 'Bb' ? 'bg-orange-950/60 text-orange-300 border border-orange-500' :
+                            'bg-slate-800 text-amber-300 border border-slate-700'
+                        }">${key}</span>
                     </div>
                     ${isCurrent ? `<i data-lucide="check" class="w-3.5 h-3.5 text-white shrink-0"></i>` : ''}
                 `;
@@ -574,7 +594,13 @@
                                         <div class="flex-1 truncate text-xs text-slate-300 font-medium">
                                             ${child.filename}
                                         </div>
-                                        <span class="text-[9px] font-mono px-1 py-0.2 rounded font-bold ${childKey === 'Eb' ? 'bg-purple-900/60 text-purple-300 border border-purple-700' : childKey === 'Bb' ? 'bg-cyan-900/60 text-cyan-300 border border-cyan-700' : 'bg-slate-800 text-slate-300 border border-slate-700'}">${childKey}</span>
+                                        <span class="text-[9px] font-mono px-1 py-0.2 rounded font-bold ${
+                                            childKey === 'Eb' 
+                                                ? 'bg-sky-950/60 text-sky-300 border border-sky-500' 
+                                                : childKey === 'Bb' 
+                                                ? 'bg-orange-950/60 text-orange-300 border border-orange-500' 
+                                                : 'bg-slate-800 text-slate-300 border border-slate-700'
+                                        }">${childKey}</span>
                                         <button onclick="event.stopPropagation(); triggerRemovePageWithFeedback('${child.id}');" class="p-1 hover:text-red-400 text-slate-500 rounded" title="Delete Part">
                                             <i data-lucide="trash-2" class="w-3 h-3"></i>
                                         </button>
@@ -593,7 +619,11 @@
                         <div class="flex-1 truncate cursor-pointer" onclick="jumpToPageById('${parentPage.id}')" ondblclick="renamePageTitle('${parentPage.id}')" title="Tap to select • Double tap to rename">
                             <div class="text-xs font-bold text-white truncate flex items-center gap-1.5">
                                 <span class="truncate">${parentPage.filename}</span>
-                                <span class="text-[9px] font-mono px-1 py-0.2 rounded font-bold bg-blue-900/60 text-blue-300 border border-blue-700">${parentKey}</span>
+                                <span class="text-[9px] font-mono px-1 py-0.2 rounded font-bold ${
+                                    parentKey === 'Eb' ? 'bg-sky-950/60 text-sky-300 border border-sky-500' :
+                                    parentKey === 'Bb' ? 'bg-orange-950/60 text-orange-300 border border-orange-500' :
+                                    'bg-blue-900/60 text-blue-300 border border-blue-700'
+                                }">${parentKey}</span>
                             </div>
                             <div class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                                 <span>Master Score</span>
@@ -675,7 +705,7 @@
         });
 
         // ---------------------------------------------------------
-        // PUBLIC HAYNOTES GOOGLE DRIVE BROWSER & SAVING ENGINE
+        // GOOGLE DRIVE API & PUBLIC SETLIST SAVER (NO NUMBER PREFIXES)
         // ---------------------------------------------------------
         const DRIVE_CLIENT_ID = '1086834950344-qce6cl6d57ufu1hpkq1pq9th5quo19kg.apps.googleusercontent.com';
         const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive';
@@ -727,6 +757,66 @@
             if (tokenClient) tokenClient.requestAccessToken();
         });
 
+        // Save Setlist to Google Drive WITHOUT numerical prefixing
+        document.getElementById('btnSaveSetlist').addEventListener('click', async () => {
+            if (pagesData.length === 0) {
+                alert('Your setlist is empty.');
+                return;
+            }
+
+            const rawName = prompt("Enter a name for this Setlist folder:", activeSetlistName);
+            if (!rawName || !rawName.trim()) return;
+            const setlistName = rawName.trim();
+
+            if (!driveAccessToken) {
+                alert("Please authenticate with Google Drive first using the cloud button.");
+                if (tokenClient) tokenClient.requestAccessToken();
+                return;
+            }
+
+            try {
+                const folderRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${driveAccessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: setlistName,
+                        mimeType: 'application/vnd.google-apps.folder',
+                        parents: [ROOT_HAYNOTES_FOLDER_ID]
+                    })
+                });
+                const folderData = await folderRes.json();
+                const setlistFolderId = folderData.id;
+
+                for (let i = 0; i < pagesData.length; i++) {
+                    const page = pagesData[i];
+                    const blob = await getPageAsBlob(page);
+                    if (blob) {
+                        // DO NOT PREFIX WITH NUMBER INDEX - use clean sanitized name
+                        const cleanBase = sanitizeTitle(page.filename || `Page_${i + 1}`).replace(/[^a-zA-Z0-9_\- ]/g, '');
+                        const imgName = `${cleanBase}.jpg`;
+                        
+                        const metadata = { name: imgName, parents: [setlistFolderId] };
+                        const formData = new FormData();
+                        formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                        formData.append('file', blob);
+
+                        await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${driveAccessToken}` },
+                            body: formData
+                        });
+                    }
+                }
+
+                alert(`Setlist "${setlistName}" saved cleanly without number prefixes!`);
+            } catch (err) {
+                alert(`Error saving to Google Drive: ${err.message}`);
+            }
+        });
+
         const driveLibraryModal = document.getElementById('driveLibraryModal');
         document.getElementById('btnOpenDriveLibrary').addEventListener('click', () => {
             driveLibraryModal.classList.remove('hidden');
@@ -754,7 +844,6 @@
             try {
                 let res = await fetch(endpoint, { headers });
                 
-                // If unauthorized without token, prompt user to link drive account
                 if (!res.ok && res.status === 401) {
                     fileListEl.innerHTML = `
                         <div class="text-center p-6 text-slate-400 space-y-3">
@@ -777,7 +866,6 @@
                 }
 
                 fileListEl.innerHTML = '';
-                // Case-insensitive alphabetical sort for songs
                 const sortedFiles = data.files.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 
                 sortedFiles.forEach(file => {
@@ -788,6 +876,7 @@
                     const isImg = file.mimeType.startsWith('image/');
                     const iconName = isFolder ? 'folder-open' : isImg ? 'image' : 'file';
                     const buttonText = isFolder ? 'Import Setlist' : 'Add Page';
+                    const cleanDisplayName = sanitizeTitle(file.name);
 
                     item.innerHTML = `
                         <div class="flex items-center gap-3 overflow-hidden flex-1">
@@ -795,7 +884,7 @@
                                 <i data-lucide="${iconName}" class="w-5 h-5 ${isFolder ? 'text-amber-400' : 'text-cyan-400'}"></i>
                             </div>
                             <div class="truncate">
-                                <div class="text-xs font-semibold text-slate-200 truncate">${file.name}</div>
+                                <div class="text-xs font-semibold text-slate-200 truncate">${cleanDisplayName}</div>
                                 <div class="text-[10px] text-slate-400 uppercase">${isFolder ? 'Setlist Folder' : 'Score Item'}</div>
                             </div>
                         </div>
@@ -836,7 +925,7 @@
                 const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, { headers });
                 const blob = await res.blob();
                 const file = new File([blob], fileName, { type: mimeType });
-                await processFile(file, true);
+                await processFile(file);
                 driveLibraryModal.classList.add('hidden');
             } catch (e) {
                 alert(`Could not download file: ${e.message}`);
@@ -968,11 +1057,54 @@
             }
         }
 
+        async function getPageAsBlob(pageMeta) {
+            return new Promise((resolve) => {
+                const wrapper = document.getElementById(`wrap-${pageMeta.id}`);
+                if (!wrapper) return resolve(null);
+
+                const imgEl = wrapper.querySelector('img');
+                const fabricCanvas = fabricCanvases[pageMeta.id];
+
+                const tempCanvas = document.createElement('canvas');
+                const ctx = tempCanvas.getContext('2d');
+
+                const width = fabricCanvas ? fabricCanvas.width : (imgEl?.naturalWidth || wrapper.clientWidth || 800);
+                const height = fabricCanvas ? fabricCanvas.height : (imgEl?.naturalHeight || wrapper.clientHeight || 1000);
+
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, height);
+
+                if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+                    ctx.drawImage(imgEl, 0, 0, width, height);
+                }
+
+                if (fabricCanvas) {
+                    const overlayImg = new Image();
+                    overlayImg.onload = () => {
+                        ctx.drawImage(overlayImg, 0, 0, width, height);
+                        tempCanvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.92);
+                    };
+                    overlayImg.onerror = () => {
+                        tempCanvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.92);
+                    };
+                    overlayImg.src = fabricCanvas.toDataURL({ format: 'png' });
+                } else {
+                    tempCanvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.92);
+                }
+            });
+        }
+
         async function addPage(type, content, filename = "Page", insertIndex = null) {
             const pageId = generateId();
-            if (filename) lastUsedPageTitle = filename;
+            
+            // Auto clean any number prefixes or double underscores on import
+            const cleanTitle = sanitizeTitle(filename);
+            lastUsedPageTitle = cleanTitle;
 
-            const pageObj = { id: pageId, type: type, content: content, filename: filename };
+            const pageObj = { id: pageId, type: type, content: content, filename: cleanTitle };
 
             if (insertIndex !== null && insertIndex >= 0 && insertIndex < pagesData.length) {
                 pagesData.splice(insertIndex, 0, pageObj);
@@ -1028,7 +1160,7 @@
 
             const newTitle = prompt("Enter a new name for this score:", pageObj.filename);
             if (newTitle && newTitle.trim()) {
-                pageObj.filename = newTitle.trim();
+                pageObj.filename = sanitizeTitle(newTitle.trim());
                 renderPagesListDrawer();
                 updatePageIndicator();
             }
@@ -1079,7 +1211,8 @@
         async function processFile(file) {
             if (!file) return;
             const ext = file.name.split('.').pop().toLowerCase();
-            const originalName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+            const rawName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+            const originalName = sanitizeTitle(rawName);
 
             if (['abc', 'txt'].includes(ext)) { 
                 await addPage('abc', await file.text(), originalName); 
@@ -1109,6 +1242,17 @@
             e.target.value = ''; 
         });
         document.getElementById('dropZone').addEventListener('click', () => document.getElementById('fileInput').click());
+
+        // Clear Setlist
+        document.getElementById('btnClear').addEventListener('click', () => {
+            if (pagesData.length === 0) return;
+            if (confirm("Clear all pages in the current setlist?")) {
+                [...pagesData].forEach(p => triggerRemovePageWithFeedback(p.id));
+                pagesData = [];
+                currentPageIndex = 0;
+                updatePageIndicator();
+            }
+        });
 
         // Keyboard navigation
         window.addEventListener('keydown', (e) => {
