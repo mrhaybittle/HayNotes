@@ -341,6 +341,93 @@
         </div>
     </div>
 
+    <!-- IMPORT INSTRUMENT PART SELECTION MODAL -->
+    <div id="importPartModal" class="hidden fixed inset-0 z-[80] bg-slate-950/85 flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-950 border border-blue-800 flex items-center justify-center text-blue-400 shrink-0">
+                    <i data-lucide="music" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-white">Importing Score Page</h3>
+                    <p class="text-xs text-slate-400" id="importModalSubtitle">Select the instrument parts on this page</p>
+                </div>
+            </div>
+
+            <!-- Page Title Input -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-semibold text-slate-400">Song / Page Title:</label>
+                <input type="text" id="inputImportSongTitle" class="bg-slate-950 border border-slate-800 p-2.5 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500">
+            </div>
+
+            <!-- Instrument Selection Boxes -->
+            <div class="flex flex-col gap-2 pt-1">
+                <label class="text-xs font-semibold text-slate-400">Instrument Part:</label>
+                <div class="grid grid-cols-3 gap-2" id="partSelectorGrid">
+                    <!-- Concert C Box -->
+                    <label class="part-select-card cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl border border-blue-500 bg-blue-950/40 text-blue-300 font-bold text-xs transition-all select-none gap-1.5" data-key="C">
+                        <input type="checkbox" name="importKeyPart" value="C" checked class="hidden">
+                        <span class="text-base font-extrabold">C</span>
+                        <span class="text-[10px] text-blue-200/80">Concert</span>
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-blue-400 part-check-icon"></i>
+                    </label>
+
+                    <!-- Bb Box -->
+                    <label class="part-select-card cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl border border-slate-800 bg-slate-950/60 text-slate-300 font-bold text-xs transition-all select-none gap-1.5 opacity-80 hover:opacity-100" data-key="Bb">
+                        <input type="checkbox" name="importKeyPart" value="Bb" class="hidden">
+                        <span class="text-base font-extrabold text-orange-400">B♭</span>
+                        <span class="text-[10px] text-slate-400">Trumpet / Sax</span>
+                        <i data-lucide="circle" class="w-4 h-4 text-slate-600 part-check-icon"></i>
+                    </label>
+
+                    <!-- Eb Box -->
+                    <label class="part-select-card cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl border border-slate-800 bg-slate-950/60 text-slate-300 font-bold text-xs transition-all select-none gap-1.5 opacity-80 hover:opacity-100" data-key="Eb">
+                        <input type="checkbox" name="importKeyPart" value="Eb" class="hidden">
+                        <span class="text-base font-extrabold text-sky-400">E♭</span>
+                        <span class="text-[10px] text-slate-400">Alto Sax</span>
+                        <i data-lucide="circle" class="w-4 h-4 text-slate-600 part-check-icon"></i>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Multi-part page toggle -->
+            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <div class="flex flex-col">
+                    <span class="text-xs font-semibold text-slate-200">Allow multiple parts</span>
+                    <span class="text-[10px] text-slate-400">Page has 2 or more instrument scores</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="toggleMultiParts" class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+
+            <!-- Insertion position option if existing pages exist -->
+            <div id="importPositionSection" class="hidden flex flex-col gap-1.5 pt-1">
+                <label class="text-xs font-semibold text-slate-400">Setlist Placement:</label>
+                <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                    <button type="button" id="btnImportPosCurrent" class="p-2.5 rounded-xl border border-emerald-800 bg-emerald-950/50 text-emerald-300 hover:bg-emerald-900/60 transition-colors text-left flex items-center justify-between">
+                        <span>Insert after page</span>
+                        <i data-lucide="between-horizontal-start" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" id="btnImportPosEnd" class="p-2.5 rounded-xl border border-blue-800 bg-blue-950/50 text-blue-300 hover:bg-blue-900/60 transition-colors text-left flex items-center justify-between">
+                        <span>Add to End</span>
+                        <i data-lucide="arrow-down-to-line" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                <button type="button" id="btnCancelImportPart" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors">
+                    Cancel
+                </button>
+                <button type="button" id="btnConfirmImportPart" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-colors shadow-lg flex items-center gap-1.5">
+                    <i data-lucide="check" class="w-4 h-4"></i> Add Page
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Google Drive Library Browser Modal -->
     <div id="driveLibraryModal" class="hidden fixed inset-0 z-50 bg-slate-900/80 flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
@@ -374,53 +461,52 @@
         // ---------------------------------------------------------
         // TITLE CLEANING, NORMALIZATION & KEY DETECTION HELPERS
         // ---------------------------------------------------------
-        
-        // Strip prefixes like "01_", "08 - ", "12. " and clean excessive underscores/spaces
         function sanitizeTitle(rawName) {
             if (!rawName) return "Page";
             let name = rawName.trim();
-            // Remove leading numerical ordering prefixes (e.g., 01_, 02-, 14. )
             name = name.replace(/^\d+[\s._-]+/, '');
-            // Replace double/multiple underscores with spaces
             name = name.replace(/_{2,}/g, ' ');
-            // Replace remaining single underscores with spaces for clean display
             name = name.replace(/_/g, ' ');
-            // Collapse multiple spaces
             name = name.replace(/\s+/g, ' ').trim();
             return name || rawName;
         }
 
-        // Case-insensitive detection of key tags: (Eb), (E♭), __Eb__, _Eb_, (Bb), (B♭), __Bb__, _Bb_
-        function detectInstrumentKey(filename) {
-            if (!filename) return "C";
+        // Returns an array of keys found on the page (supports multiple parts: ['C', 'Bb'])
+        function detectInstrumentKeys(filename) {
+            if (!filename) return ["C"];
             const name = filename.trim();
-            if (/\(?\b(eb|e♭|alto)\b\)?/i.test(name) || /[\s_\[\(](eb|e♭|alto)[\s_\]\)]/i.test(name)) return "Eb";
-            if (/\(?\b(bb|b♭)\b\)?/i.test(name) || /[\s_\[\(](bb|b♭)[\s_\]\)]/i.test(name)) return "Bb";
-            return "C";
+            const keys = [];
+
+            if (/\(?\b(eb|e♭|alto)\b\)?/i.test(name) || /[\s_\[\(](eb|e♭|alto)[\s_\]\)]/i.test(name)) {
+                keys.push("Eb");
+            }
+            if (/\(?\b(bb|b♭)\b\)?/i.test(name) || /[\s_\[\(](bb|b♭)[\s_\]\)]/i.test(name)) {
+                keys.push("Bb");
+            }
+            if (/\(?\b(c|concert)\b\)?/i.test(name) || keys.length === 0) {
+                keys.push("C");
+            }
+            return Array.from(new Set(keys));
         }
 
-        // Extracts base root name by removing prefixes, part identifiers, and page suffixes
         function extractSongRootTitle(filename) {
             if (!filename) return "";
             let name = sanitizeTitle(filename);
-            
-            // Remove instrument tags
-            name = name.replace(/\(?\b(eb|e♭|bb|b♭|tab|alto)\b\)?/gi, '');
-            name = name.replace(/[\s_\[\(]+(eb|e♭|bb|b♭|tab|alto)[\s_\]\)]+/gi, ' ');
-            
-            // Remove page suffixes like p1, p.2, - 1, etc.
+            name = name.replace(/\(?\b(eb|e♭|bb|b♭|tab|alto|concert|c)\b\)?/gi, '');
+            name = name.replace(/[\s_\[\(]+(eb|e♭|bb|b♭|tab|alto|concert|c)[\s_\]\)]+/gi, ' ');
             name = name.replace(/[_\s\(-]*p\.?\s*\d+\)?$/i, '');
-            
-            // Final cleanup of extra separators or trailing dashes
             name = name.replace(/[-_\s]+$/, '').trim();
             name = name.replace(/\s+/g, ' ').trim();
             return name;
         }
 
-        // Strict instrument filtering for performance/score viewing
+        // Active pages check: a page is active if it includes the selected instrument key
         function getActivePages() {
             if (pagesData.length === 0) return [];
-            return pagesData.filter(p => detectInstrumentKey(p.filename) === selectedInstrumentKey);
+            return pagesData.filter(p => {
+                const keys = detectInstrumentKeys(p.filename);
+                return keys.includes(selectedInstrumentKey);
+            });
         }
 
         // Instrument Dropdown Listener
@@ -441,6 +527,145 @@
                 updatePageIndicator();
             }
             renderPagesListDrawer();
+        });
+
+        // ---------------------------------------------------------
+        // IMPORT INSTRUMENT PART SELECTION MODAL CONTROLLER
+        // ---------------------------------------------------------
+        let importPartModalResolve = null;
+        let chosenInsertPosition = 'end';
+
+        function showImportPartSelectionModal(defaultTitle, pageNumber = null, totalPages = null) {
+            return new Promise((resolve) => {
+                importPartModalResolve = resolve;
+                const modal = document.getElementById('importPartModal');
+                const titleInput = document.getElementById('inputImportSongTitle');
+                const subtitle = document.getElementById('importModalSubtitle');
+                const multiToggle = document.getElementById('toggleMultiParts');
+                const posSection = document.getElementById('importPositionSection');
+
+                titleInput.value = extractSongRootTitle(defaultTitle) || sanitizeTitle(defaultTitle);
+
+                if (pageNumber && totalPages && totalPages > 1) {
+                    subtitle.textContent = `Page ${pageNumber} of ${totalPages} • Select part(s) on this page`;
+                } else {
+                    subtitle.textContent = `Select the instrument part(s) on this page`;
+                }
+
+                // Reset options: Concert C checked by default, multi-parts disabled
+                multiToggle.checked = false;
+                chosenInsertPosition = 'end';
+
+                setPartSelection(['C']);
+
+                if (pagesData.length > 0) {
+                    posSection.classList.remove('hidden');
+                } else {
+                    posSection.classList.add('hidden');
+                }
+
+                modal.classList.remove('hidden');
+                lucide.createIcons();
+            });
+        }
+
+        function setPartSelection(keysToSelect) {
+            const cards = document.querySelectorAll('.part-select-card');
+            cards.forEach(card => {
+                const key = card.dataset.key;
+                const checkbox = card.querySelector('input[type="checkbox"]');
+                const isSelected = keysToSelect.includes(key);
+                checkbox.checked = isSelected;
+
+                const icon = card.querySelector('.part-check-icon');
+                if (isSelected) {
+                    card.classList.add('border-blue-500', 'bg-blue-950/40');
+                    card.classList.remove('border-slate-800', 'bg-slate-950/60', 'opacity-80');
+                    if (icon) icon.setAttribute('data-lucide', 'check-circle-2');
+                } else {
+                    card.classList.remove('border-blue-500', 'bg-blue-950/40');
+                    card.classList.add('border-slate-800', 'bg-slate-950/60', 'opacity-80');
+                    if (icon) icon.setAttribute('data-lucide', 'circle');
+                }
+            });
+            lucide.createIcons();
+        }
+
+        // Click handler for part selection cards
+        document.querySelectorAll('.part-select-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                e.preventDefault();
+                const key = card.dataset.key;
+                const isMulti = document.getElementById('toggleMultiParts').checked;
+                const currentSelected = Array.from(document.querySelectorAll('.part-select-card input:checked')).map(i => i.value);
+
+                if (isMulti) {
+                    if (currentSelected.includes(key)) {
+                        if (currentSelected.length > 1) {
+                            setPartSelection(currentSelected.filter(k => k !== key));
+                        }
+                    } else {
+                        setPartSelection([...currentSelected, key]);
+                    }
+                } else {
+                    setPartSelection([key]);
+                }
+            });
+        });
+
+        // Toggle multi-part behavior
+        document.getElementById('toggleMultiParts').addEventListener('change', (e) => {
+            if (!e.target.checked) {
+                const currentSelected = Array.from(document.querySelectorAll('.part-select-card input:checked')).map(i => i.value);
+                setPartSelection([currentSelected[0] || 'C']);
+            }
+        });
+
+        document.getElementById('btnImportPosCurrent').addEventListener('click', () => {
+            chosenInsertPosition = 'current';
+            document.getElementById('btnImportPosCurrent').classList.add('ring-2', 'ring-emerald-400');
+            document.getElementById('btnImportPosEnd').classList.remove('ring-2', 'ring-blue-400');
+        });
+
+        document.getElementById('btnImportPosEnd').addEventListener('click', () => {
+            chosenInsertPosition = 'end';
+            document.getElementById('btnImportPosEnd').classList.add('ring-2', 'ring-blue-400');
+            document.getElementById('btnImportPosCurrent').classList.remove('ring-2', 'ring-emerald-400');
+        });
+
+        document.getElementById('btnConfirmImportPart').addEventListener('click', () => {
+            const selectedKeys = Array.from(document.querySelectorAll('.part-select-card input:checked')).map(i => i.value);
+            const rawTitle = document.getElementById('inputImportSongTitle').value.trim() || "Song";
+            
+            // Build title string with tags: e.g., "Espresso (Bb)" or "Espresso (C) (Bb)"
+            let formattedTitle = rawTitle;
+            const nonConcertKeys = selectedKeys.filter(k => k !== 'C');
+            if (nonConcertKeys.length > 0) {
+                if (selectedKeys.includes('C')) {
+                    formattedTitle += ` (C)`;
+                }
+                nonConcertKeys.forEach(k => {
+                    formattedTitle += ` (${k})`;
+                });
+            }
+
+            document.getElementById('importPartModal').classList.add('hidden');
+            if (importPartModalResolve) {
+                importPartModalResolve({
+                    title: formattedTitle,
+                    keys: selectedKeys,
+                    position: chosenInsertPosition
+                });
+                importPartModalResolve = null;
+            }
+        });
+
+        document.getElementById('btnCancelImportPart').addEventListener('click', () => {
+            document.getElementById('importPartModal').classList.add('hidden');
+            if (importPartModalResolve) {
+                importPartModalResolve(null);
+                importPartModalResolve = null;
+            }
         });
 
         // ---------------------------------------------------------
@@ -489,7 +714,15 @@
 
                 const globalIdx = pagesData.findIndex(p => p.id === page.id);
                 const isCurrent = globalIdx === currentPageIndex;
-                const key = detectInstrumentKey(page.filename);
+                const keys = detectInstrumentKeys(page.filename);
+
+                const badgesHtml = keys.map(k => `
+                    <span class="text-[9px] font-mono px-1 py-0.5 rounded ${
+                        k === 'Eb' ? 'bg-sky-950/60 text-sky-300 border border-sky-500' :
+                        k === 'Bb' ? 'bg-orange-950/60 text-orange-300 border border-orange-500' :
+                        'bg-slate-800 text-amber-300 border border-slate-700'
+                    }">${k}</span>
+                `).join(' ');
 
                 const li = document.createElement('li');
                 li.className = `p-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition-colors ${isCurrent ? 'bg-blue-600 text-white font-bold' : 'text-slate-200 hover:bg-slate-800'}`;
@@ -498,11 +731,7 @@
                     <div class="flex items-center gap-2 truncate">
                         <span class="font-mono text-[10px] ${isCurrent ? 'text-blue-200' : 'text-slate-500'} w-6 text-right">${displayIdx + 1}.</span>
                         <span class="truncate">${title}</span>
-                        <span class="text-[9px] font-mono px-1 py-0.5 rounded ${
-                            key === 'Eb' ? 'bg-sky-950/60 text-sky-300 border border-sky-500' :
-                            key === 'Bb' ? 'bg-orange-950/60 text-orange-300 border border-orange-500' :
-                            'bg-slate-800 text-amber-300 border border-slate-700'
-                        }">${key}</span>
+                        <div class="flex items-center gap-1">${badgesHtml}</div>
                     </div>
                     ${isCurrent ? `<i data-lucide="check" class="w-3.5 h-3.5 text-white shrink-0"></i>` : ''}
                 `;
@@ -527,7 +756,7 @@
             pagesData.forEach(page => {
                 const rootName = extractSongRootTitle(page.filename) || page.filename || "Untitled";
                 const rootKey = rootName.toLowerCase();
-                const key = detectInstrumentKey(page.filename);
+                const keys = detectInstrumentKeys(page.filename);
 
                 if (!groups.has(rootKey)) {
                     groups.set(rootKey, {
@@ -540,14 +769,14 @@
                 }
 
                 const group = groups.get(rootKey);
-                if (key === 'C' && !group.parent) {
+                // If it has a C part and group hasn't assigned a parent yet, make it parent
+                if (keys.includes('C') && !group.parent) {
                     group.parent = page;
                 } else {
                     group.children.push(page);
                 }
             });
 
-            // If a group has no C part, promote the first child to parent card
             rootOrder.forEach(rKey => {
                 const g = groups.get(rKey);
                 if (!g.parent && g.children.length > 0) {
@@ -569,8 +798,16 @@
                 if (!group || !group.parent) return;
 
                 const parentPage = group.parent;
-                const parentKey = detectInstrumentKey(parentPage.filename);
+                const parentKeys = detectInstrumentKeys(parentPage.filename);
                 const isParentActive = pagesData[currentPageIndex]?.id === parentPage.id;
+
+                const parentBadges = parentKeys.map(k => `
+                    <span class="text-[9px] font-mono px-1 py-0.2 rounded font-bold ${
+                        k === 'Eb' ? 'bg-sky-950/60 text-sky-300 border border-sky-500' :
+                        k === 'Bb' ? 'bg-orange-950/60 text-orange-300 border border-orange-500' :
+                        'bg-blue-900/60 text-blue-300 border border-blue-700'
+                    }">${k}</span>
+                `).join(' ');
 
                 const groupCard = document.createElement('li');
                 groupCard.className = `song-group-block rounded-xl border border-slate-700 bg-slate-850 p-2 shadow-md transition-all ${isParentActive ? 'ring-1 ring-blue-500' : ''}`;
@@ -582,9 +819,18 @@
                     childrenHtml = `
                         <div class="mt-2 pl-3 border-l-2 border-amber-500/40 space-y-1.5 pt-1">
                             ${group.children.map((child, idx) => {
-                                const childKey = detectInstrumentKey(child.filename);
+                                const childKeys = detectInstrumentKeys(child.filename);
                                 const isChildActive = pagesData[currentPageIndex]?.id === child.id;
                                 const isLast = idx === group.children.length - 1;
+
+                                const childBadges = childKeys.map(k => `
+                                    <span class="text-[9px] font-mono px-1 py-0.2 rounded font-bold ${
+                                        k === 'Eb' ? 'bg-sky-950/60 text-sky-300 border border-sky-500' :
+                                        k === 'Bb' ? 'bg-orange-950/60 text-orange-300 border border-orange-500' :
+                                        'bg-slate-800 text-slate-300 border border-slate-700'
+                                    }">${k}</span>
+                                `).join(' ');
+
                                 return `
                                     <div class="flex items-center gap-1.5 py-1 px-1.5 rounded-lg bg-slate-900/80 border border-slate-800 hover:bg-slate-800 transition-colors cursor-pointer ${isChildActive ? 'border-amber-500 bg-amber-950/20' : ''}" onclick="jumpToPageById('${child.id}')">
                                         <div class="text-amber-400 font-mono text-xs select-none flex items-center shrink-0">
@@ -594,13 +840,7 @@
                                         <div class="flex-1 truncate text-xs text-slate-300 font-medium">
                                             ${child.filename}
                                         </div>
-                                        <span class="text-[9px] font-mono px-1 py-0.2 rounded font-bold ${
-                                            childKey === 'Eb' 
-                                                ? 'bg-sky-950/60 text-sky-300 border border-sky-500' 
-                                                : childKey === 'Bb' 
-                                                ? 'bg-orange-950/60 text-orange-300 border border-orange-500' 
-                                                : 'bg-slate-800 text-slate-300 border border-slate-700'
-                                        }">${childKey}</span>
+                                        <div class="flex items-center gap-1">${childBadges}</div>
                                         <button onclick="event.stopPropagation(); triggerRemovePageWithFeedback('${child.id}');" class="p-1 hover:text-red-400 text-slate-500 rounded" title="Delete Part">
                                             <i data-lucide="trash-2" class="w-3 h-3"></i>
                                         </button>
@@ -619,11 +859,7 @@
                         <div class="flex-1 truncate cursor-pointer" onclick="jumpToPageById('${parentPage.id}')" ondblclick="renamePageTitle('${parentPage.id}')" title="Tap to select • Double tap to rename">
                             <div class="text-xs font-bold text-white truncate flex items-center gap-1.5">
                                 <span class="truncate">${parentPage.filename}</span>
-                                <span class="text-[9px] font-mono px-1 py-0.2 rounded font-bold ${
-                                    parentKey === 'Eb' ? 'bg-sky-950/60 text-sky-300 border border-sky-500' :
-                                    parentKey === 'Bb' ? 'bg-orange-950/60 text-orange-300 border border-orange-500' :
-                                    'bg-blue-900/60 text-blue-300 border border-blue-700'
-                                }">${parentKey}</span>
+                                <div class="flex items-center gap-1">${parentBadges}</div>
                             </div>
                             <div class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                                 <span>Master Score</span>
@@ -652,14 +888,12 @@
 
             const { rootOrder, groups } = getStructuredSongGroups();
 
-            // Sort roots alphabetically ignoring case
             const sortedRoots = [...rootOrder].sort((a, b) => {
                 const titleA = (groups.get(a)?.rootDisplayName || a).trim();
                 const titleB = (groups.get(b)?.rootDisplayName || b).trim();
                 return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
             });
 
-            // Reconstruct pagesData keeping all nested children attached directly behind their parent C part
             const newOrderedPages = [];
             sortedRoots.forEach(rKey => {
                 const group = groups.get(rKey);
@@ -757,7 +991,6 @@
             if (tokenClient) tokenClient.requestAccessToken();
         });
 
-        // Save Setlist to Google Drive WITHOUT numerical prefixing
         document.getElementById('btnSaveSetlist').addEventListener('click', async () => {
             if (pagesData.length === 0) {
                 alert('Your setlist is empty.');
@@ -794,7 +1027,6 @@
                     const page = pagesData[i];
                     const blob = await getPageAsBlob(page);
                     if (blob) {
-                        // DO NOT PREFIX WITH NUMBER INDEX - use clean sanitized name
                         const cleanBase = sanitizeTitle(page.filename || `Page_${i + 1}`).replace(/[^a-zA-Z0-9_\- ]/g, '');
                         const imgName = `${cleanBase}.jpg`;
                         
@@ -827,7 +1059,6 @@
             driveLibraryModal.classList.add('hidden');
         });
 
-        // Universal Public Fetch with Auth Fallback
         async function fetchDriveLibraryFiles() {
             const fileListEl = document.getElementById('driveFileList');
             fileListEl.innerHTML = `<div class="text-center text-slate-400 py-8 text-xs"><i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto mb-2 text-cyan-400"></i> Loading HayNotes public scores...</div>`;
@@ -1100,7 +1331,6 @@
         async function addPage(type, content, filename = "Page", insertIndex = null) {
             const pageId = generateId();
             
-            // Auto clean any number prefixes or double underscores on import
             const cleanTitle = sanitizeTitle(filename);
             lastUsedPageTitle = cleanTitle;
 
@@ -1207,7 +1437,9 @@
             pagesDrawerEl.classList.add('hidden'); 
         });
 
-        // File Input Processing
+        // ---------------------------------------------------------
+        // FILE IMPORT PROCESSING WITH PART SELECTION PROMPT
+        // ---------------------------------------------------------
         async function processFile(file) {
             if (!file) return;
             const ext = file.name.split('.').pop().toLowerCase();
@@ -1224,14 +1456,70 @@
                     const canvas = document.createElement('canvas');
                     canvas.width = viewport.width; canvas.height = viewport.height;
                     await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-                    const pageSuffix = i > 1 ? ` p${i}` : '';
-                    await addPage('pdf', canvas.toDataURL('image/jpeg', 0.8), `${originalName}${pageSuffix}`);
+                    
+                    const pageSuffix = pdf.numPages > 1 ? ` p${i}` : '';
+                    const defaultName = `${originalName}${pageSuffix}`;
+
+                    // Prompt user for instrument parts for this PDF page
+                    const selection = await showImportPartSelectionModal(defaultName, i, pdf.numPages);
+                    if (selection) {
+                        const targetIdx = (selection.position === 'current') ? currentPageIndex + 1 : pagesData.length;
+                        await addPage('pdf', canvas.toDataURL('image/jpeg', 0.8), selection.title, targetIdx);
+                    }
                 }
             } else if (file.type.startsWith('image/')) {
                 const dataUrl = await new Promise((r) => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
-                await addPage('image', dataUrl, originalName);
+                
+                // Crop dialog if available
+                let finalDataUrl = dataUrl;
+                if (typeof openCropper === 'function') {
+                    const cropped = await openCropper(dataUrl);
+                    if (!cropped) return; // cancelled
+                    finalDataUrl = cropped;
+                }
+
+                // Prompt user for instrument parts for this photo
+                const selection = await showImportPartSelectionModal(originalName);
+                if (selection) {
+                    const targetIdx = (selection.position === 'current') ? currentPageIndex + 1 : pagesData.length;
+                    await addPage('image', finalDataUrl, selection.title, targetIdx);
+                }
             }
         }
+
+        // Cropper Logic
+        function openCropper(dataUrl) {
+            return new Promise((resolve) => {
+                const cropModal = document.getElementById('cropModal');
+                const cropImage = document.getElementById('cropImage');
+                cropImage.src = dataUrl;
+                cropModal.classList.remove('hidden');
+                if (cropper) cropper.destroy();
+                
+                cropper = new Cropper(cropImage, { viewMode: 1, autoCropArea: 0.95, background: false, zoomable: true, movable: true });
+                cropResolve = resolve;
+            });
+        }
+
+        function closeCropperCleanly() {
+            document.getElementById('cropModal').classList.add('hidden');
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+        }
+
+        document.getElementById('btnCropConfirm').addEventListener('click', () => {
+            if (!cropper) return;
+            const res = cropper.getCroppedCanvas().toDataURL('image/jpeg', 0.9);
+            closeCropperCleanly();
+            if (cropResolve) { cropResolve(res); cropResolve = null; }
+        });
+
+        document.getElementById('btnCropCancel').addEventListener('click', () => {
+            closeCropperCleanly();
+            if (cropResolve) { cropResolve(null); cropResolve = null; }
+        });
 
         document.getElementById('fileInput').addEventListener('change', async (e) => { 
             for(let f of e.target.files) await processFile(f); 
