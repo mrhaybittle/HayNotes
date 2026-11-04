@@ -166,6 +166,10 @@
 
         <!-- Bottom Controls -->
         <div class="flex sm:flex-col items-center gap-2">
+            <button id="btnToggleLaptopMode" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Toggle Laptop (Half-Page Scroll) Mode">
+                <i id="laptopModeIcon" data-lucide="smartphone" class="w-4 h-4 text-emerald-400"></i>
+            </button>
+
             <button id="btnPerformanceMode" class="bg-emerald-950/50 hover:bg-emerald-800 border border-emerald-800 text-emerald-400 p-2 rounded-xl text-xs font-medium flex items-center justify-center transition-colors" title="Performance Mode (Hide UI)">
                 <i data-lucide="play" class="w-4 h-4"></i>
             </button>
@@ -568,6 +572,12 @@
                 <button id="btnGenericConfirmAction" class="px-4 py-2 rounded-xl text-white text-xs font-bold transition-colors shadow-lg">Confirm</button>
             </div>
         </div>
+    </div>
+
+    <!-- Laptop Mode Toast Notification -->
+    <div id="modeToast" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] px-10 py-8 rounded-3xl font-black text-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-all duration-300 text-center flex-col items-center gap-4 border-4 pointer-events-none">
+        <i id="modeToastIcon" data-lucide="laptop" class="w-16 h-16"></i>
+        <span id="modeToastText">Laptop Mode Activated</span>
     </div>
 
     <!-- 3-CHOICE IMPORT POPUP MODAL -->
@@ -1890,6 +1900,45 @@
         let leftArrowTimer; let leftArrowPressed = false;
         let cropper = null; let cropResolve = null;
 
+        // Laptop Mode State
+        let isLaptopMode = false;
+        const btnToggleLaptopMode = document.getElementById('btnToggleLaptopMode');
+        const laptopModeIcon = document.getElementById('laptopModeIcon');
+        const modeToast = document.getElementById('modeToast');
+        const modeToastIcon = document.getElementById('modeToastIcon');
+        const modeToastText = document.getElementById('modeToastText');
+        let toastTimeout;
+
+        btnToggleLaptopMode.addEventListener('click', () => {
+            isLaptopMode = !isLaptopMode;
+            
+            modeToast.classList.remove('hidden', 'bg-yellow-400', 'text-yellow-950', 'border-yellow-400', 'bg-green-400', 'text-green-950', 'border-green-400');
+            modeToast.classList.add('flex');
+            
+            if (isLaptopMode) {
+                laptopModeIcon.setAttribute('data-lucide', 'laptop');
+                laptopModeIcon.className = 'w-4 h-4 text-yellow-400';
+                
+                modeToast.classList.add('bg-yellow-400', 'text-yellow-950', 'border-yellow-400');
+                modeToastIcon.setAttribute('data-lucide', 'laptop');
+                modeToastText.textContent = 'Laptop Mode Activated';
+            } else {
+                laptopModeIcon.setAttribute('data-lucide', 'smartphone');
+                laptopModeIcon.className = 'w-4 h-4 text-emerald-400';
+                
+                modeToast.classList.add('bg-green-400', 'text-green-950', 'border-green-400');
+                modeToastIcon.setAttribute('data-lucide', 'smartphone');
+                modeToastText.textContent = 'Tablet / Phone Mode';
+            }
+            lucide.createIcons();
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                modeToast.classList.add('hidden');
+                modeToast.classList.remove('flex');
+            }, 2000);
+        });
+
         // Fullscreen Logic
         const btnFullscreen = document.getElementById('btnFullscreen');
         const fullscreenIcon = document.getElementById('fullscreenIcon');
@@ -2225,18 +2274,56 @@
             const firstVisible = getNextVisiblePageIndex(0, 1);
             showPage(firstVisible === -1 ? 0 : firstVisible);
         });
-        document.getElementById('btnNext').addEventListener('click', () => { 
+
+        function navigateNextAction() {
+            if (pagesData.length === 0) return;
+            const activePageEl = document.getElementById(pagesData[currentPageIndex].id);
+            
+            if (isLaptopMode && activePageEl) {
+                // If there is room to scroll down (using 10px threshold)
+                if (activePageEl.scrollTop + activePageEl.clientHeight < activePageEl.scrollHeight - 10) {
+                    activePageEl.scrollBy({ top: activePageEl.clientHeight * 0.75, behavior: 'smooth' });
+                    return;
+                }
+            }
+            
             const nextIdx = getNextVisiblePageIndex(currentPageIndex, 1);
             if (nextIdx !== -1 && nextIdx !== currentPageIndex) {
-                showPage(nextIdx); flashPedal('right'); 
+                showPage(nextIdx); 
+                flashPedal('right'); 
+                const nextEl = document.getElementById(pagesData[nextIdx].id);
+                if (nextEl) nextEl.scrollTop = 0;
             }
-        });
-        document.getElementById('btnPrev').addEventListener('click', () => { 
+        }
+
+        function navigatePrevAction() {
+            if (pagesData.length === 0) return;
+            const activePageEl = document.getElementById(pagesData[currentPageIndex].id);
+            
+            if (isLaptopMode && activePageEl) {
+                // If there is room to scroll up
+                if (activePageEl.scrollTop > 10) {
+                    activePageEl.scrollBy({ top: -activePageEl.clientHeight * 0.75, behavior: 'smooth' });
+                    return;
+                }
+            }
+            
             const prevIdx = getNextVisiblePageIndex(currentPageIndex, -1);
             if (prevIdx !== -1 && prevIdx !== currentPageIndex) {
-                showPage(prevIdx); flashPedal('left'); 
+                showPage(prevIdx); 
+                flashPedal('left'); 
+                const prevEl = document.getElementById(pagesData[prevIdx].id);
+                if (prevEl && isLaptopMode) {
+                    // Small timeout ensures the element renders its height before jumping to the bottom
+                    setTimeout(() => { prevEl.scrollTop = prevEl.scrollHeight; }, 10);
+                } else if (prevEl) {
+                    prevEl.scrollTop = 0;
+                }
             }
-        });
+        }
+
+        document.getElementById('btnNext').addEventListener('click', navigateNextAction);
+        document.getElementById('btnPrev').addEventListener('click', navigatePrevAction);
 
         // Horizontal Scrubber Logic
         const scrubberTrack = document.getElementById('scrubberTrack');
@@ -2378,11 +2465,9 @@
 
             if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX < 0) {
-                    const nextIdx = getNextVisiblePageIndex(currentPageIndex, 1);
-                    if (nextIdx !== -1) { showPage(nextIdx); flashPedal('right'); }
+                    navigateNextAction();
                 } else {
-                    const prevIdx = getNextVisiblePageIndex(currentPageIndex, -1);
-                    if (prevIdx !== -1) { showPage(prevIdx); flashPedal('left'); }
+                    navigatePrevAction();
                 }
             }
         }, { passive: true });
@@ -2405,8 +2490,7 @@
 
             if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'ArrowDown') { 
                 e.preventDefault(); 
-                const nextIdx = getNextVisiblePageIndex(currentPageIndex, 1);
-                if (nextIdx !== -1) { showPage(nextIdx); flashPedal('right'); }
+                navigateNextAction();
             } 
             else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -2425,8 +2509,7 @@
         window.addEventListener('keyup', (e) => {
             if ((e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') && leftArrowPressed) {
                 clearTimeout(leftArrowTimer);
-                const prevIdx = getNextVisiblePageIndex(currentPageIndex, -1);
-                if (prevIdx !== -1) showPage(prevIdx);
+                navigatePrevAction();
                 leftArrowPressed = false;
             }
         });
