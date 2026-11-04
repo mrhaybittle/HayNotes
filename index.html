@@ -122,12 +122,8 @@
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
             </label>
 
-            <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors disabled:opacity-40" disabled title="Import from Google Drive Library">
+            <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Import from Google Drive Library">
                 <i data-lucide="cloud-download" class="w-4 h-4 text-cyan-400"></i>
-            </button>
-
-            <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 transition-colors flex items-center justify-center" title="Google Drive Disconnected">
-                <i id="driveStatusIcon" data-lucide="cloud-off" class="w-4 h-4 text-red-500"></i>
             </button>
 
             <button id="btnSaveSetlist" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-xl text-xs font-medium flex items-center justify-center transition-colors shadow-sm" title="Save Setlist to Drive">
@@ -185,7 +181,7 @@
     </aside>
 
     <!-- POPUP ANNOTATION TOOLBAR -->
-    <div id="annotationToolbar" class="fixed top-4 left-1/2 -translate-x-1/2 w-11/12 max-w-[760px] bg-white p-2.5 rounded-2xl shadow-2xl border border-slate-200 z-50 hidden flex-col sm:flex-row items-center justify-between gap-2.5">
+    <div id="annotationToolbar" class="fixed top-4 left-1/2 -translate-x-1/2 w-11/12 max-w-[850px] bg-white p-2.5 rounded-2xl shadow-2xl border border-slate-200 z-50 hidden flex-col sm:flex-row items-center justify-between gap-2.5">
         <!-- Tools Group -->
         <div class="flex items-center gap-1 sm:border-r border-slate-200 sm:pr-3 flex-wrap justify-center">
             <button class="tool-btn active p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="navigate" title="Navigate (Read Only / Click Jumps)">
@@ -209,6 +205,12 @@
             <button id="btnUndo" class="p-2 text-slate-600 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Undo">
                 <i data-lucide="undo" class="w-4 h-4"></i>
             </button>
+        </div>
+
+        <!-- Thickness Selector -->
+        <div class="flex items-center gap-2 sm:border-r border-slate-200 sm:pr-3 justify-center">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-slate-400" title="Brush Thickness"></i>
+            <input type="range" id="brushThickness" min="1" max="100" value="15" class="w-24 accent-blue-500 cursor-pointer" title="Adjust Pen & Highlighter Thickness">
         </div>
 
         <!-- Color Palette -->
@@ -705,7 +707,8 @@
                         "bg-blue-600 hover:bg-blue-500", 
                         (confirmed) => {
                             if (confirmed) {
-                                document.getElementById('btnConnectDrive').click();
+                                if (!tokenClient) initGoogleDrive();
+                                if (tokenClient) tokenClient.requestAccessToken();
                             }
                         }
                     );
@@ -1396,23 +1399,13 @@
         let tokenClient = null;
         let driveAccessToken = localStorage.getItem('haynotes_drive_token') || null;
 
+        // Visual Drive state is completely deferred to background or library interactions
         function setDriveConnectedUI() {
-            const btn = document.getElementById('btnConnectDrive');
-            const icon = document.getElementById('driveStatusIcon');
-            btn.title = "Google Drive Connected";
-            icon.setAttribute('data-lucide', 'cloud');
-            icon.className = "w-4 h-4 text-emerald-400";
-            lucide.createIcons();
+            // Re-enables interactions internally and visually marks connected where applicable
             document.getElementById('btnOpenDriveLibrary').disabled = false;
         }
 
         function setDriveDisconnectedUI() {
-            const btn = document.getElementById('btnConnectDrive');
-            const icon = document.getElementById('driveStatusIcon');
-            btn.title = "Google Drive Disconnected - Click to connect";
-            icon.setAttribute('data-lucide', 'cloud-off');
-            icon.className = "w-4 h-4 text-red-500";
-            lucide.createIcons();
             document.getElementById('btnOpenDriveLibrary').disabled = true;
         }
 
@@ -1456,17 +1449,6 @@
                 setDriveDisconnectedUI();
             }
         }
-
-        document.getElementById('btnConnectDrive').addEventListener('click', async () => {
-            if (driveAccessToken && await verifyToken(driveAccessToken)) {
-                setDriveConnectedUI();
-                document.getElementById('driveLibraryModal').classList.remove('hidden');
-                fetchDriveLibraryFiles();
-                return;
-            }
-            if (!tokenClient) initGoogleDrive();
-            if (tokenClient) tokenClient.requestAccessToken();
-        });
 
         async function createDriveFolder(folderName, parentFolderId = ROOT_HAYNOTES_FOLDER_ID) {
             const metadata = {
@@ -1655,7 +1637,9 @@
         const driveLibraryModal = document.getElementById('driveLibraryModal');
         document.getElementById('btnOpenDriveLibrary').addEventListener('click', async () => {
             if (!driveAccessToken) {
-                alert('Please connect to Google Drive first.');
+                // If they haven't authenticated yet, do so directly instead of relying on the removed red button
+                if (!tokenClient) initGoogleDrive();
+                if (tokenClient) tokenClient.requestAccessToken();
                 return;
             }
             driveLibraryModal.classList.remove('hidden');
@@ -1959,6 +1943,14 @@
         const fabricCanvases = {}; 
         let activeTool = 'navigate';
         let activeColor = '#ef4444';
+        
+        // Listen to Thickness Selector Slider Changes
+        const brushThicknessInput = document.getElementById('brushThickness');
+        if (brushThicknessInput) {
+            brushThicknessInput.addEventListener('input', () => {
+                updateAllCanvasesMode();
+            });
+        }
 
         const colors = [
             '#000000', '#4b5563', '#9ca3af', '#ffffff', 
@@ -2043,6 +2035,8 @@
         }
 
         function updateAllCanvasesMode() {
+            const baseThickness = brushThicknessInput ? parseInt(brushThicknessInput.value, 10) : 15;
+            
             Object.values(fabricCanvases).forEach(canvas => {
                 canvas.isDrawingMode = false;
                 canvas.selection = false;
@@ -2069,14 +2063,14 @@
                     canvas.isDrawingMode = true;
                     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                     canvas.freeDrawingBrush.color = activeColor;
-                    canvas.freeDrawingBrush.width = 15;
+                    canvas.freeDrawingBrush.width = baseThickness;
                 } 
                 else if (activeTool === 'highlight') {
                     canvas.allowTouchScrolling = false;
                     canvas.isDrawingMode = true;
                     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                     canvas.freeDrawingBrush.color = hexToRgba(activeColor, 0.35);
-                    canvas.freeDrawingBrush.width = 48;
+                    canvas.freeDrawingBrush.width = baseThickness * 3.2; 
                 } 
                 else if (activeTool === 'text') {
                     canvas.allowTouchScrolling = false;
