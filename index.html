@@ -97,10 +97,12 @@
             </button>
 
             <!-- INSTRUMENT PART SELECTION -->
-            <select id="instrumentSelect" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] sm:text-xs rounded-lg p-1 sm:w-full border border-slate-700 transition-colors cursor-pointer text-center outline-none focus:border-blue-500" title="Select Instrument Transposition">
-                <option value="C" selected>C Part</option>
+            <select id="instrumentSelect" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs py-2 px-1 rounded-lg sm:w-full border border-slate-700 transition-colors cursor-pointer text-center outline-none focus:border-blue-500" title="Select Instrument Transposition">
+                <option value="C" selected>C Inst</option>
                 <option value="Bb">Bb Part</option>
                 <option value="Eb">Eb Part</option>
+                <option value="Bass">Bass</option>
+                <option value="ALL">ALL</option>
             </select>
         </div>
 
@@ -395,7 +397,7 @@
             <!-- INSTRUMENT PARTS SELECTION -->
             <div class="flex flex-col gap-1.5 bg-slate-950/50 p-3 rounded-xl border border-slate-800">
                 <label class="text-xs font-semibold text-slate-400">Part Type(s) on Page:</label>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 flex-wrap">
                     <label class="text-xs text-white flex items-center gap-1.5 cursor-pointer">
                         <input type="checkbox" id="chkPartC" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-blue-500"> Concert (C)
                     </label>
@@ -404,6 +406,9 @@
                     </label>
                     <label class="text-xs text-white flex items-center gap-1.5 cursor-pointer">
                         <input type="checkbox" id="chkPartEb" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-sky-500"> Eb Part
+                    </label>
+                    <label class="text-xs text-white flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="chkPartBass" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-purple-500 focus:ring-purple-500"> Bass
                     </label>
                 </div>
             </div>
@@ -643,6 +648,7 @@
         }
         
         function isPageVisibleForPart(pageObj, activePart) {
+            if (activePart === 'ALL') return true;
             if (!pageObj || !pageObj.parts) return true; // Default show all if missing parts
             return pageObj.parts.includes(activePart);
         }
@@ -753,12 +759,15 @@
             if (/\(\s*Bb\s*\)/i.test(base) || /\bBrass\b/i.test(base) || /\bBb\b/i.test(base)) parts.push('Bb');
             // Detect Eb Parts
             if (/\(\s*Eb\s*\)/i.test(base) || /\bEb\b/i.test(base)) parts.push('Eb');
+            // Detect Bass Parts
+            if (/\bBass\b/i.test(base) || /\(\s*Bass\s*\)/i.test(base)) parts.push('Bass');
             // Tablature
             if (/\(\s*TAB\s*\)/i.test(base)) parts.push('TAB');
 
             // Strip out indicators to get cleanly matched base title for grouping
             base = base.replace(/\(\s*Eb\s*\)/ig, '').replace(/\bEb\b/ig, '')
                        .replace(/\(\s*Bb\s*\)/ig, '').replace(/\bBrass\b/ig, '').replace(/\bBb\b/ig, '')
+                       .replace(/\(\s*Bass\s*\)/ig, '').replace(/\bBass\b/ig, '')
                        .replace(/\(\s*TAB\s*\)/ig, '').trim();
 
             const match = base.match(/^(.*?)[_\s\(-]*p\.?\s*(\d+)\)?$/i);
@@ -2175,10 +2184,13 @@
                 
                 const li = document.querySelector(`li[data-id="${p.id}"]`);
                 if(li) {
-                    li.classList.toggle('border-red-500', i === index);
-                    li.classList.toggle('bg-red-950/40', i === index);
-                    if (i !== index) {
-                        li.classList.remove('border-red-500', 'bg-red-950/40');
+                    li.classList.toggle('border-red-400', i === index);
+                    li.classList.toggle('bg-red-600', i === index);
+                    if (i === index) {
+                        li.querySelector('.page-title-text')?.classList.add('text-white', 'font-bold');
+                    } else {
+                        li.classList.remove('border-red-400', 'bg-red-600');
+                        li.querySelector('.page-title-text')?.classList.remove('text-white', 'font-bold');
                     }
                 }
             });
@@ -2426,6 +2438,10 @@
                         bgColorStr = 'bg-orange-950';
                         borderColorStr = 'border-orange-500';
                         textColorStr = 'text-orange-100';
+                    } else if (pageObj.parts.includes('Bass')) {
+                        bgColorStr = 'bg-purple-950';
+                        borderColorStr = 'border-purple-400';
+                        textColorStr = 'text-purple-100';
                     } else if (pageObj.parts.includes('C')) {
                         bgColorStr = 'bg-yellow-950';
                         borderColorStr = 'border-yellow-400';
@@ -2434,8 +2450,9 @@
                 }
                 
                 if (isCurrent) {
-                    bgColorStr = 'bg-red-950';
-                    borderColorStr = 'border-red-500';
+                    bgColorStr = 'bg-red-600';
+                    borderColorStr = 'border-red-400';
+                    textColorStr = 'text-white font-bold';
                 }
 
                 const li = document.createElement('li');
@@ -2452,7 +2469,7 @@
                 let partsTags = '';
                 if (pageObj.parts) {
                     pageObj.parts.forEach(pt => {
-                        let badgeCol = pt === 'Eb' ? 'text-sky-900 bg-sky-300' : pt === 'Bb' ? 'text-orange-900 bg-orange-400' : 'text-yellow-900 bg-yellow-400';
+                        let badgeCol = pt === 'Eb' ? 'text-sky-900 bg-sky-300' : pt === 'Bb' ? 'text-orange-900 bg-orange-400' : pt === 'Bass' ? 'text-purple-900 bg-purple-400' : 'text-yellow-900 bg-yellow-400';
                         partsTags += `<span class="px-1.5 py-0.5 ${badgeCol} text-[9px] font-bold rounded-md shrink-0 mr-1">${pt}</span>`;
                     });
                 }
@@ -2465,7 +2482,7 @@
                         <i data-lucide="${isLinked ? 'link' : iconStr}" class="w-3.5 h-3.5 ${isLinked ? 'text-amber-400 hover:text-rose-400' : 'text-slate-400 hover:text-blue-400'}"></i>
                     </div>
                     <div class="flex-1 overflow-hidden cursor-pointer" onclick="jumpToPageById('${pageId}')" ondblclick="renamePageTitle('${pageId}')" title="Single tap to jump • Double tap to rename">
-                        <div id="thumb-title-${pageId}" class="text-xs ${textColorStr} truncate font-semibold flex items-center gap-1">
+                        <div id="thumb-title-${pageId}" class="text-xs ${textColorStr} page-title-text truncate flex items-center gap-1">
                             <span class="truncate">${filename}</span>
                             ${isLinked ? `<span class="px-1 py-0.5 bg-amber-500/20 text-amber-300 text-[9px] font-mono rounded shrink-0">p.${groupInfo.pageNum}</span>` : ''}
                         </div>
@@ -2718,15 +2735,18 @@
                 const chkPartC = document.getElementById('chkPartC');
                 const chkPartBb = document.getElementById('chkPartBb');
                 const chkPartEb = document.getElementById('chkPartEb');
+                const chkPartBass = document.getElementById('chkPartBass');
                 
                 // Default resets
                 chkPartC.checked = true;
                 chkPartBb.checked = false;
                 chkPartEb.checked = false;
+                chkPartBass.checked = false;
 
-                // Infer checkmarks if title already contains Bb or Eb
+                // Infer checkmarks if title already contains Bb, Eb, or Bass
                 if (/\(Eb\)/i.test(defaultFallbackTitle)) { chkPartEb.checked = true; chkPartC.checked = false; }
                 if (/\(Bb\)/i.test(defaultFallbackTitle) || /\bBrass\b/i.test(defaultFallbackTitle)) { chkPartBb.checked = true; chkPartC.checked = false; }
+                if (/\bBass\b/i.test(defaultFallbackTitle) || /\(\s*Bass\s*\)/i.test(defaultFallbackTitle)) { chkPartBass.checked = true; chkPartC.checked = false; }
 
                 inputTitle.value = defaultFallbackTitle;
                 
@@ -2759,6 +2779,7 @@
                     if (chkPartC.checked) parts.push('C');
                     if (chkPartBb.checked) parts.push('Bb');
                     if (chkPartEb.checked) parts.push('Eb');
+                    if (chkPartBass.checked) parts.push('Bass');
                     if (parts.length === 0) parts.push('C'); // fallback
                     return parts;
                 };
