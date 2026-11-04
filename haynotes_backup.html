@@ -77,6 +77,10 @@
         /* Pedal UI Graphic Styles */
         .pedal-pad { transition: all 0.15s ease-out; }
         .pedal-pad.active { background-color: #ef4444 !important; border-color: #f87171 !important; box-shadow: 0 0 15px rgba(239, 68, 68, 0.9) !important; transform: scale(0.95); }
+        
+        /* Bright RED override for currently active page in rearrange window */
+        .rearrange-active { background-color: #dc2626 !important; border-color: #f87171 !important; opacity: 1 !important; }
+        .rearrange-active .page-title-text { color: #ffffff !important; font-weight: 800 !important; }
     </style>
 </head>
 <body class="h-full flex flex-col sm:flex-row antialiased text-slate-800 bg-slate-100 relative">
@@ -85,16 +89,25 @@
     <aside id="leftToolbar" class="w-full sm:w-16 bg-slate-900 text-slate-100 shadow-xl border-b sm:border-b-0 sm:border-r border-slate-800 flex-none z-40 relative flex sm:flex-col items-center justify-between p-2 gap-2 overflow-x-auto sm:overflow-y-auto">
         
         <!-- Top: Logo & Home -->
-        <div class="flex sm:flex-col items-center gap-2">
+        <div class="flex sm:flex-col items-center gap-2 w-full">
             <div class="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-slate-800 text-blue-400 font-bold" title="HayNotes">
                 <i data-lucide="music-4" class="w-5 h-5 text-blue-400 shrink-0"></i>
                 <span class="font-bold text-white text-base sm:hidden">HayNotes</span>
             </div>
             <div class="h-px w-full bg-slate-800 hidden sm:block"></div>
             
-            <button id="btnHome" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Home (First Page)">
+            <button id="btnHome" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors w-full" title="Home (First Page)">
                 <i data-lucide="home" class="w-4 h-4 text-amber-400"></i>
             </button>
+
+            <!-- INSTRUMENT PART SELECTION -->
+            <select id="instrumentSelect" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs py-2 px-1 rounded-lg sm:w-full border border-slate-700 transition-colors cursor-pointer text-center outline-none focus:border-blue-500" title="Select Instrument Transposition">
+                <option value="C" selected>C Inst</option>
+                <option value="Bb">Bb Part</option>
+                <option value="Eb">Eb Part</option>
+                <option value="Bass">Bass</option>
+                <option value="ALL">ALL</option>
+            </select>
         </div>
 
         <!-- Middle Action Controls -->
@@ -109,12 +122,8 @@
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
             </label>
 
-            <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors disabled:opacity-40" disabled title="Import from Google Drive Library">
+            <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Import from Google Drive Library">
                 <i data-lucide="cloud-download" class="w-4 h-4 text-cyan-400"></i>
-            </button>
-
-            <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 transition-colors flex items-center justify-center" title="Google Drive Disconnected">
-                <i id="driveStatusIcon" data-lucide="cloud-off" class="w-4 h-4 text-red-500"></i>
             </button>
 
             <button id="btnSaveSetlist" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-xl text-xs font-medium flex items-center justify-center transition-colors shadow-sm" title="Save Setlist to Drive">
@@ -153,6 +162,10 @@
 
         <!-- Bottom Controls -->
         <div class="flex sm:flex-col items-center gap-2">
+            <button id="btnToggleLaptopMode" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Toggle Laptop (Half-Page Scroll) Mode">
+                <i id="laptopModeIcon" data-lucide="smartphone" class="w-4 h-4 text-emerald-400"></i>
+            </button>
+
             <button id="btnPerformanceMode" class="bg-emerald-950/50 hover:bg-emerald-800 border border-emerald-800 text-emerald-400 p-2 rounded-xl text-xs font-medium flex items-center justify-center transition-colors" title="Performance Mode (Hide UI)">
                 <i data-lucide="play" class="w-4 h-4"></i>
             </button>
@@ -168,10 +181,10 @@
     </aside>
 
     <!-- POPUP ANNOTATION TOOLBAR -->
-    <div id="annotationToolbar" class="fixed top-4 left-1/2 -translate-x-1/2 w-11/12 max-w-[980px] bg-white p-2.5 rounded-2xl shadow-2xl border border-slate-200 z-50 hidden flex-col sm:flex-row items-center justify-between gap-2.5">
+    <div id="annotationToolbar" class="fixed top-4 left-1/2 -translate-x-1/2 w-11/12 max-w-[850px] bg-white p-2.5 rounded-2xl shadow-2xl border border-slate-200 z-50 hidden flex-col sm:flex-row items-center justify-between gap-2.5">
         <!-- Tools Group -->
         <div class="flex items-center gap-1 sm:border-r border-slate-200 sm:pr-3 flex-wrap justify-center">
-            <button class="tool-btn active p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="navigate" title="Navigate (Read Only / Click Jumps & Hotspots)">
+            <button class="tool-btn active p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="navigate" title="Navigate (Read Only / Click Jumps)">
                 <i data-lucide="mouse-pointer-2" class="w-4 h-4"></i>
             </button>
             <button class="tool-btn p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="pen" title="Pen (Draw)">
@@ -186,17 +199,6 @@
             <button class="tool-btn p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="stamp" title="Music Stamps & Jump Links">
                 <i data-lucide="stamp" class="w-4 h-4 text-purple-600"></i>
             </button>
-            
-            <!-- Smart Jump Hotspot Tool -->
-            <button class="tool-btn p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="hotspot" title="Smart Jump Hotspot (Draw Box to Jump to Page)">
-                <i data-lucide="scan" class="w-4 h-4 text-amber-500"></i>
-            </button>
-
-            <!-- Fingering & Fretboard Tool -->
-            <button class="tool-btn p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="fingering" title="Fingering & Fretboard Numbers">
-                <i data-lucide="hash" class="w-4 h-4 text-emerald-600"></i>
-            </button>
-
             <button class="tool-btn p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="erase" title="Eraser (Click to delete)">
                 <i data-lucide="eraser" class="w-4 h-4"></i>
             </button>
@@ -205,13 +207,10 @@
             </button>
         </div>
 
-        <!-- NEW: Stroke Width Selector Control -->
-        <div id="strokeWidthControl" class="flex items-center gap-1.5 sm:border-r border-slate-200 sm:pr-3 py-1">
-            <span class="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
-                <i data-lucide="minus" class="w-3.5 h-3.5"></i> Width:
-            </span>
-            <input type="range" id="toolWidthSlider" min="1" max="60" value="3" class="w-20 sm:w-24 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-            <span id="toolWidthValue" class="text-xs font-mono font-bold text-slate-700 min-w-[2.2rem] text-right">3px</span>
+        <!-- Thickness Selector -->
+        <div class="flex items-center gap-2 sm:border-r border-slate-200 sm:pr-3 justify-center">
+            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-slate-400" title="Brush Thickness"></i>
+            <input type="range" id="brushThickness" min="1" max="100" value="15" class="w-24 accent-blue-500 cursor-pointer" title="Adjust Pen & Highlighter Thickness">
         </div>
 
         <!-- Color Palette -->
@@ -241,83 +240,19 @@
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="f">f</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold italic" data-stamp="ff">ff</button>
             
-            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="𝄐" title="Fermata">𝄐</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="" title="Fermata"></button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="’" title="Breath Mark">’</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp=">" title="Accent">&gt;</button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="^" title="Marcato">^</button>
-            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="♯" title="Sharp">♯</button>
-            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="♭" title="Flat">♭</button>
-            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="♮" title="Natural">♮</button>
-            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="𝄋" title="Segno" data-link="true">𝄋</button>
-            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="𝄌" title="Coda" data-link="true">𝄌</button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="" title="Sharp"></button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="" title="Flat"></button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="" title="Natural"></button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="" title="Segno" data-link="true"></button>
+            <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold text-base" data-stamp="" title="Coda" data-link="true"></button>
             
-            <button class="stamp-btn p-2 bg-rose-950/70 border border-rose-800 hover:bg-rose-700 rounded-lg font-bold text-lg text-rose-300" data-stamp="←" title="Left Jump Arrow" data-link="true">←</button>
-            <button class="stamp-btn p-2 bg-blue-950/70 border border-blue-800 hover:bg-blue-700 rounded-lg font-bold text-lg text-blue-300" data-stamp="→" title="Right Jump Arrow" data-link="true">→</button>
+            <button class="stamp-btn p-2 bg-rose-950/70 border border-rose-800 hover:bg-rose-700 rounded-lg font-bold text-lg text-rose-300" data-stamp="" title="Left Jump Arrow" data-link="true"></button>
+            <button class="stamp-btn p-2 bg-blue-950/70 border border-blue-800 hover:bg-blue-700 rounded-lg font-bold text-lg text-blue-300" data-stamp="" title="Right Jump Arrow" data-link="true"></button>
             <button class="stamp-btn p-2 bg-slate-800 hover:bg-blue-600 rounded-lg font-bold" data-stamp="D.S." title="Dal Segno" data-link="true">D.S.</button>
-        </div>
-    </div>
-
-    <!-- FINGERING & FRETBOARD NUMBER GENERATOR MODAL -->
-    <div id="fingeringPaletteModal" class="hidden fixed top-20 left-1/2 -translate-x-1/2 bg-slate-900 text-white p-3.5 rounded-2xl shadow-2xl border border-slate-800 z-50 flex flex-col gap-3 w-11/12 max-w-md">
-        <div class="flex items-center justify-between text-xs font-semibold text-slate-300 pb-2 border-b border-slate-800">
-            <span class="flex items-center gap-1.5"><i data-lucide="hash" class="w-4 h-4 text-emerald-400"></i> Fingering & Fretboard Generator</span>
-            <button id="btnCloseFingering" class="text-slate-400 hover:text-white p-0.5 rounded"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
-        </div>
-
-        <!-- Category 1: Piano & Standard Fingering -->
-        <div>
-            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                <span>Piano & Generic Fingerings</span>
-                <span class="text-emerald-400 font-mono text-[9px]">Tap score to place</span>
-            </div>
-            <div class="grid grid-cols-7 gap-1 text-center font-mono text-sm">
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1">1</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="2">2</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="3">3</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="4">4</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="5">5</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-xs" data-symbol="LH">LH</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-xs" data-symbol="RH">RH</button>
-            </div>
-        </div>
-
-        <!-- Category 2: Guitar Strings, Frets & Positions -->
-        <div>
-            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Guitar Strings & Frets / Positions</div>
-            <div class="grid grid-cols-8 gap-1 text-center font-mono text-xs">
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="①">①</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="②">②</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="③">③</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="④">④</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="⑤">⑤</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold text-sm" data-symbol="⑥">⑥</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="T">T</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="0">0</button>
-            </div>
-            <div class="grid grid-cols-7 gap-1 text-center font-serif text-xs mt-1">
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="I">I</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="II">II</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="III">III</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="IV">IV</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="V">V</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="VII">VII</button>
-                <button class="fingering-btn p-1.5 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="IX">IX</button>
-            </div>
-        </div>
-
-        <!-- Category 3: Brass Valve Combinations -->
-        <div>
-            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Brass Valve Combinations</div>
-            <div class="grid grid-cols-4 gap-1 text-center font-mono text-xs">
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="0 (open)">0 (open)</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1">1</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="2">2</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="3">3</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1-2">1-2</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="2-3">2-3</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1-3">1-3</button>
-                <button class="fingering-btn p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg font-bold" data-symbol="1-2-3">1-2-3</button>
-            </div>
         </div>
     </div>
 
@@ -356,12 +291,15 @@
 
         <!-- RIGHT-HAND SIDE PAGES MANAGER DRAWER -->
         <div id="pagesDrawer" class="hidden absolute right-0 top-0 bottom-0 w-72 bg-slate-900 border-l border-slate-800 z-30 flex flex-col shadow-2xl transition-all">
-            <div class="p-3 bg-slate-950 border-b border-slate-800 flex justify-between text-xs font-semibold text-slate-300">
+            <div class="p-3 bg-slate-950 border-b border-slate-800 flex justify-between items-center text-xs font-semibold text-slate-300">
                 <span class="flex items-center gap-1.5"><i data-lucide="link" class="w-4 h-4 text-amber-400"></i> Rearrange & Group Songs</span>
-                <button id="btnClosePages" class="text-slate-400 hover:text-white p-1 rounded"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <div class="flex items-center gap-1">
+                    <button id="btnSortAlpha" class="text-slate-400 hover:text-white p-1 rounded transition-colors" title="Sort Alphabetically"><i data-lucide="arrow-down-a-z" class="w-4 h-4"></i></button>
+                    <button id="btnClosePages" class="text-slate-400 hover:text-white p-1 rounded transition-colors" title="Close"><i data-lucide="x" class="w-4 h-4"></i></button>
+                </div>
             </div>
             <div class="p-2 text-[10px] text-slate-400 text-center border-b border-slate-800 bg-slate-900/50 uppercase tracking-wide">
-                Click chain icon to unlink • Drag to reorder
+                Click icon to link/unlink • Drag RIGHT to link
             </div>
             <ul id="pagesList" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-900"></ul>
         </div>
@@ -468,6 +406,25 @@
                     </button>
                 </div>
             </div>
+            
+            <!-- INSTRUMENT PARTS SELECTION -->
+            <div class="flex flex-col gap-1.5 bg-slate-950/50 p-3 rounded-xl border border-slate-800">
+                <label class="text-xs font-semibold text-slate-400">Part Type(s) on Page:</label>
+                <div class="flex items-center gap-4 flex-wrap">
+                    <label class="text-xs text-white flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="chkPartC" checked class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-blue-500"> Concert (C)
+                    </label>
+                    <label class="text-xs text-white flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="chkPartBb" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-orange-500 focus:ring-orange-500"> Bb Part
+                    </label>
+                    <label class="text-xs text-white flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="chkPartEb" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-sky-500"> Eb Part
+                    </label>
+                    <label class="text-xs text-white flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" id="chkPartBass" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-purple-500 focus:ring-purple-500"> Bass
+                    </label>
+                </div>
+            </div>
 
             <div class="flex flex-col gap-2.5 pt-2">
                 <button id="btnInsertCurrentPos" class="w-full p-3 bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-800/80 rounded-xl text-left transition-colors flex items-center justify-between group">
@@ -512,7 +469,7 @@
                 <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Ensemble Reference Tones</label>
                 <div class="grid grid-cols-3 gap-2">
                     <button class="tuner-btn p-3 rounded-xl bg-teal-950/60 border border-teal-800 text-teal-300 font-bold hover:bg-teal-900 transition-colors active:scale-95 flex flex-col items-center" data-freq="466.16">
-                        <span class="text-base">Concert B♭</span>
+                        <span class="text-base">Concert B</span>
                         <span class="text-[10px] text-teal-400/80">466.16 Hz</span>
                     </button>
                     <button class="tuner-btn p-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold transition-colors active:scale-95 flex flex-col items-center" data-freq="440.00">
@@ -607,6 +564,24 @@
         </div>
     </div>
 
+    <!-- Generic Confirm Modal -->
+    <div id="genericConfirmModal" class="hidden fixed inset-0 z-[90] bg-slate-900/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-sm p-6 shadow-2xl flex flex-col gap-4">
+            <h3 class="font-bold text-lg text-white" id="genericConfirmTitle">Confirm</h3>
+            <p class="text-sm text-slate-300" id="genericConfirmMsg"></p>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button id="btnGenericConfirmCancel" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors">Cancel</button>
+                <button id="btnGenericConfirmAction" class="px-4 py-2 rounded-xl text-white text-xs font-bold transition-colors shadow-lg">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Laptop Mode Toast Notification -->
+    <div id="modeToast" class="hidden fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] px-10 py-8 rounded-3xl font-black text-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-all duration-300 text-center flex-col items-center gap-4 border-4 pointer-events-none">
+        <i id="modeToastIcon" data-lucide="laptop" class="w-16 h-16"></i>
+        <span id="modeToastText">Laptop Mode Activated</span>
+    </div>
+
     <!-- 3-CHOICE IMPORT POPUP MODAL -->
     <div id="importOptionModal" class="hidden fixed inset-0 z-[60] bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-5">
@@ -676,6 +651,71 @@
         let lastUsedPageTitle = "Page 1";
         let activeSetlistName = "Main Setlist";
 
+        // Global Instrument Dropdown state updater
+        const instrumentSelect = document.getElementById('instrumentSelect');
+        instrumentSelect.addEventListener('change', () => {
+            renderPagesListDrawer(); // Update drawer colors (if conditionally showing, though rule says always lock them)
+            // Re-find the closest visible page to jump to
+            let newIndex = getNextVisiblePageIndex(currentPageIndex, 0);
+            if (newIndex === -1) newIndex = 0; // fallback
+            showPage(newIndex);
+            updatePageIndicator();
+        });
+
+        function getActivePart() {
+            return document.getElementById('instrumentSelect').value;
+        }
+        
+        function isPageVisibleForPart(pageObj, activePart) {
+            if (activePart === 'ALL') return true;
+            if (!pageObj || !pageObj.parts) return true; // Default show all if missing parts
+            return pageObj.parts.includes(activePart);
+        }
+
+        // Helper to find the next/prev page matching the instrument selection
+        function getNextVisiblePageIndex(startIndex, direction) {
+            const activePart = getActivePart();
+            if (direction === 0) {
+                // Just check if current is valid, if not search forwards then backwards
+                if (pagesData[startIndex] && isPageVisibleForPart(pagesData[startIndex], activePart)) return startIndex;
+                direction = 1;
+            }
+            
+            let curr = startIndex + direction;
+            while (curr >= 0 && curr < pagesData.length) {
+                if (isPageVisibleForPart(pagesData[curr], activePart)) {
+                    return curr;
+                }
+                curr += direction;
+            }
+            return -1; // None found in that direction
+        }
+
+        function getVisiblePagesCount() {
+            const activePart = getActivePart();
+            return pagesData.filter(p => isPageVisibleForPart(p, activePart)).length;
+        }
+
+        // Google Drive Connection Auto-Prompt on Load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (!driveAccessToken) {
+                    showCustomConfirm(
+                        "Cloud Backup Sync", 
+                        "Would you like to connect to Google Drive to backup and sync your setlists?", 
+                        "Connect to Drive", 
+                        "bg-blue-600 hover:bg-blue-500", 
+                        (confirmed) => {
+                            if (confirmed) {
+                                if (!tokenClient) initGoogleDrive();
+                                if (tokenClient) tokenClient.requestAccessToken();
+                            }
+                        }
+                    );
+                }
+            }, 2000);
+        });
+
         // ---------------------------------------------------------
         // HEADER SONG JUMP DROPDOWN ENGINE
         // ---------------------------------------------------------
@@ -709,30 +749,35 @@
 
         function renderSongJumpList(filterText = '') {
             songJumpList.innerHTML = '';
-            if (pagesData.length === 0) {
-                songJumpList.innerHTML = `<li class="p-3 text-center text-slate-500 text-xs">No pages in setlist</li>`;
+            
+            const activePart = getActivePart();
+            const visiblePages = pagesData.filter(p => isPageVisibleForPart(p, activePart));
+
+            if (visiblePages.length === 0) {
+                songJumpList.innerHTML = `<li class="p-3 text-center text-slate-500 text-xs">No pages for selected instrument</li>`;
                 return;
             }
 
-            pagesData.forEach((page, idx) => {
-                const title = page.filename || `Page ${idx + 1}`;
+            visiblePages.forEach((page, displayIdx) => {
+                const title = page.filename || `Page`;
                 if (filterText && !title.toLowerCase().includes(filterText)) return;
 
-                const isCurrent = idx === currentPageIndex;
+                const actualIdx = pagesData.indexOf(page);
+                const isCurrent = actualIdx === currentPageIndex;
                 const isLinked = isPageLinkedToParent(page);
                 const li = document.createElement('li');
                 li.className = `p-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition-colors ${isCurrent ? 'bg-blue-600 text-white font-bold' : 'text-slate-200 hover:bg-slate-800'}`;
                 
                 li.innerHTML = `
                     <div class="flex items-center gap-2 truncate">
-                        <span class="font-mono text-[10px] ${isCurrent ? 'text-blue-200' : 'text-slate-500'} w-6 text-right">${idx + 1}.</span>
+                        <span class="font-mono text-[10px] ${isCurrent ? 'text-blue-200' : 'text-slate-500'} w-6 text-right">${displayIdx + 1}.</span>
                         <span class="truncate ${isLinked ? 'pl-2 text-slate-300' : ''}">${title}</span>
                     </div>
                     ${isCurrent ? `<i data-lucide="check" class="w-3.5 h-3.5 text-white shrink-0"></i>` : ''}
                 `;
 
                 li.onclick = () => {
-                    showPage(idx);
+                    showPage(actualIdx);
                     songJumpDropdown.classList.add('hidden');
                 };
 
@@ -745,40 +790,128 @@
         // SONG / PAGE GROUPING UTILITIES
         // ---------------------------------------------------------
         function parsePageGroupInfo(filename) {
-            if (!filename) return { baseTitle: "Page", pageNum: null };
+            let base = filename || "Page";
+            let pNum = 1; // Any song without p2/p.2 is default treated as 1st page
+            let parts = [];
+            
+            // Detect Bb Parts
+            if (/\(\s*Bb\s*\)/i.test(base) || /\bBrass\b/i.test(base) || /\bBb\b/i.test(base)) parts.push('Bb');
+            // Detect Eb Parts
+            if (/\(\s*Eb\s*\)/i.test(base) || /\bEb\b/i.test(base)) parts.push('Eb');
+            // Detect Bass Parts
+            if (/\bBass\b/i.test(base) || /\(\s*Bass\s*\)/i.test(base)) parts.push('Bass');
+            // Tablature
+            if (/\(\s*TAB\s*\)/i.test(base)) parts.push('TAB');
 
-            const match = filename.match(/^(.*?)[_\s\(-]*p\.?\s*(\d+)\)?$/i);
+            // Strip out indicators to get cleanly matched base title for grouping
+            base = base.replace(/\(\s*Eb\s*\)/ig, '').replace(/\bEb\b/ig, '')
+                       .replace(/\(\s*Bb\s*\)/ig, '').replace(/\bBrass\b/ig, '').replace(/\bBb\b/ig, '')
+                       .replace(/\(\s*Bass\s*\)/ig, '').replace(/\bBass\b/ig, '')
+                       .replace(/\(\s*TAB\s*\)/ig, '').trim();
+
+            const match = base.match(/^(.*?)[_\s\(-]*p\.?\s*(\d+)\)?$/i);
             if (match) {
-                const base = match[1].trim();
-                const pNum = parseInt(match[2], 10);
-                if (base.length > 0 && !isNaN(pNum)) {
-                    return { baseTitle: base, pageNum: pNum };
-                }
+                base = match[1].trim();
+                pNum = parseInt(match[2], 10);
             }
-            return { baseTitle: filename.trim(), pageNum: null };
+
+            if (parts.length === 0) parts = ['C']; // Main parts for Concert C
+            
+            return { baseTitle: base || filename, pageNum: pNum, detectedParts: parts };
         }
 
         function isPageLinkedToParent(pageObj) {
             const groupInfo = parsePageGroupInfo(pageObj.filename);
-            if (groupInfo.pageNum === null) return false;
-
-            return pagesData.some(p => {
-                if (p.id === pageObj.id) return false;
+            const index = pagesData.findIndex(p => p.id === pageObj.id);
+            if (index === -1) return false;
+            
+            // It is a child (nested) if there's another page with the same baseTitle that comes BEFORE it.
+            return pagesData.slice(0, index).some(p => {
                 const pInfo = parsePageGroupInfo(p.filename);
                 return pInfo.baseTitle.toLowerCase() === groupInfo.baseTitle.toLowerCase();
             });
+        }
+
+        function showCustomConfirm(title, msg, confirmText, confirmColorClass, callback) {
+            const modal = document.getElementById('genericConfirmModal');
+            document.getElementById('genericConfirmTitle').textContent = title;
+            document.getElementById('genericConfirmMsg').innerHTML = msg;
+            
+            const btnAction = document.getElementById('btnGenericConfirmAction');
+            btnAction.textContent = confirmText;
+            btnAction.className = `px-4 py-2 rounded-xl text-white text-xs font-bold transition-colors shadow-lg ${confirmColorClass}`;
+            
+            const btnCancel = document.getElementById('btnGenericConfirmCancel');
+            
+            modal.classList.remove('hidden');
+            
+            const cleanup = () => {
+                modal.classList.add('hidden');
+                btnAction.onclick = null;
+                btnCancel.onclick = null;
+            };
+            
+            btnCancel.onclick = () => { cleanup(); callback(false); };
+            btnAction.onclick = () => { cleanup(); callback(true); };
         }
 
         function unlinkPageGroup(pageId) {
             const pageObj = pagesData.find(p => p.id === pageId);
             if (!pageObj) return;
 
-            if (confirm(`Unlink "${pageObj.filename}" as an independent page?`)) {
-                const groupInfo = parsePageGroupInfo(pageObj.filename);
-                pageObj.filename = groupInfo.baseTitle + ` (Part ${groupInfo.pageNum})`;
-                renderPagesListDrawer();
-                updatePageIndicator();
-            }
+            showCustomConfirm(
+                "Unlink Page", 
+                `Unlink <strong>${pageObj.filename}</strong> as an independent page?`, 
+                "Unlink", 
+                "bg-amber-600 hover:bg-amber-500", 
+                (confirmed) => {
+                    if (confirmed) {
+                        const groupInfo = parsePageGroupInfo(pageObj.filename);
+                        pageObj.filename = groupInfo.baseTitle + ` (Unlinked Part ${groupInfo.pageNum})`;
+                        renderPagesListDrawer();
+                        updatePageIndicator();
+                    }
+                }
+            );
+        }
+
+        function linkToPrevious(pageId) {
+            const index = pagesData.findIndex(p => p.id === pageId);
+            if (index <= 0) return;
+            
+            const prevPage = pagesData[index - 1];
+            const prevInfo = parsePageGroupInfo(prevPage.filename);
+            const targetPage = pagesData[index];
+            const targetInfo = parsePageGroupInfo(targetPage.filename);
+            
+            if (prevInfo.baseTitle.toLowerCase() === targetInfo.baseTitle.toLowerCase()) return;
+            
+            showCustomConfirm(
+                "Link to Previous", 
+                `Link <strong>${targetPage.filename}</strong> to <strong>${prevInfo.baseTitle}</strong>?`, 
+                "Link Pages", 
+                "bg-blue-600 hover:bg-blue-500", 
+                (confirmed) => {
+                    if (confirmed) {
+                        let maxPageNum = 1;
+                        pagesData.forEach(p => {
+                            const info = parsePageGroupInfo(p.filename);
+                            if (info.baseTitle.toLowerCase() === prevInfo.baseTitle.toLowerCase() && info.pageNum > maxPageNum) {
+                                maxPageNum = info.pageNum;
+                            }
+                        });
+                        
+                        let partsStr = '';
+                        if (targetPage.parts) {
+                            if (targetPage.parts.includes('Bb')) partsStr = ' (Bb)';
+                            else if (targetPage.parts.includes('Eb')) partsStr = ' (Eb)';
+                        }
+                        targetPage.filename = `${prevInfo.baseTitle}${partsStr} p.${maxPageNum + 1}`;
+                        renderPagesListDrawer();
+                        updatePageIndicator();
+                    }
+                }
+            );
         }
 
         function getGroupMemberIds(targetPageId) {
@@ -818,6 +951,7 @@
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
                         
+                        // Crop the top 25% of the page to focus on the title area
                         const cropHeight = Math.floor(img.height * 0.25);
                         canvas.width = img.width;
                         canvas.height = cropHeight;
@@ -836,12 +970,19 @@
                         if (ret.data && ret.data.lines) {
                             for (const line of ret.data.lines) {
                                 const text = line.text.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
+                                
+                                // Filter out noise, extremely short text, or common musical header artifacts
                                 if (text.length < 3 || /^(page|sheet|score|\d+|www)/i.test(text)) continue;
 
                                 const { x0, y0, x1, y1 } = line.bbox;
                                 const height = y1 - y0;
                                 const lineCenterX = x0 + ((x1 - x0) / 2);
+                                
+                                // Calculate distance from center (0 = perfectly centered, 1 = at edge)
                                 const centerDist = Math.abs(imgCenterX - lineCenterX) / imgCenterX;
+                                
+                                // Score: Height represents text size (bigger is better).
+                                // Penalty applied based on distance from center (up to 80% reduction if at far edge).
                                 const score = height * (1 - (centerDist * 0.8));
 
                                 if (score > maxScore) {
@@ -881,12 +1022,13 @@
                 document.getElementById('scrubberContainer').style.display = 'none';
                 btnExitPerformance.classList.remove('hidden');
 
+                // Force Navigate mode to prevent accidental drawing
                 document.querySelector('[data-tool="navigate"]').click();
             } else {
                 leftToolbar.style.display = '';
                 topPageIndicator.style.display = '';
                 btnExitPerformance.classList.add('hidden');
-                updatePageIndicator();
+                updatePageIndicator(); // Restores scrubber based on total page count
             }
         }
 
@@ -1003,8 +1145,11 @@
         // EXPORT MERGED PDF (jsPDF)
         // ---------------------------------------------------------
         document.getElementById('btnExportPDF').addEventListener('click', async () => {
-            if (pagesData.length === 0) {
-                alert('Your setlist is empty. Add pages before exporting.');
+            const activePart = getActivePart();
+            const visiblePages = pagesData.filter(p => isPageVisibleForPart(p, activePart));
+            
+            if (visiblePages.length === 0) {
+                alert('Your setlist is empty for the current instrument selection. Add pages before exporting.');
                 return;
             }
 
@@ -1017,8 +1162,8 @@
                 const { jsPDF } = window.jspdf;
                 let pdfDoc = null;
 
-                for (let i = 0; i < pagesData.length; i++) {
-                    const blob = await getPageAsBlob(pagesData[i]);
+                for (let i = 0; i < visiblePages.length; i++) {
+                    const blob = await getPageAsBlob(visiblePages[i]);
                     if (!blob) continue;
 
                     const dataUrl = await new Promise((res) => {
@@ -1123,15 +1268,24 @@
             syncModal.classList.add('hidden');
         });
 
-        function makeShortCode(len = 5) {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let res = '';
-            for (let i = 0; i < len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
-            return res;
+        function makeShortCode() {
+            const words = [
+                'ABBA', 'ACDC', 'BACH', 'BASS', 'BEAT', 'BECK', 'BIRD', 'BLOW', 'CAGE', 'CHER', 
+                'CLEF', 'CLUB', 'CODA', 'CROW', 'DEAN', 'DEVO', 'DIRE', 'DOVE', 'DRUM', 'DUET', 
+                'ECHO', 'EDGE', 'ENYA', 'EPIC', 'FAME', 'FAST', 'FIRE', 'FLOW', 'FOLK', 'FUNK', 
+                'GAGA', 'GIGS', 'GONG', 'HALL', 'HITS', 'HOOK', 'HORN', 'HOWL', 'INXS', 'JAMS', 
+                'JAZZ', 'JOAN', 'JUMP', 'KEYS', 'KICK', 'KISS', 'KORN', 'LEAD', 'LION', 'LOUD', 
+                'LOVE', 'LUTE', 'LYRE', 'MACK', 'MIDI', 'MIKE', 'MOOG', 'MOON', 'MUSE', 'NINE', 
+                'NOTE', 'OAKS', 'OBOE', 'OPUS', 'PINK', 'PLAY', 'PLUG', 'PUNK', 'REED', 'REST', 
+                'RIFF', 'RING', 'ROCK', 'ROSE', 'RUSH', 'SADE', 'SEAL', 'SHOW', 'SING', 'SOLO', 
+                'SONG', 'SOUL', 'SPIN', 'STAR', 'STEP', 'SYNC', 'TALK', 'TOTO', 'TOUR', 'TOWN', 
+                'TRAP', 'TUNE', 'VAMP', 'WALK', 'WHAM', 'WIND', 'WIRE', 'WOLF', 'WOOD', 'ZINC'
+            ];
+            return words[Math.floor(Math.random() * words.length)];
         }
 
         document.getElementById('btnStartHost').addEventListener('click', () => {
-            const shortId = 'HN-' + makeShortCode(4);
+            const shortId = makeShortCode();
             if (peer) peer.destroy();
 
             peer = new Peer(shortId);
@@ -1166,7 +1320,7 @@
         });
 
         document.getElementById('btnJoinLeader').addEventListener('click', () => {
-            const code = document.getElementById('inputLeaderCode').value.trim();
+            const code = document.getElementById('inputLeaderCode').value.trim().toUpperCase();
             if (!code) return;
 
             if (peer) peer.destroy();
@@ -1236,195 +1390,22 @@
         });
 
         // ---------------------------------------------------------
-        // FINGERING & FRETBOARD GENERATOR ENGINE
-        // ---------------------------------------------------------
-        let activeFingeringSymbol = null;
-        const fingeringPaletteModal = document.getElementById('fingeringPaletteModal');
-
-        document.querySelector('[data-tool="fingering"]').addEventListener('click', () => {
-            fingeringPaletteModal.classList.remove('hidden');
-        });
-        document.getElementById('btnCloseFingering').addEventListener('click', () => {
-            fingeringPaletteModal.classList.add('hidden');
-        });
-
-        document.querySelectorAll('.fingering-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const target = e.currentTarget;
-                activeFingeringSymbol = target.dataset.symbol;
-                fingeringPaletteModal.classList.add('hidden');
-                document.querySelector('[data-tool="fingering"]').classList.add('active');
-            });
-        });
-
-        function fingeringPlacementHandler(options) {
-            if (activeTool !== 'fingering' || !activeFingeringSymbol || options.target) return;
-            const canvas = this;
-            const pointer = canvas.getPointer(options.e);
-
-            const isCircled = /^[①-⑥]$/.test(activeFingeringSymbol);
-            const isRoman = /^[IVXLCDM]+$/.test(activeFingeringSymbol);
-            const fontSize = isCircled ? 38 : isRoman ? 30 : 34;
-
-            const fingerText = new fabric.Text(activeFingeringSymbol, {
-                left: pointer.x,
-                top: pointer.y,
-                fontSize: fontSize,
-                fontWeight: 'bold',
-                fill: activeColor,
-                fontFamily: isRoman ? 'serif' : 'sans-serif',
-                selectable: true,
-                hasControls: true,
-                originX: 'center',
-                originY: 'center',
-                shadow: new fabric.Shadow({
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    blur: 6,
-                    offsetX: 0,
-                    offsetY: 0
-                })
-            });
-
-            canvas.add(fingerText);
-            canvas.renderAll();
-        }
-
-        // ---------------------------------------------------------
-        // SMART JUMP HOTSPOTS ENGINE
-        // ---------------------------------------------------------
-        let isDrawingHotspot = false;
-        let hotspotOrigX = 0;
-        let hotspotOrigY = 0;
-        let activeHotspotRect = null;
-
-        function hotspotMouseDownHandler(o) {
-            if (activeTool !== 'hotspot') return;
-            const canvas = this;
-            isDrawingHotspot = true;
-            const pointer = canvas.getPointer(o.e);
-            hotspotOrigX = pointer.x;
-            hotspotOrigY = pointer.y;
-
-            activeHotspotRect = new fabric.Rect({
-                left: hotspotOrigX,
-                top: hotspotOrigY,
-                originX: 'left',
-                originY: 'top',
-                width: 0,
-                height: 0,
-                fill: 'rgba(245, 158, 11, 0.28)',
-                stroke: '#f59e0b',
-                strokeWidth: 2,
-                strokeDashArray: [6, 4],
-                selectable: false,
-                isSmartHotspot: true
-            });
-            canvas.add(activeHotspotRect);
-        }
-
-        function hotspotMouseMoveHandler(o) {
-            if (!isDrawingHotspot || !activeHotspotRect) return;
-            const canvas = this;
-            const pointer = canvas.getPointer(o.e);
-
-            if (hotspotOrigX > pointer.x) {
-                activeHotspotRect.set({ left: Math.abs(pointer.x) });
-            }
-            if (hotspotOrigY > pointer.y) {
-                activeHotspotRect.set({ top: Math.abs(pointer.y) });
-            }
-
-            activeHotspotRect.set({
-                width: Math.abs(hotspotOrigX - pointer.x),
-                height: Math.abs(hotspotOrigY - pointer.y)
-            });
-
-            canvas.renderAll();
-        }
-
-        function hotspotMouseUpHandler(o) {
-            if (!isDrawingHotspot || !activeHotspotRect) return;
-            isDrawingHotspot = false;
-            const canvas = this;
-
-            if (activeHotspotRect.width < 24 || activeHotspotRect.height < 24) {
-                canvas.remove(activeHotspotRect);
-                activeHotspotRect = null;
-                canvas.renderAll();
-                return;
-            }
-
-            const promptMsg = `Smart Jump Hotspot: Enter target page number to jump to when tapping this area:`;
-            const defaultTarget = Math.min(pagesData.length, currentPageIndex + 2);
-            const entered = prompt(promptMsg, defaultTarget);
-
-            if (entered && !isNaN(parseInt(entered))) {
-                const targetPage = parseInt(entered);
-                activeHotspotRect.set({
-                    targetPage: targetPage,
-                    selectable: false,
-                    hasControls: false,
-                    hoverCursor: 'pointer'
-                });
-
-                const badgeText = new fabric.Text(`Jump to p.${targetPage}`, {
-                    left: activeHotspotRect.left + 4,
-                    top: activeHotspotRect.top + 4,
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    fontFamily: 'sans-serif',
-                    fill: '#b45309',
-                    backgroundColor: 'rgba(254, 243, 199, 0.85)',
-                    padding: 2,
-                    selectable: false,
-                    evented: false
-                });
-
-                const hotspotGroup = new fabric.Group([activeHotspotRect, badgeText], {
-                    left: activeHotspotRect.left,
-                    top: activeHotspotRect.top,
-                    selectable: (activeTool === 'navigate'),
-                    targetPage: targetPage,
-                    isSmartHotspot: true
-                });
-
-                canvas.remove(activeHotspotRect);
-                canvas.add(hotspotGroup);
-                canvas.renderAll();
-            } else {
-                canvas.remove(activeHotspotRect);
-                canvas.renderAll();
-            }
-            activeHotspotRect = null;
-        }
-
-        // ---------------------------------------------------------
         // GOOGLE DRIVE API INTEGRATION CONFIG
         // ---------------------------------------------------------
         const DRIVE_CLIENT_ID = '1086834950344-qce6cl6d57ufu1hpkq1pq9th5quo19kg.apps.googleusercontent.com';
-        const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive';
+        const DRIVE_SCOPES = 'https://www.googleapis.com/auth/drive.file';
         const ROOT_HAYNOTES_FOLDER_ID = '1oI8WlCZVE4rAui3Anw9YPzc4sPD6pA8W';
 
         let tokenClient = null;
         let driveAccessToken = localStorage.getItem('haynotes_drive_token') || null;
 
+        // Visual Drive state is completely deferred to background or library interactions
         function setDriveConnectedUI() {
-            const btn = document.getElementById('btnConnectDrive');
-            const icon = document.getElementById('driveStatusIcon');
-            btn.title = "Google Drive Connected";
-            icon.setAttribute('data-lucide', 'cloud');
-            icon.className = "w-4 h-4 text-emerald-400";
-            lucide.createIcons();
+            // Re-enables interactions internally and visually marks connected where applicable
             document.getElementById('btnOpenDriveLibrary').disabled = false;
         }
 
         function setDriveDisconnectedUI() {
-            const btn = document.getElementById('btnConnectDrive');
-            const icon = document.getElementById('driveStatusIcon');
-            btn.title = "Google Drive Disconnected - Click to connect";
-            icon.setAttribute('data-lucide', 'cloud-off');
-            icon.className = "w-4 h-4 text-red-500";
-            lucide.createIcons();
             document.getElementById('btnOpenDriveLibrary').disabled = true;
         }
 
@@ -1468,17 +1449,6 @@
                 setDriveDisconnectedUI();
             }
         }
-
-        document.getElementById('btnConnectDrive').addEventListener('click', async () => {
-            if (driveAccessToken && await verifyToken(driveAccessToken)) {
-                setDriveConnectedUI();
-                document.getElementById('driveLibraryModal').classList.remove('hidden');
-                fetchDriveLibraryFiles();
-                return;
-            }
-            if (!tokenClient) initGoogleDrive();
-            if (tokenClient) tokenClient.requestAccessToken();
-        });
 
         async function createDriveFolder(folderName, parentFolderId = ROOT_HAYNOTES_FOLDER_ID) {
             const metadata = {
@@ -1603,7 +1573,8 @@
             }
 
             const cleanDefaultName = activeSetlistName.replace(/_[A-Z][a-z]{2}\d{1,2}_\d{4}_\d{1,4}(AM|PM)$/i, '');
-            const rawName = prompt("Enter a name for this Setlist folder:", cleanDefaultName);
+            const promptDefault = cleanDefaultName === "Main Setlist" ? "" : cleanDefaultName;
+            const rawName = prompt("Enter a name for this Setlist folder:", promptDefault);
             if (!rawName || !rawName.trim()) return;
             
             const nowObj = new Date();
@@ -1630,6 +1601,7 @@
                     filename: page.filename,
                     type: page.type,
                     content: page.content,
+                    parts: page.parts || ['C'],
                     annotations: fabricCanvases[page.id] ? fabricCanvases[page.id].toJSON() : null
                 }))
             };
@@ -1665,7 +1637,9 @@
         const driveLibraryModal = document.getElementById('driveLibraryModal');
         document.getElementById('btnOpenDriveLibrary').addEventListener('click', async () => {
             if (!driveAccessToken) {
-                alert('Please connect to Google Drive first.');
+                // If they haven't authenticated yet, do so directly instead of relying on the removed red button
+                if (!tokenClient) initGoogleDrive();
+                if (tokenClient) tokenClient.requestAccessToken();
                 return;
             }
             driveLibraryModal.classList.remove('hidden');
@@ -1808,7 +1782,7 @@
 
         async function renderSetlistPayload(setlistData) {
             for (const page of setlistData.pages) {
-                await addPage(page.type, page.content, page.filename);
+                await addPage(page.type, page.content, page.filename, null, page.parts || null);
                 if (page.annotations && fabricCanvases[page.id]) {
                     fabricCanvases[page.id].loadFromJSON(page.annotations, () => {
                         fabricCanvases[page.id].renderAll();
@@ -1816,7 +1790,7 @@
                 }
             }
             renderPagesListDrawer();
-            showPage(0);
+            showPage(getNextVisiblePageIndex(0, 1) === -1 ? 0 : getNextVisiblePageIndex(0, 1));
         }
 
         async function syncSetlistFromCloudInBackground(folderId, localSetlist, localKey) {
@@ -1883,7 +1857,7 @@
                     await importDriveFile(file.id, file.name, file.mimeType);
                 }
                 driveLibraryModal.classList.add('hidden');
-                showPage(0);
+                showPage(getNextVisiblePageIndex(0, 1) === -1 ? 0 : getNextVisiblePageIndex(0, 1));
 
             } catch (err) {
                 alert(`Error importing setlist from Drive: ${err.message}`);
@@ -1910,6 +1884,45 @@
         let leftArrowTimer; let leftArrowPressed = false;
         let cropper = null; let cropResolve = null;
 
+        // Laptop Mode State
+        let isLaptopMode = false;
+        const btnToggleLaptopMode = document.getElementById('btnToggleLaptopMode');
+        const laptopModeIcon = document.getElementById('laptopModeIcon');
+        const modeToast = document.getElementById('modeToast');
+        const modeToastIcon = document.getElementById('modeToastIcon');
+        const modeToastText = document.getElementById('modeToastText');
+        let toastTimeout;
+
+        btnToggleLaptopMode.addEventListener('click', () => {
+            isLaptopMode = !isLaptopMode;
+            
+            modeToast.classList.remove('hidden', 'bg-yellow-400', 'text-yellow-950', 'border-yellow-400', 'bg-green-400', 'text-green-950', 'border-green-400');
+            modeToast.classList.add('flex');
+            
+            if (isLaptopMode) {
+                laptopModeIcon.setAttribute('data-lucide', 'laptop');
+                laptopModeIcon.className = 'w-4 h-4 text-yellow-400';
+                
+                modeToast.classList.add('bg-yellow-400', 'text-yellow-950', 'border-yellow-400');
+                modeToastIcon.setAttribute('data-lucide', 'laptop');
+                modeToastText.textContent = 'Laptop Mode Activated';
+            } else {
+                laptopModeIcon.setAttribute('data-lucide', 'smartphone');
+                laptopModeIcon.className = 'w-4 h-4 text-emerald-400';
+                
+                modeToast.classList.add('bg-green-400', 'text-green-950', 'border-green-400');
+                modeToastIcon.setAttribute('data-lucide', 'smartphone');
+                modeToastText.textContent = 'Tablet / Phone Mode';
+            }
+            lucide.createIcons();
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                modeToast.classList.add('hidden');
+                modeToast.classList.remove('flex');
+            }, 2000);
+        });
+
         // Fullscreen Logic
         const btnFullscreen = document.getElementById('btnFullscreen');
         const fullscreenIcon = document.getElementById('fullscreenIcon');
@@ -1930,51 +1943,14 @@
         const fabricCanvases = {}; 
         let activeTool = 'navigate';
         let activeColor = '#ef4444';
-
-        // Custom Tool Width States (Pen is thinner now: 3px default)
-        let penStrokeWidth = 3;
-        let highlightStrokeWidth = 28;
-
-        const toolWidthSlider = document.getElementById('toolWidthSlider');
-        const toolWidthValue = document.getElementById('toolWidthValue');
-
-        function getCurrentToolWidth() {
-            return activeTool === 'highlight' ? highlightStrokeWidth : penStrokeWidth;
-        }
-
-        function updateWidthSliderUI() {
-            const currentW = getCurrentToolWidth();
-            toolWidthSlider.value = currentW;
-            toolWidthValue.textContent = `${currentW}px`;
-        }
-
-        toolWidthSlider.addEventListener('input', (e) => {
-            const newWidth = parseInt(e.target.value, 10);
-            toolWidthValue.textContent = `${newWidth}px`;
-            
-            if (activeTool === 'highlight') {
-                highlightStrokeWidth = newWidth;
-            } else {
-                penStrokeWidth = newWidth;
-            }
-
-            // Dynamically update brush width on all canvas instances
-            Object.values(fabricCanvases).forEach(canvas => {
-                if (canvas.freeDrawingBrush) {
-                    canvas.freeDrawingBrush.width = newWidth;
-                }
+        
+        // Listen to Thickness Selector Slider Changes
+        const brushThicknessInput = document.getElementById('brushThickness');
+        if (brushThicknessInput) {
+            brushThicknessInput.addEventListener('input', () => {
+                updateAllCanvasesMode();
             });
-
-            // If a stroke object is currently selected, adjust its stroke width live
-            const activeCanvas = fabricCanvases[pagesData[currentPageIndex]?.id];
-            if (activeCanvas) {
-                const activeObj = activeCanvas.getActiveObject();
-                if (activeObj && activeObj.strokeWidth !== undefined) {
-                    activeObj.set('strokeWidth', newWidth);
-                    activeCanvas.renderAll();
-                }
-            }
-        });
+        }
 
         const colors = [
             '#000000', '#4b5563', '#9ca3af', '#ffffff', 
@@ -2010,6 +1986,7 @@
             annotationToolbar.classList.add('hidden');
             annotationToolbar.style.display = '';
             
+            // Auto-deselect any active transform bounding box when closing drawing toolbar
             Object.values(fabricCanvases).forEach(canvas => {
                 canvas.discardActiveObject();
                 canvas.requestRenderAll();
@@ -2023,7 +2000,6 @@
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
                 e.currentTarget.classList.add('active');
                 activeTool = e.currentTarget.dataset.tool;
-                updateWidthSliderUI();
                 updateAllCanvasesMode();
             });
         });
@@ -2059,6 +2035,8 @@
         }
 
         function updateAllCanvasesMode() {
+            const baseThickness = brushThicknessInput ? parseInt(brushThicknessInput.value, 10) : 15;
+            
             Object.values(fabricCanvases).forEach(canvas => {
                 canvas.isDrawingMode = false;
                 canvas.selection = false;
@@ -2069,11 +2047,7 @@
                 canvas.off('mouse:down', eraserHandler);
                 canvas.off('mouse:down', textHandler);
                 canvas.off('mouse:down', stampHandler);
-                canvas.off('mouse:down', fingeringPlacementHandler);
                 canvas.off('mouse:down', linkNavigationHandler);
-                canvas.off('mouse:down', hotspotMouseDownHandler);
-                canvas.off('mouse:move', hotspotMouseMoveHandler);
-                canvas.off('mouse:up', hotspotMouseUpHandler);
 
                 if (activeTool !== 'navigate') {
                     canvas.discardActiveObject();
@@ -2089,14 +2063,14 @@
                     canvas.isDrawingMode = true;
                     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                     canvas.freeDrawingBrush.color = activeColor;
-                    canvas.freeDrawingBrush.width = penStrokeWidth;
+                    canvas.freeDrawingBrush.width = baseThickness;
                 } 
                 else if (activeTool === 'highlight') {
                     canvas.allowTouchScrolling = false;
                     canvas.isDrawingMode = true;
                     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                     canvas.freeDrawingBrush.color = hexToRgba(activeColor, 0.35);
-                    canvas.freeDrawingBrush.width = highlightStrokeWidth;
+                    canvas.freeDrawingBrush.width = baseThickness * 3.2; 
                 } 
                 else if (activeTool === 'text') {
                     canvas.allowTouchScrolling = false;
@@ -2109,20 +2083,6 @@
                     canvas.defaultCursor = 'crosshair';
                     canvas.hoverCursor = 'crosshair';
                     canvas.on('mouse:down', stampHandler);
-                }
-                else if (activeTool === 'fingering') {
-                    canvas.allowTouchScrolling = false;
-                    canvas.defaultCursor = 'crosshair';
-                    canvas.hoverCursor = 'crosshair';
-                    canvas.on('mouse:down', fingeringPlacementHandler);
-                }
-                else if (activeTool === 'hotspot') {
-                    canvas.allowTouchScrolling = false;
-                    canvas.defaultCursor = 'crosshair';
-                    canvas.hoverCursor = 'crosshair';
-                    canvas.on('mouse:down', hotspotMouseDownHandler);
-                    canvas.on('mouse:move', hotspotMouseMoveHandler);
-                    canvas.on('mouse:up', hotspotMouseUpHandler);
                 }
                 else if (activeTool === 'erase') {
                     canvas.allowTouchScrolling = false;
@@ -2160,17 +2120,17 @@
             let jumpTarget = null;
             if (activeStampIsLink) {
                 let promptMsg = `Enter page number to jump to when clicking this "${activeStampSymbol}":`;
-                if (activeStampSymbol === '←') {
-                    promptMsg = `Enter target page to jump back to when clicking this Left Arrow (←):`;
+                if (activeStampSymbol === '') {
+                    promptMsg = `Enter target page to jump back to when clicking this Left Arrow ():`;
                 }
-                const defaultTarget = activeStampSymbol === '←' ? Math.max(1, currentPageIndex) : Math.min(pagesData.length, currentPageIndex + 2);
+                const defaultTarget = activeStampSymbol === '' ? Math.max(1, currentPageIndex) : Math.min(pagesData.length, currentPageIndex + 2);
                 const entered = prompt(promptMsg, defaultTarget);
                 if (entered && !isNaN(parseInt(entered))) {
                     jumpTarget = parseInt(entered);
                 }
             }
 
-            const isArrow = (activeStampSymbol === '←' || activeStampSymbol === '→');
+            const isArrow = (activeStampSymbol === '' || activeStampSymbol === '');
             
             if (isArrow && jumpTarget !== null) {
                 const targetPageObj = pagesData[jumpTarget - 1];
@@ -2231,26 +2191,8 @@
 
         function linkNavigationHandler(options) {
             if (activeTool !== 'navigate' || !options.target) return;
-            
             if (options.target.targetPage) {
                 const targetIdx = options.target.targetPage - 1;
-                
-                if (options.target.isSmartHotspot) {
-                    const canvas = this;
-                    const origOpacity = options.target.opacity || 1;
-                    options.target.set({ opacity: 0.1 });
-                    canvas.requestRenderAll();
-                    
-                    setTimeout(() => {
-                        options.target.set({ opacity: origOpacity });
-                        canvas.requestRenderAll();
-                        if (targetIdx >= 0 && targetIdx < pagesData.length) {
-                            showPage(targetIdx);
-                        }
-                    }, 120);
-                    return;
-                }
-
                 if (targetIdx >= 0 && targetIdx < pagesData.length) {
                     showPage(targetIdx);
                 }
@@ -2268,9 +2210,18 @@
         function generateId() { return 'page-' + Math.random().toString(36).substr(2, 9); }
 
         function updatePageIndicator() {
-            const total = pagesData.length;
-            document.getElementById('pageIndicator').textContent = `${total === 0 ? 0 : currentPageIndex + 1} / ${total}`;
-            document.getElementById('dropZone').style.display = total === 0 ? 'flex' : 'none';
+            const activePart = getActivePart();
+            const visiblePages = pagesData.filter(p => isPageVisibleForPart(p, activePart));
+            const total = visiblePages.length;
+            
+            // Current display index based on visible pages, not absolute index
+            let displayIndex = 0;
+            if (pagesData[currentPageIndex] && isPageVisibleForPart(pagesData[currentPageIndex], activePart)) {
+                displayIndex = visiblePages.findIndex(p => p.id === pagesData[currentPageIndex].id);
+            }
+            
+            document.getElementById('pageIndicator').textContent = `${total === 0 ? 0 : displayIndex + 1} / ${total}`;
+            document.getElementById('dropZone').style.display = pagesData.length === 0 ? 'flex' : 'none';
 
             const scrubberContainer = document.getElementById('scrubberContainer');
             if (isPerformanceMode) {
@@ -2286,33 +2237,98 @@
             }
         }
 
+        function scrollToActivePageInDrawer() {
+            const drawer = document.getElementById('pagesDrawer');
+            if (drawer.classList.contains('hidden')) return;
+            
+            const activeLi = document.querySelector('.rearrange-active');
+            if (activeLi) {
+                activeLi.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
         function showPage(index, broadcast = true) {
             if (pagesData.length === 0) { updatePageIndicator(); return; }
+            
+            // Validate bounds for requested absolute index
             index = Math.max(0, Math.min(index, pagesData.length - 1));
+            
+            // Set current
             currentPageIndex = index;
+            const activePart = getActivePart();
             
             pagesData.forEach((p, i) => {
                 const el = document.getElementById(p.id);
-                if (el) el.classList.toggle('active', i === index);
+                // ONLY show if it's the exact index AND fits the part constraints. (It's possible index was forced)
+                if (el) el.classList.toggle('active', i === index && isPageVisibleForPart(p, activePart));
                 
                 const li = document.querySelector(`li[data-id="${p.id}"]`);
                 if(li) {
-                    li.classList.toggle('border-red-500', i === index);
-                    li.classList.toggle('bg-red-950/40', i === index);
-                    li.classList.toggle('border-slate-700', i !== index);
-                    li.classList.toggle('bg-slate-800', i !== index);
+                    li.classList.toggle('rearrange-active', i === index);
                 }
             });
             updatePageIndicator();
+            scrollToActivePageInDrawer();
 
             if (broadcast) {
                 broadcastPageToBand(currentPageIndex);
             }
         }
 
-        document.getElementById('btnHome').addEventListener('click', () => showPage(0));
-        document.getElementById('btnNext').addEventListener('click', () => { showPage(currentPageIndex + 1); flashPedal('right'); });
-        document.getElementById('btnPrev').addEventListener('click', () => { showPage(currentPageIndex - 1); flashPedal('left'); });
+        document.getElementById('btnHome').addEventListener('click', () => {
+            const firstVisible = getNextVisiblePageIndex(0, 1);
+            showPage(firstVisible === -1 ? 0 : firstVisible);
+        });
+
+        function navigateNextAction() {
+            if (pagesData.length === 0) return;
+            const activePageEl = document.getElementById(pagesData[currentPageIndex].id);
+            
+            if (isLaptopMode && activePageEl) {
+                // If there is room to scroll down (using 10px threshold)
+                if (activePageEl.scrollTop + activePageEl.clientHeight < activePageEl.scrollHeight - 10) {
+                    activePageEl.scrollBy({ top: activePageEl.clientHeight * 0.75, behavior: 'smooth' });
+                    return;
+                }
+            }
+            
+            const nextIdx = getNextVisiblePageIndex(currentPageIndex, 1);
+            if (nextIdx !== -1 && nextIdx !== currentPageIndex) {
+                showPage(nextIdx); 
+                flashPedal('right'); 
+                const nextEl = document.getElementById(pagesData[nextIdx].id);
+                if (nextEl) nextEl.scrollTop = 0;
+            }
+        }
+
+        function navigatePrevAction() {
+            if (pagesData.length === 0) return;
+            const activePageEl = document.getElementById(pagesData[currentPageIndex].id);
+            
+            if (isLaptopMode && activePageEl) {
+                // If there is room to scroll up
+                if (activePageEl.scrollTop > 10) {
+                    activePageEl.scrollBy({ top: -activePageEl.clientHeight * 0.75, behavior: 'smooth' });
+                    return;
+                }
+            }
+            
+            const prevIdx = getNextVisiblePageIndex(currentPageIndex, -1);
+            if (prevIdx !== -1 && prevIdx !== currentPageIndex) {
+                showPage(prevIdx); 
+                flashPedal('left'); 
+                const prevEl = document.getElementById(pagesData[prevIdx].id);
+                if (prevEl && isLaptopMode) {
+                    // Small timeout ensures the element renders its height before jumping to the bottom
+                    setTimeout(() => { prevEl.scrollTop = prevEl.scrollHeight; }, 10);
+                } else if (prevEl) {
+                    prevEl.scrollTop = 0;
+                }
+            }
+        }
+
+        document.getElementById('btnNext').addEventListener('click', navigateNextAction);
+        document.getElementById('btnPrev').addEventListener('click', navigatePrevAction);
 
         // Horizontal Scrubber Logic
         const scrubberTrack = document.getElementById('scrubberTrack');
@@ -2326,10 +2342,17 @@
         let isScrubbing = false;
 
         function updateScrubberUI() {
-            const total = pagesData.length;
+            const activePart = getActivePart();
+            const visiblePages = pagesData.filter(p => isPageVisibleForPart(p, activePart));
+            const total = visiblePages.length;
             if (total <= 1) return;
 
-            const ratio = currentPageIndex / (total - 1);
+            let displayIndex = 0;
+            if (pagesData[currentPageIndex] && isPageVisibleForPart(pagesData[currentPageIndex], activePart)) {
+                displayIndex = visiblePages.findIndex(p => p.id === pagesData[currentPageIndex].id);
+            }
+
+            const ratio = displayIndex / (total - 1);
             const trackWidth = scrubberTrack.clientWidth;
             const handleLeft = ratio * trackWidth;
 
@@ -2347,25 +2370,30 @@
         }
 
         function handleScrubberMove(clientX) {
-            const total = pagesData.length;
+            const activePart = getActivePart();
+            const visiblePages = pagesData.filter(p => isPageVisibleForPart(p, activePart));
+            const total = visiblePages.length;
             if (total <= 1) return;
 
             const rect = scrubberTrack.getBoundingClientRect();
             let offsetX = Math.max(0, Math.min(clientX - rect.left, rect.width));
             const ratio = offsetX / rect.width;
-            const targetIndex = Math.round(ratio * (total - 1));
+            const targetDisplayIndex = Math.round(ratio * (total - 1));
+            
+            const targetPage = visiblePages[targetDisplayIndex];
+            const targetAbsoluteIndex = pagesData.indexOf(targetPage);
 
             scrubberHandle.style.left = `${offsetX}px`;
             scrubberProgress.style.width = `${offsetX}px`;
 
-            const currentTitle = pagesData[targetIndex]?.filename || 'Page';
-            badgePageNum.textContent = `${targetIndex + 1} / ${total}`;
+            const currentTitle = targetPage?.filename || 'Page';
+            badgePageNum.textContent = `${targetDisplayIndex + 1} / ${total}`;
             badgeTitle.textContent = currentTitle;
             scrubberBadge.style.left = `${offsetX}px`;
             scrubberBadge.classList.remove('hidden');
 
-            if (targetIndex !== currentPageIndex) {
-                showPage(targetIndex);
+            if (targetAbsoluteIndex !== -1 && targetAbsoluteIndex !== currentPageIndex) {
+                showPage(targetAbsoluteIndex);
             }
         }
 
@@ -2442,11 +2470,9 @@
 
             if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX < 0) {
-                    showPage(currentPageIndex + 1);
-                    flashPedal('right');
+                    navigateNextAction();
                 } else {
-                    showPage(currentPageIndex - 1);
-                    flashPedal('left');
+                    navigatePrevAction();
                 }
             }
         }, { passive: true });
@@ -2469,15 +2495,18 @@
 
             if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'ArrowDown') { 
                 e.preventDefault(); 
-                showPage(currentPageIndex + 1); 
-                flashPedal('right');
+                navigateNextAction();
             } 
             else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') {
                 e.preventDefault();
                 flashPedal('left');
                 if (!leftArrowPressed) {
                     leftArrowPressed = true;
-                    leftArrowTimer = setTimeout(() => { showPage(0); leftArrowPressed = false; }, 500);
+                    leftArrowTimer = setTimeout(() => { 
+                        const firstVisible = getNextVisiblePageIndex(0, 1);
+                        showPage(firstVisible === -1 ? 0 : firstVisible); 
+                        leftArrowPressed = false; 
+                    }, 500);
                 }
             }
         });
@@ -2485,9 +2514,31 @@
         window.addEventListener('keyup', (e) => {
             if ((e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') && leftArrowPressed) {
                 clearTimeout(leftArrowTimer);
-                showPage(currentPageIndex - 1);
+                navigatePrevAction();
                 leftArrowPressed = false;
             }
+        });
+
+        document.getElementById('btnSortAlpha').addEventListener('click', () => {
+            if (pagesData.length === 0) return;
+            
+            // Sort logic: Group by baseTitle, then sort by pageNum
+            pagesData.sort((a, b) => {
+                const infoA = parsePageGroupInfo(a.filename);
+                const infoB = parsePageGroupInfo(b.filename);
+                
+                const titleCmp = infoA.baseTitle.toLowerCase().localeCompare(infoB.baseTitle.toLowerCase());
+                if (titleCmp !== 0) return titleCmp;
+                
+                // If same base title, sort by part type to keep them together if possible, then page num
+                return (infoA.pageNum || 1) - (infoB.pageNum || 1);
+            });
+            
+            renderPagesListDrawer();
+            
+            // Jump to the first logical visible page after a sort to avoid getting stuck
+            const firstVisible = getNextVisiblePageIndex(0, 1);
+            showPage(firstVisible === -1 ? 0 : firstVisible);
         });
 
         function renderPagesListDrawer() {
@@ -2499,27 +2550,70 @@
                 const filename = pageObj.filename;
                 const type = pageObj.type;
                 const groupInfo = parsePageGroupInfo(filename);
+                
                 const isLinked = isPageLinkedToParent(pageObj);
+                const isCurrent = pageId === pagesData[currentPageIndex]?.id;
+
+                // Set drawer item color depending on the designated part(s)
+                let bgColorStr = 'bg-slate-800';
+                let borderColorStr = 'border-slate-700';
+                let textColorStr = 'text-slate-200';
+
+                if (pageObj.parts) {
+                    if (pageObj.parts.includes('Eb')) {
+                        bgColorStr = 'bg-sky-950';
+                        borderColorStr = 'border-sky-400';
+                        textColorStr = 'text-sky-100';
+                    } else if (pageObj.parts.includes('Bb')) {
+                        bgColorStr = 'bg-orange-950';
+                        borderColorStr = 'border-orange-500';
+                        textColorStr = 'text-orange-100';
+                    } else if (pageObj.parts.includes('Bass')) {
+                        bgColorStr = 'bg-purple-950';
+                        borderColorStr = 'border-purple-400';
+                        textColorStr = 'text-purple-100';
+                    } else if (pageObj.parts.includes('C')) {
+                        bgColorStr = 'bg-yellow-950';
+                        borderColorStr = 'border-yellow-400';
+                        textColorStr = 'text-yellow-100';
+                    }
+                }
 
                 const li = document.createElement('li');
-                li.className = `page-thumb-container bg-slate-800 p-2 rounded-xl border flex items-center gap-2 hover:bg-slate-750 transition-all ${isLinked ? 'ml-4 border-amber-800/60 bg-slate-850' : 'border-slate-700'}`;
+                let liClasses = `page-thumb-container ${bgColorStr} p-2 rounded-xl border-2 flex items-center gap-2 hover:bg-slate-750 transition-all ${borderColorStr}`;
+                if (isLinked) {
+                    liClasses += ' ml-8 opacity-95'; // indent children for clear nesting
+                }
+                if (isCurrent) {
+                    liClasses += ' rearrange-active';
+                }
+                li.className = liClasses;
                 li.dataset.id = pageId;
 
                 let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
+
+                // Construct tag list for UI
+                let partsTags = '';
+                if (pageObj.parts) {
+                    pageObj.parts.forEach(pt => {
+                        let badgeCol = pt === 'Eb' ? 'text-sky-900 bg-sky-300' : pt === 'Bb' ? 'text-orange-900 bg-orange-400' : pt === 'Bass' ? 'text-purple-900 bg-purple-400' : 'text-yellow-900 bg-yellow-400';
+                        partsTags += `<span class="px-1.5 py-0.5 ${badgeCol} text-[9px] font-bold rounded-md shrink-0 mr-1 normal-case">${pt}</span>`;
+                    });
+                }
 
                 li.innerHTML = `
                     <div class="drag-handle p-1 text-slate-500 hover:text-emerald-400 shrink-0" title="Drag to reorder song group">
                         <i data-lucide="grip-vertical" class="w-4 h-4"></i>
                     </div>
-                    <div onclick="${isLinked ? `unlinkPageGroup('${pageId}')` : ''}" class="w-7 h-7 rounded-lg ${isLinked ? 'bg-amber-950/60 border border-amber-700/50 hover:bg-amber-900/80 cursor-pointer' : 'bg-slate-900 border border-slate-800'} flex items-center justify-center shrink-0" title="${isLinked ? 'Click to UNLINK page' : ''}">
-                        <i data-lucide="${isLinked ? 'link' : iconStr}" class="w-3.5 h-3.5 ${isLinked ? 'text-amber-400 hover:text-rose-400' : 'text-blue-400'}"></i>
+                    <div onclick="${isLinked ? `unlinkPageGroup('${pageId}')` : `linkToPrevious('${pageId}')`}" class="w-7 h-7 rounded-lg ${isLinked ? 'bg-amber-950 border border-amber-700 hover:bg-amber-900 cursor-pointer' : 'bg-slate-900 border border-slate-800 hover:bg-slate-700 cursor-pointer'} flex items-center justify-center shrink-0" title="${isLinked ? 'Click to UNLINK page' : 'Click to LINK to the page above'}">
+                        <i data-lucide="${isLinked ? 'link' : iconStr}" class="w-3.5 h-3.5 ${isLinked ? 'text-amber-400 hover:text-rose-400' : 'text-slate-400 hover:text-blue-400'}"></i>
                     </div>
                     <div class="flex-1 overflow-hidden cursor-pointer" onclick="jumpToPageById('${pageId}')" ondblclick="renamePageTitle('${pageId}')" title="Single tap to jump • Double tap to rename">
-                        <div id="thumb-title-${pageId}" class="text-xs text-slate-200 truncate font-semibold flex items-center gap-1">
+                        <div id="thumb-title-${pageId}" class="text-xs ${textColorStr} page-title-text truncate flex items-center gap-1">
                             <span class="truncate">${filename}</span>
-                            ${isLinked ? `<span class="px-1 py-0.2 bg-amber-500/20 text-amber-300 text-[9px] font-mono rounded shrink-0">p.${groupInfo.pageNum}</span>` : ''}
+                            ${isLinked ? `<span class="px-1 py-0.5 bg-amber-500/20 text-amber-300 text-[9px] font-mono rounded shrink-0">p.${groupInfo.pageNum}</span>` : ''}
                         </div>
-                        <div class="text-[10px] text-slate-500 uppercase">${isLinked ? 'Linked Sub-Page' : type}</div>
+                        <div class="text-[10px] text-slate-400 uppercase flex items-center mt-1">${partsTags} ${isLinked ? 'Linked' : type}</div>
                     </div>
                     <button id="btn-trash-${pageId}" onclick="event.stopPropagation(); triggerRemovePageWithFeedback('${pageId}');" class="btn-delete-page p-1.5 hover:text-red-400 text-slate-400 rounded-lg hover:bg-slate-900 shrink-0" title="Delete Page">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -2529,15 +2623,21 @@
             });
 
             lucide.createIcons();
-            showPage(currentPageIndex, false);
         }
 
-        async function addPage(type, content, filename = "Page", insertIndex = null) {
+        async function addPage(type, content, filename = "Page", insertIndex = null, parts = null) {
             const pageId = generateId();
             
             if (filename) lastUsedPageTitle = filename;
+            
+            // Use provided parts, or automatically detect from the filename, or default to ['C']
+            let finalParts = parts;
+            if (!finalParts) {
+                const groupInfo = parsePageGroupInfo(filename);
+                finalParts = groupInfo.detectedParts.length > 0 ? groupInfo.detectedParts : ['C'];
+            }
 
-            const pageObj = { id: pageId, type: type, content: content, filename: filename };
+            const pageObj = { id: pageId, type: type, content: content, filename: filename, parts: finalParts };
 
             if (insertIndex !== null && insertIndex >= 0 && insertIndex < pagesData.length) {
                 pagesData.splice(insertIndex, 0, pageObj);
@@ -2616,6 +2716,13 @@
             if (newTitle && newTitle.trim()) {
                 pageObj.filename = newTitle.trim();
                 lastUsedPageTitle = pageObj.filename;
+                
+                // Also update the tags on rename if user adds tags
+                const groupInfo = parsePageGroupInfo(pageObj.filename);
+                if(groupInfo.detectedParts.length > 0) {
+                    pageObj.parts = groupInfo.detectedParts;
+                }
+
                 renderPagesListDrawer();
                 updatePageIndicator();
             }
@@ -2632,9 +2739,13 @@
             if (fabricCanvases[id]) { fabricCanvases[id].dispose(); delete fabricCanvases[id]; }
             
             pagesData = pagesData.filter(p => p.id !== id);
-            currentPageIndex = Math.min(currentPageIndex, Math.max(0, pagesData.length - 1));
             
+            let nextIdx = getNextVisiblePageIndex(currentPageIndex, 0);
+            if (nextIdx === -1) nextIdx = getNextVisiblePageIndex(0, 1) === -1 ? 0 : getNextVisiblePageIndex(0, 1);
+            
+            currentPageIndex = Math.min(nextIdx, Math.max(0, pagesData.length - 1));
             renderPagesListDrawer();
+            showPage(currentPageIndex);
         }
 
         // ---------------------------------------------------------
@@ -2651,6 +2762,19 @@
                 const draggedId = draggedDomEl ? draggedDomEl.dataset.id : null;
                 if (!draggedId) return;
 
+                let dropX = 0;
+                if (evt.originalEvent) {
+                    if (evt.originalEvent.changedTouches && evt.originalEvent.changedTouches.length > 0) {
+                        dropX = evt.originalEvent.changedTouches[0].clientX;
+                    } else if (evt.originalEvent.clientX !== undefined) {
+                        dropX = evt.originalEvent.clientX;
+                    }
+                }
+                
+                const drawerRect = document.getElementById('pagesList').getBoundingClientRect();
+                const relativeX = dropX - drawerRect.left;
+                const isIndentedDrop = relativeX > 50; // Threshold for intentional linking
+
                 const groupMemberIds = getGroupMemberIds(draggedId);
                 const memberObjects = groupMemberIds.map(id => pagesData.find(p => p.id === id)).filter(Boolean);
 
@@ -2662,7 +2786,34 @@
 
                 pagesData.splice(targetIdx, 0, ...memberObjects);
 
+                // Auto-Link Logic when dropping indented
+                if (isIndentedDrop && targetIdx > 0 && memberObjects.length === 1) {
+                    const prevPage = pagesData[targetIdx - 1];
+                    const prevInfo = parsePageGroupInfo(prevPage.filename);
+                    const draggedPage = pagesData[targetIdx];
+                    const draggedInfo = parsePageGroupInfo(draggedPage.filename);
+                    
+                    if (prevInfo.baseTitle.toLowerCase() !== draggedInfo.baseTitle.toLowerCase()) {
+                        let maxPageNum = 1;
+                        pagesData.forEach(p => {
+                            const info = parsePageGroupInfo(p.filename);
+                            if (info.baseTitle.toLowerCase() === prevInfo.baseTitle.toLowerCase() && info.pageNum > maxPageNum) {
+                                maxPageNum = info.pageNum;
+                            }
+                        });
+                        
+                        let partsStr = '';
+                        if (draggedPage.parts) {
+                            if (draggedPage.parts.includes('Bb')) partsStr = ' (Bb)';
+                            else if (draggedPage.parts.includes('Eb')) partsStr = ' (Eb)';
+                        }
+                        
+                        draggedPage.filename = `${prevInfo.baseTitle}${partsStr} p.${maxPageNum + 1}`;
+                    }
+                }
+
                 renderPagesListDrawer();
+                showPage(currentPageIndex, false); // Maintain visual active state
             }
         });
 
@@ -2708,6 +2859,22 @@
                 const btnClearTitle = document.getElementById('btnClearScanTitle');
                 const ocrBadge = document.getElementById('ocrStatusBadge');
 
+                const chkPartC = document.getElementById('chkPartC');
+                const chkPartBb = document.getElementById('chkPartBb');
+                const chkPartEb = document.getElementById('chkPartEb');
+                const chkPartBass = document.getElementById('chkPartBass');
+                
+                // Default resets
+                chkPartC.checked = true;
+                chkPartBb.checked = false;
+                chkPartEb.checked = false;
+                chkPartBass.checked = false;
+
+                // Infer checkmarks if title already contains Bb, Eb, or Bass
+                if (/\(Eb\)/i.test(defaultFallbackTitle)) { chkPartEb.checked = true; chkPartC.checked = false; }
+                if (/\(Bb\)/i.test(defaultFallbackTitle) || /\bBrass\b/i.test(defaultFallbackTitle)) { chkPartBb.checked = true; chkPartC.checked = false; }
+                if (/\bBass\b/i.test(defaultFallbackTitle) || /\(\s*Bass\s*\)/i.test(defaultFallbackTitle)) { chkPartBass.checked = true; chkPartC.checked = false; }
+
                 inputTitle.value = defaultFallbackTitle;
                 
                 btnClearTitle.onclick = () => {
@@ -2715,7 +2882,6 @@
                     inputTitle.focus();
                 };
 
-                const currentNum = pagesData.length === 0 ? 1 : currentPageIndex + 1;
                 document.getElementById('descInsertCurrent').textContent = `Inserts right after current page`;
                 document.getElementById('descAppendEnd').textContent = `Appends as page ${pagesData.length + 1}`;
 
@@ -2735,6 +2901,16 @@
                 const btnAppend = document.getElementById('btnAppendEndPos');
                 const btnCancel = document.getElementById('btnCancelScanInsert');
 
+                const getSelectedParts = () => {
+                    const parts = [];
+                    if (chkPartC.checked) parts.push('C');
+                    if (chkPartBb.checked) parts.push('Bb');
+                    if (chkPartEb.checked) parts.push('Eb');
+                    if (chkPartBass.checked) parts.push('Bass');
+                    if (parts.length === 0) parts.push('C'); // fallback
+                    return parts;
+                };
+
                 const cleanup = () => {
                     modal.classList.add('hidden');
                     ocrBadge.classList.add('hidden');
@@ -2746,14 +2922,16 @@
 
                 btnInsert.onclick = () => {
                     const finalTitle = inputTitle.value.trim() || defaultFallbackTitle;
+                    const parts = getSelectedParts();
                     cleanup();
-                    resolve({ position: 'insert', title: finalTitle });
+                    resolve({ position: 'insert', title: finalTitle, parts });
                 };
 
                 btnAppend.onclick = () => {
                     const finalTitle = inputTitle.value.trim() || defaultFallbackTitle;
+                    const parts = getSelectedParts();
                     cleanup();
-                    resolve({ position: 'append', title: finalTitle });
+                    resolve({ position: 'append', title: finalTitle, parts });
                 };
 
                 btnCancel.onclick = () => {
@@ -2771,15 +2949,33 @@
             const suggestedDefaultTitle = (lastUsedPageTitle && lastUsedPageTitle !== 'Page 1') ? lastUsedPageTitle : originalName;
 
             if (['abc', 'txt'].includes(ext)) { 
-                const name = isDirectDriveImport ? originalName : (prompt("Score name:", suggestedDefaultTitle) || suggestedDefaultTitle);
-                await addPage('abc', await file.text(), name); 
+                if (isDirectDriveImport) {
+                    await addPage('abc', await file.text(), originalName); 
+                } else {
+                    const choice = await showScanInsertPositionModal(null, suggestedDefaultTitle);
+                    if (choice) {
+                        const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
+                        await addPage('abc', await file.text(), choice.title, targetIdx, choice.parts);
+                    }
+                }
             } 
             else if (['xml', 'mxl', 'musicxml'].includes(ext)) { 
-                const name = isDirectDriveImport ? originalName : (prompt("Score name:", suggestedDefaultTitle) || suggestedDefaultTitle);
-                await addPage('musicxml', await file.text(), name); 
+                if (isDirectDriveImport) {
+                    await addPage('musicxml', await file.text(), originalName); 
+                } else {
+                    const choice = await showScanInsertPositionModal(null, suggestedDefaultTitle);
+                    if (choice) {
+                        const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
+                        await addPage('musicxml', await file.text(), choice.title, targetIdx, choice.parts);
+                    }
+                }
             }
             else if (file.type === 'application/pdf' || ext === 'pdf') {
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+                let pdfInsertIdx = null;
+                let pdfParts = null;
+                let pdfBaseTitle = suggestedDefaultTitle;
+                
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const viewport = page.getViewport({ scale: 2.0 }); 
@@ -2793,10 +2989,24 @@
                         const pageSuffix = i > 1 ? ` p${i}` : '';
                         await addPage('pdf', pageDataUrl, `${originalName}${pageSuffix}`);
                     } else {
-                        const detected = await detectTitleFromImage(pageDataUrl);
-                        const baseTitle = detected || suggestedDefaultTitle;
-                        const pageSuffix = i > 1 ? ` p${i}` : '';
-                        await addPage('pdf', pageDataUrl, `${baseTitle}${pageSuffix}`);
+                        if (i === 1) {
+                            const detected = await detectTitleFromImage(pageDataUrl);
+                            pdfBaseTitle = detected || suggestedDefaultTitle;
+                            
+                            const choice = await showScanInsertPositionModal(pageDataUrl, pdfBaseTitle);
+                            if (choice) {
+                                pdfParts = choice.parts;
+                                pdfInsertIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
+                                pdfBaseTitle = choice.title;
+                                await addPage('pdf', pageDataUrl, pdfBaseTitle, pdfInsertIdx, pdfParts);
+                            } else {
+                                break; // Cancelled importing the PDF
+                            }
+                        } else {
+                            const pageSuffix = ` p${i}`;
+                            if (pdfInsertIdx !== null) pdfInsertIdx++; // increment sequentially
+                            await addPage('pdf', pageDataUrl, `${pdfBaseTitle}${pageSuffix}`, pdfInsertIdx !== null ? pdfInsertIdx : undefined, pdfParts);
+                        }
                     }
                 }
             }
@@ -2808,18 +3018,12 @@
                 } else {
                     const croppedDataUrl = await openCropper(dataUrl);
                     if (croppedDataUrl) {
-                        if (pagesData.length > 0) {
-                            const choice = await showScanInsertPositionModal(croppedDataUrl, suggestedDefaultTitle);
-                            if (choice) {
-                                const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
-                                await addPage('image', croppedDataUrl, choice.title, targetIdx);
-                            }
-                        } else {
-                            const detectedTitle = await detectTitleFromImage(croppedDataUrl);
-                            const finalFallback = detectedTitle || suggestedDefaultTitle;
-                            const enteredName = prompt("Page name:", finalFallback);
-                            const finalName = (enteredName && enteredName.trim()) ? enteredName.trim() : finalFallback;
-                            await addPage('image', croppedDataUrl, finalName);
+                        const detectedTitle = await detectTitleFromImage(croppedDataUrl);
+                        const finalFallback = detectedTitle || suggestedDefaultTitle;
+                        const choice = await showScanInsertPositionModal(croppedDataUrl, finalFallback);
+                        if(choice) {
+                            const targetIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
+                            await addPage('image', croppedDataUrl, choice.title, targetIdx, choice.parts);
                         }
                     }
                 }
@@ -2835,8 +3039,12 @@
         const pagesDrawerEl = document.getElementById('pagesDrawer');
         document.getElementById('btnTogglePages').addEventListener('click', () => { 
             const isHidden = pagesDrawerEl.classList.toggle('hidden'); 
+            // Avoid toggling scrubber if performance mode is active
             if (!isPerformanceMode) {
                 scrubberContainerEl.style.display = isHidden ? '' : 'none';
+            }
+            if (!isHidden) {
+                setTimeout(scrollToActivePageInDrawer, 50);
             }
         });
         document.getElementById('btnClosePages').addEventListener('click', () => { 
@@ -2855,6 +3063,7 @@
                         filename: page.filename,
                         type: page.type,
                         content: page.content,
+                        parts: page.parts || ['C'],
                         annotations: fabricCanvases[page.id] ? fabricCanvases[page.id].toJSON() : null
                     }))
                 };
