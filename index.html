@@ -126,10 +126,6 @@
                 <i data-lucide="cloud-download" class="w-4 h-4 text-cyan-400"></i>
             </button>
 
-            <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 transition-colors flex items-center justify-center" title="Google Drive Disconnected">
-                <i id="driveStatusIcon" data-lucide="cloud-off" class="w-4 h-4 text-red-500"></i>
-            </button>
-
             <button id="btnSaveSetlist" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-xl text-xs font-medium flex items-center justify-center transition-colors shadow-sm" title="Save Setlist to Drive">
                 <i data-lucide="folder-output" class="w-4 h-4"></i>
             </button>
@@ -687,9 +683,10 @@
         // Global Instrument Dropdown state updater
         const instrumentSelect = document.getElementById('instrumentSelect');
         instrumentSelect.addEventListener('change', () => {
-            renderPagesListDrawer();
+            renderPagesListDrawer(); // Update drawer colors (if conditionally showing, though rule says always lock them)
+            // Re-find the closest visible page to jump to
             let newIndex = getNextVisiblePageIndex(currentPageIndex, 0);
-            if (newIndex === -1) newIndex = 0;
+            if (newIndex === -1) newIndex = 0; // fallback
             showPage(newIndex);
             updatePageIndicator();
         });
@@ -700,13 +697,15 @@
         
         function isPageVisibleForPart(pageObj, activePart) {
             if (activePart === 'ALL') return true;
-            if (!pageObj || !pageObj.parts) return true;
+            if (!pageObj || !pageObj.parts) return true; // Default show all if missing parts
             return pageObj.parts.includes(activePart);
         }
 
+        // Helper to find the next/prev page matching the instrument selection
         function getNextVisiblePageIndex(startIndex, direction) {
             const activePart = getActivePart();
             if (direction === 0) {
+                // Just check if current is valid, if not search forwards then backwards
                 if (pagesData[startIndex] && isPageVisibleForPart(pagesData[startIndex], activePart)) return startIndex;
                 direction = 1;
             }
@@ -718,7 +717,7 @@
                 }
                 curr += direction;
             }
-            return -1;
+            return -1; // None found in that direction
         }
 
         function getVisiblePagesCount() {
@@ -726,6 +725,7 @@
             return pagesData.filter(p => isPageVisibleForPart(p, activePart)).length;
         }
 
+        // Google Drive Connection Auto-Prompt on Load
         window.addEventListener('load', () => {
             setTimeout(() => {
                 if (!driveAccessToken) {
@@ -736,7 +736,8 @@
                         "bg-blue-600 hover:bg-blue-500", 
                         (confirmed) => {
                             if (confirmed) {
-                                document.getElementById('btnConnectDrive').click();
+                                if (!tokenClient) initGoogleDrive();
+                                if (tokenClient) tokenClient.requestAccessToken();
                             }
                         }
                     );
@@ -819,14 +820,19 @@
         // ---------------------------------------------------------
         function parsePageGroupInfo(filename) {
             let base = filename || "Page";
-            let pNum = 1; 
+            let pNum = 1; // Any song without p2/p.2 is default treated as 1st page
             let parts = [];
             
+            // Detect Bb Parts
             if (/\(\s*Bb\s*\)/i.test(base) || /\bBrass\b/i.test(base) || /\bBb\b/i.test(base)) parts.push('Bb');
+            // Detect Eb Parts
             if (/\(\s*Eb\s*\)/i.test(base) || /\bEb\b/i.test(base)) parts.push('Eb');
+            // Detect Bass Parts
             if (/\bBass\b/i.test(base) || /\(\s*Bass\s*\)/i.test(base)) parts.push('Bass');
+            // Tablature
             if (/\(\s*TAB\s*\)/i.test(base)) parts.push('TAB');
 
+            // Strip out indicators to get cleanly matched base title for grouping
             base = base.replace(/\(\s*Eb\s*\)/ig, '').replace(/\bEb\b/ig, '')
                        .replace(/\(\s*Bb\s*\)/ig, '').replace(/\bBrass\b/ig, '').replace(/\bBb\b/ig, '')
                        .replace(/\(\s*Bass\s*\)/ig, '').replace(/\bBass\b/ig, '')
@@ -838,7 +844,7 @@
                 pNum = parseInt(match[2], 10);
             }
 
-            if (parts.length === 0) parts = ['C'];
+            if (parts.length === 0) parts = ['C']; // Main parts for Concert C
             
             return { baseTitle: base || filename, pageNum: pNum, detectedParts: parts };
         }
@@ -848,6 +854,7 @@
             const index = pagesData.findIndex(p => p.id === pageObj.id);
             if (index === -1) return false;
             
+            // It is a child (nested) if there's another page with the same baseTitle that comes BEFORE it.
             return pagesData.slice(0, index).some(p => {
                 const pInfo = parsePageGroupInfo(p.filename);
                 return pInfo.baseTitle.toLowerCase() === groupInfo.baseTitle.toLowerCase();
@@ -973,6 +980,7 @@
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
                         
+                        // Crop the top 25% of the page to focus on the title area
                         const cropHeight = Math.floor(img.height * 0.25);
                         canvas.width = img.width;
                         canvas.height = cropHeight;
@@ -992,13 +1000,18 @@
                             for (const line of ret.data.lines) {
                                 const text = line.text.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
                                 
+                                // Filter out noise, extremely short text, or common musical header artifacts
                                 if (text.length < 3 || /^(page|sheet|score|\d+|www)/i.test(text)) continue;
 
                                 const { x0, y0, x1, y1 } = line.bbox;
                                 const height = y1 - y0;
                                 const lineCenterX = x0 + ((x1 - x0) / 2);
                                 
+                                // Calculate distance from center (0 = perfectly centered, 1 = at edge)
                                 const centerDist = Math.abs(imgCenterX - lineCenterX) / imgCenterX;
+                                
+                                // Score: Height represents text size (bigger is better).
+                                // Penalty applied based on distance from center (up to 80% reduction if at far edge).
                                 const score = height * (1 - (centerDist * 0.8));
 
                                 if (score > maxScore) {
@@ -1038,12 +1051,13 @@
                 document.getElementById('scrubberContainer').style.display = 'none';
                 btnExitPerformance.classList.remove('hidden');
 
+                // Force Navigate mode to prevent accidental drawing
                 document.querySelector('[data-tool="navigate"]').click();
             } else {
                 leftToolbar.style.display = '';
                 topPageIndicator.style.display = '';
                 btnExitPerformance.classList.add('hidden');
-                updatePageIndicator(); 
+                updatePageIndicator(); // Restores scrubber based on total page count
             }
         }
 
@@ -1420,33 +1434,18 @@
         let driveAccessToken = localStorage.getItem('haynotes_drive_token') || null;
 
         function setDriveConnectedUI() {
-            const btn = document.getElementById('btnConnectDrive');
-            const icon = document.getElementById('driveStatusIcon');
-            btn.title = "Google Drive Connected";
-            icon.setAttribute('data-lucide', 'cloud');
-            icon.className = "w-4 h-4 text-emerald-400";
-            lucide.createIcons();
             document.getElementById('btnOpenDriveLibrary').disabled = false;
         }
 
         function setDriveDisconnectedUI() {
-            const btn = document.getElementById('btnConnectDrive');
-            const icon = document.getElementById('driveStatusIcon');
-            btn.title = "Google Drive Disconnected - Click to connect";
-            icon.setAttribute('data-lucide', 'cloud-off');
-            icon.className = "w-4 h-4 text-red-500";
-            lucide.createIcons();
             document.getElementById('btnOpenDriveLibrary').disabled = true;
         }
 
-        async function verifyToken(token) {
+        function verifyToken(token) {
             if (!token) return false;
-            try {
-                const res = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${token}`);
-                return res.ok;
-            } catch (e) {
-                return false;
-            }
+            return fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${token}`)
+                .then(res => res.ok)
+                .catch(() => false);
         }
 
         async function initGoogleDrive() {
@@ -1464,13 +1463,18 @@
                         setDriveDisconnectedUI();
                     }
                 },
-                error_callback: () => setDriveDisconnectedUI()
+                error_callback: () => {
+                    driveAccessToken = null;
+                    localStorage.removeItem('haynotes_drive_token');
+                    setDriveDisconnectedUI();
+                }
             });
 
             if (driveAccessToken) {
                 const isValid = await verifyToken(driveAccessToken);
-                if (isValid) setDriveConnectedUI();
-                else {
+                if (isValid) {
+                    setDriveConnectedUI();
+                } else {
                     localStorage.removeItem('haynotes_drive_token');
                     driveAccessToken = null;
                     setDriveDisconnectedUI();
@@ -1479,17 +1483,6 @@
                 setDriveDisconnectedUI();
             }
         }
-
-        document.getElementById('btnConnectDrive').addEventListener('click', async () => {
-            if (driveAccessToken && await verifyToken(driveAccessToken)) {
-                setDriveConnectedUI();
-                document.getElementById('driveLibraryModal').classList.remove('hidden');
-                fetchDriveLibraryFiles();
-                return;
-            }
-            if (!tokenClient) initGoogleDrive();
-            if (tokenClient) tokenClient.requestAccessToken();
-        });
 
         async function createDriveFolder(folderName, parentFolderId = ROOT_HAYNOTES_FOLDER_ID) {
             const metadata = {
@@ -1686,9 +1679,12 @@
         });
 
         const driveLibraryModal = document.getElementById('driveLibraryModal');
+        
+        // Single point of entry for Google Drive to eliminate the red button completely
         document.getElementById('btnOpenDriveLibrary').addEventListener('click', async () => {
             if (!driveAccessToken) {
-                alert('Please connect to Google Drive first.');
+                if (!tokenClient) initGoogleDrive();
+                if (tokenClient) tokenClient.requestAccessToken();
                 return;
             }
             driveLibraryModal.classList.remove('hidden');
@@ -2049,6 +2045,7 @@
             annotationToolbar.classList.add('hidden');
             annotationToolbar.style.display = '';
             
+            // Auto-deselect any active transform bounding box when closing drawing toolbar
             Object.values(fabricCanvases).forEach(canvas => {
                 canvas.discardActiveObject();
                 canvas.requestRenderAll();
@@ -2274,6 +2271,7 @@
             const visiblePages = pagesData.filter(p => isPageVisibleForPart(p, activePart));
             const total = visiblePages.length;
             
+            // Current display index based on visible pages, not absolute index
             let displayIndex = 0;
             if (pagesData[currentPageIndex] && isPageVisibleForPart(pagesData[currentPageIndex], activePart)) {
                 displayIndex = visiblePages.findIndex(p => p.id === pagesData[currentPageIndex].id);
@@ -2315,12 +2313,16 @@
             });
             currentZoomLevel = 1;
             
+            // Validate bounds for requested absolute index
             index = Math.max(0, Math.min(index, pagesData.length - 1));
+            
+            // Set current
             currentPageIndex = index;
             const activePart = getActivePart();
             
             pagesData.forEach((p, i) => {
                 const el = document.getElementById(p.id);
+                // ONLY show if it's the exact index AND fits the part constraints. (It's possible index was forced)
                 if (el) el.classList.toggle('active', i === index && isPageVisibleForPart(p, activePart));
                 
                 const li = document.querySelector(`li[data-id="${p.id}"]`);
@@ -2346,6 +2348,7 @@
             const activePageEl = document.getElementById(pagesData[currentPageIndex].id);
             
             if (isLaptopMode && activePageEl) {
+                // If there is room to scroll down (using 10px threshold)
                 if (activePageEl.scrollTop + activePageEl.clientHeight < activePageEl.scrollHeight - 10) {
                     activePageEl.scrollBy({ top: activePageEl.clientHeight * 0.75, behavior: 'smooth' });
                     return;
@@ -2366,6 +2369,7 @@
             const activePageEl = document.getElementById(pagesData[currentPageIndex].id);
             
             if (isLaptopMode && activePageEl) {
+                // If there is room to scroll up
                 if (activePageEl.scrollTop > 10) {
                     activePageEl.scrollBy({ top: -activePageEl.clientHeight * 0.75, behavior: 'smooth' });
                     return;
@@ -2378,6 +2382,7 @@
                 flashPedal('left'); 
                 const prevEl = document.getElementById(pagesData[prevIdx].id);
                 if (prevEl && isLaptopMode) {
+                    // Small timeout ensures the element renders its height before jumping to the bottom
                     setTimeout(() => { prevEl.scrollTop = prevEl.scrollHeight; }, 10);
                 } else if (prevEl) {
                     prevEl.scrollTop = 0;
@@ -2618,17 +2623,21 @@
         document.getElementById('btnSortAlpha').addEventListener('click', () => {
             if (pagesData.length === 0) return;
             
+            // Sort logic: Group by baseTitle, then sort by pageNum
             pagesData.sort((a, b) => {
                 const infoA = parsePageGroupInfo(a.filename);
                 const infoB = parsePageGroupInfo(b.filename);
                 
                 const titleCmp = infoA.baseTitle.toLowerCase().localeCompare(infoB.baseTitle.toLowerCase());
                 if (titleCmp !== 0) return titleCmp;
+                
+                // If same base title, sort by part type to keep them together if possible, then page num
                 return (infoA.pageNum || 1) - (infoB.pageNum || 1);
             });
             
             renderPagesListDrawer();
             
+            // Jump to the first logical visible page after a sort to avoid getting stuck
             const firstVisible = getNextVisiblePageIndex(0, 1);
             showPage(firstVisible === -1 ? 0 : firstVisible);
         });
@@ -2646,6 +2655,7 @@
                 const isLinked = isPageLinkedToParent(pageObj);
                 const isCurrent = pageId === pagesData[currentPageIndex]?.id;
 
+                // Set drawer item color depending on the designated part(s)
                 let bgColorStr = 'bg-slate-800';
                 let borderColorStr = 'border-slate-700';
                 let textColorStr = 'text-slate-200';
@@ -2673,7 +2683,7 @@
                 const li = document.createElement('li');
                 let liClasses = `page-thumb-container ${bgColorStr} p-2 rounded-xl border-2 flex items-center gap-2 hover:bg-slate-750 transition-all ${borderColorStr}`;
                 if (isLinked) {
-                    liClasses += ' ml-8 opacity-95'; 
+                    liClasses += ' ml-8 opacity-95'; // indent children for clear nesting
                 }
                 if (isCurrent) {
                     liClasses += ' rearrange-active';
@@ -2683,6 +2693,7 @@
 
                 let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
 
+                // Construct tag list for UI
                 let partsTags = '';
                 if (pageObj.parts) {
                     pageObj.parts.forEach(pt => {
@@ -2720,6 +2731,7 @@
             
             if (filename) lastUsedPageTitle = filename;
             
+            // Use provided parts, or automatically detect from the filename, or default to ['C']
             let finalParts = parts;
             if (!finalParts) {
                 const groupInfo = parsePageGroupInfo(filename);
@@ -2806,6 +2818,7 @@
                 pageObj.filename = newTitle.trim();
                 lastUsedPageTitle = pageObj.filename;
                 
+                // Also update the tags on rename if user adds tags
                 const groupInfo = parsePageGroupInfo(pageObj.filename);
                 if(groupInfo.detectedParts.length > 0) {
                     pageObj.parts = groupInfo.detectedParts;
@@ -2836,6 +2849,9 @@
             showPage(currentPageIndex);
         }
 
+        // ---------------------------------------------------------
+        // LOCKED SONG GROUP REARRANGE ENGINE WITH GREEN DROP ZONE
+        // ---------------------------------------------------------
         new Sortable(document.getElementById('pagesList'), {
             handle: '.drag-handle',
             animation: 150,
@@ -2858,7 +2874,7 @@
                 
                 const drawerRect = document.getElementById('pagesList').getBoundingClientRect();
                 const relativeX = dropX - drawerRect.left;
-                const isIndentedDrop = relativeX > 50; 
+                const isIndentedDrop = relativeX > 50; // Threshold for intentional linking
 
                 const groupMemberIds = getGroupMemberIds(draggedId);
                 const memberObjects = groupMemberIds.map(id => pagesData.find(p => p.id === id)).filter(Boolean);
@@ -2871,6 +2887,7 @@
 
                 pagesData.splice(targetIdx, 0, ...memberObjects);
 
+                // Auto-Link Logic when dropping indented
                 if (isIndentedDrop && targetIdx > 0 && memberObjects.length === 1) {
                     const prevPage = pagesData[targetIdx - 1];
                     const prevInfo = parsePageGroupInfo(prevPage.filename);
@@ -2897,10 +2914,11 @@
                 }
 
                 renderPagesListDrawer();
-                showPage(currentPageIndex, false); 
+                showPage(currentPageIndex, false); // Maintain visual active state
             }
         });
 
+        // Cropper Logic
         function openCropper(dataUrl) {
             return new Promise((resolve) => {
                 const cropModal = document.getElementById('cropModal');
@@ -2934,6 +2952,7 @@
             if (cropResolve) { cropResolve(null); cropResolve = null; }
         });
 
+        // Prompt for Insertion Position + Title Naming Modal with OCR Auto-Detection
         function showScanInsertPositionModal(dataUrlForOcr, defaultFallbackTitle) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('scanInsertModal');
@@ -2946,11 +2965,13 @@
                 const chkPartEb = document.getElementById('chkPartEb');
                 const chkPartBass = document.getElementById('chkPartBass');
                 
+                // Default resets
                 chkPartC.checked = true;
                 chkPartBb.checked = false;
                 chkPartEb.checked = false;
                 chkPartBass.checked = false;
 
+                // Infer checkmarks if title already contains Bb, Eb, or Bass
                 if (/\(Eb\)/i.test(defaultFallbackTitle)) { chkPartEb.checked = true; chkPartC.checked = false; }
                 if (/\(Bb\)/i.test(defaultFallbackTitle) || /\bBrass\b/i.test(defaultFallbackTitle)) { chkPartBb.checked = true; chkPartC.checked = false; }
                 if (/\bBass\b/i.test(defaultFallbackTitle) || /\(\s*Bass\s*\)/i.test(defaultFallbackTitle)) { chkPartBass.checked = true; chkPartC.checked = false; }
@@ -2987,7 +3008,7 @@
                     if (chkPartBb.checked) parts.push('Bb');
                     if (chkPartEb.checked) parts.push('Eb');
                     if (chkPartBass.checked) parts.push('Bass');
-                    if (parts.length === 0) parts.push('C');
+                    if (parts.length === 0) parts.push('C'); // fallback
                     return parts;
                 };
 
@@ -3129,6 +3150,7 @@
         const pagesDrawerEl = document.getElementById('pagesDrawer');
         document.getElementById('btnTogglePages').addEventListener('click', () => { 
             const isHidden = pagesDrawerEl.classList.toggle('hidden'); 
+            // Avoid toggling scrubber if performance mode is active
             if (!isPerformanceMode) {
                 scrubberContainerEl.style.display = isHidden ? '' : 'none';
             }
@@ -3183,3 +3205,4 @@
     </script>
 </body>
 </html>
+```eof
