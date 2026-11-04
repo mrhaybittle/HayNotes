@@ -45,7 +45,7 @@
         .sheet-page { display: none; width: 100%; height: 100%; position: absolute; inset: 0; align-items: flex-start; justify-content: center; overflow: auto; padding: 16px; padding-bottom: 90px; }
         .sheet-page.active { display: flex; }
 
-        .doc-wrapper { position: relative; display: inline-block; margin: auto; background: #ffffff; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); max-width: 100%; }
+        .doc-wrapper { position: relative; display: inline-block; margin: auto; background: #ffffff; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); max-width: 100%; transform-origin: top center; transition: transform 0.1s ease-out; }
         .doc-wrapper img, .doc-wrapper > div.abc-osmd-container { display: block; max-width: 100%; height: auto; background-color: #ffffff; }
         
         .canvas-container { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; z-index: 20 !important; touch-action: none !important; pointer-events: auto !important; }
@@ -122,8 +122,12 @@
                 <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
             </label>
 
-            <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors" title="Import from Google Drive Library">
+            <button id="btnOpenDriveLibrary" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl border border-slate-700 text-xs font-medium flex items-center justify-center transition-colors disabled:opacity-40" disabled title="Import from Google Drive Library">
                 <i data-lucide="cloud-download" class="w-4 h-4 text-cyan-400"></i>
+            </button>
+
+            <button id="btnConnectDrive" class="bg-slate-800 hover:bg-slate-700 p-2 rounded-xl border border-slate-700 transition-colors flex items-center justify-center" title="Google Drive Disconnected">
+                <i id="driveStatusIcon" data-lucide="cloud-off" class="w-4 h-4 text-red-500"></i>
             </button>
 
             <button id="btnSaveSetlist" class="bg-blue-600 hover:bg-blue-500 text-white p-2 rounded-xl text-xs font-medium flex items-center justify-center transition-colors shadow-sm" title="Save Setlist to Drive">
@@ -180,11 +184,22 @@
         </div>
     </aside>
 
+    <!-- GLOBAL PROGRESS MODAL -->
+    <div id="progressModal" class="hidden fixed inset-0 z-[100] bg-slate-900/90 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-2xl w-full max-w-sm text-center flex flex-col gap-4">
+            <h3 id="progressTitle" class="text-white font-bold text-lg">Processing...</h3>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 relative shadow-inner">
+                <div id="progressBarFill" class="h-full bg-blue-500 transition-all duration-300 w-0"></div>
+            </div>
+            <p id="progressText" class="text-slate-400 text-xs font-mono">Please wait</p>
+        </div>
+    </div>
+
     <!-- POPUP ANNOTATION TOOLBAR -->
-    <div id="annotationToolbar" class="fixed top-4 left-1/2 -translate-x-1/2 w-11/12 max-w-[850px] bg-white p-2.5 rounded-2xl shadow-2xl border border-slate-200 z-50 hidden flex-col sm:flex-row items-center justify-between gap-2.5">
+    <div id="annotationToolbar" class="fixed top-4 left-1/2 -translate-x-1/2 w-11/12 max-w-[760px] bg-white p-2.5 rounded-2xl shadow-2xl border border-slate-200 z-50 hidden flex-col sm:flex-row items-center justify-between gap-2.5">
         <!-- Tools Group -->
         <div class="flex items-center gap-1 sm:border-r border-slate-200 sm:pr-3 flex-wrap justify-center">
-            <button class="tool-btn active p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="navigate" title="Navigate (Read Only / Click Jumps)">
+            <button class="tool-btn active p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="navigate" title="Navigate (Read Only / Pinch Zoom / Click Jumps)">
                 <i data-lucide="mouse-pointer-2" class="w-4 h-4"></i>
             </button>
             <button class="tool-btn p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" data-tool="pen" title="Pen (Draw)">
@@ -205,12 +220,6 @@
             <button id="btnUndo" class="p-2 text-slate-600 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1" title="Undo">
                 <i data-lucide="undo" class="w-4 h-4"></i>
             </button>
-        </div>
-
-        <!-- Thickness Selector -->
-        <div class="flex items-center gap-2 sm:border-r border-slate-200 sm:pr-3 justify-center">
-            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-slate-400" title="Brush Thickness"></i>
-            <input type="range" id="brushThickness" min="1" max="100" value="15" class="w-24 accent-blue-500 cursor-pointer" title="Adjust Pen & Highlighter Thickness">
         </div>
 
         <!-- Color Palette -->
@@ -651,13 +660,36 @@
         let lastUsedPageTitle = "Page 1";
         let activeSetlistName = "Main Setlist";
 
+        // Global Visual Progress System
+        const progressModal = document.getElementById('progressModal');
+        const progressTitle = document.getElementById('progressTitle');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const progressText = document.getElementById('progressText');
+
+        function showProgress(title) {
+            progressTitle.textContent = title;
+            progressBarFill.style.width = '0%';
+            progressText.textContent = 'Starting...';
+            progressModal.classList.remove('hidden');
+            progressModal.classList.add('flex');
+        }
+
+        function updateProgress(percent, text) {
+            progressBarFill.style.width = `${percent}%`;
+            if (text) progressText.textContent = text;
+        }
+
+        function hideProgress() {
+            progressModal.classList.add('hidden');
+            progressModal.classList.remove('flex');
+        }
+
         // Global Instrument Dropdown state updater
         const instrumentSelect = document.getElementById('instrumentSelect');
         instrumentSelect.addEventListener('change', () => {
-            renderPagesListDrawer(); // Update drawer colors (if conditionally showing, though rule says always lock them)
-            // Re-find the closest visible page to jump to
+            renderPagesListDrawer();
             let newIndex = getNextVisiblePageIndex(currentPageIndex, 0);
-            if (newIndex === -1) newIndex = 0; // fallback
+            if (newIndex === -1) newIndex = 0;
             showPage(newIndex);
             updatePageIndicator();
         });
@@ -668,15 +700,13 @@
         
         function isPageVisibleForPart(pageObj, activePart) {
             if (activePart === 'ALL') return true;
-            if (!pageObj || !pageObj.parts) return true; // Default show all if missing parts
+            if (!pageObj || !pageObj.parts) return true;
             return pageObj.parts.includes(activePart);
         }
 
-        // Helper to find the next/prev page matching the instrument selection
         function getNextVisiblePageIndex(startIndex, direction) {
             const activePart = getActivePart();
             if (direction === 0) {
-                // Just check if current is valid, if not search forwards then backwards
                 if (pagesData[startIndex] && isPageVisibleForPart(pagesData[startIndex], activePart)) return startIndex;
                 direction = 1;
             }
@@ -688,7 +718,7 @@
                 }
                 curr += direction;
             }
-            return -1; // None found in that direction
+            return -1;
         }
 
         function getVisiblePagesCount() {
@@ -696,7 +726,6 @@
             return pagesData.filter(p => isPageVisibleForPart(p, activePart)).length;
         }
 
-        // Google Drive Connection Auto-Prompt on Load
         window.addEventListener('load', () => {
             setTimeout(() => {
                 if (!driveAccessToken) {
@@ -707,8 +736,7 @@
                         "bg-blue-600 hover:bg-blue-500", 
                         (confirmed) => {
                             if (confirmed) {
-                                if (!tokenClient) initGoogleDrive();
-                                if (tokenClient) tokenClient.requestAccessToken();
+                                document.getElementById('btnConnectDrive').click();
                             }
                         }
                     );
@@ -791,19 +819,14 @@
         // ---------------------------------------------------------
         function parsePageGroupInfo(filename) {
             let base = filename || "Page";
-            let pNum = 1; // Any song without p2/p.2 is default treated as 1st page
+            let pNum = 1; 
             let parts = [];
             
-            // Detect Bb Parts
             if (/\(\s*Bb\s*\)/i.test(base) || /\bBrass\b/i.test(base) || /\bBb\b/i.test(base)) parts.push('Bb');
-            // Detect Eb Parts
             if (/\(\s*Eb\s*\)/i.test(base) || /\bEb\b/i.test(base)) parts.push('Eb');
-            // Detect Bass Parts
             if (/\bBass\b/i.test(base) || /\(\s*Bass\s*\)/i.test(base)) parts.push('Bass');
-            // Tablature
             if (/\(\s*TAB\s*\)/i.test(base)) parts.push('TAB');
 
-            // Strip out indicators to get cleanly matched base title for grouping
             base = base.replace(/\(\s*Eb\s*\)/ig, '').replace(/\bEb\b/ig, '')
                        .replace(/\(\s*Bb\s*\)/ig, '').replace(/\bBrass\b/ig, '').replace(/\bBb\b/ig, '')
                        .replace(/\(\s*Bass\s*\)/ig, '').replace(/\bBass\b/ig, '')
@@ -815,7 +838,7 @@
                 pNum = parseInt(match[2], 10);
             }
 
-            if (parts.length === 0) parts = ['C']; // Main parts for Concert C
+            if (parts.length === 0) parts = ['C'];
             
             return { baseTitle: base || filename, pageNum: pNum, detectedParts: parts };
         }
@@ -825,7 +848,6 @@
             const index = pagesData.findIndex(p => p.id === pageObj.id);
             if (index === -1) return false;
             
-            // It is a child (nested) if there's another page with the same baseTitle that comes BEFORE it.
             return pagesData.slice(0, index).some(p => {
                 const pInfo = parsePageGroupInfo(p.filename);
                 return pInfo.baseTitle.toLowerCase() === groupInfo.baseTitle.toLowerCase();
@@ -951,7 +973,6 @@
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
                         
-                        // Crop the top 25% of the page to focus on the title area
                         const cropHeight = Math.floor(img.height * 0.25);
                         canvas.width = img.width;
                         canvas.height = cropHeight;
@@ -971,18 +992,13 @@
                             for (const line of ret.data.lines) {
                                 const text = line.text.replace(/[^a-zA-Z0-9\s\-_]/g, '').trim();
                                 
-                                // Filter out noise, extremely short text, or common musical header artifacts
                                 if (text.length < 3 || /^(page|sheet|score|\d+|www)/i.test(text)) continue;
 
                                 const { x0, y0, x1, y1 } = line.bbox;
                                 const height = y1 - y0;
                                 const lineCenterX = x0 + ((x1 - x0) / 2);
                                 
-                                // Calculate distance from center (0 = perfectly centered, 1 = at edge)
                                 const centerDist = Math.abs(imgCenterX - lineCenterX) / imgCenterX;
-                                
-                                // Score: Height represents text size (bigger is better).
-                                // Penalty applied based on distance from center (up to 80% reduction if at far edge).
                                 const score = height * (1 - (centerDist * 0.8));
 
                                 if (score > maxScore) {
@@ -1022,13 +1038,12 @@
                 document.getElementById('scrubberContainer').style.display = 'none';
                 btnExitPerformance.classList.remove('hidden');
 
-                // Force Navigate mode to prevent accidental drawing
                 document.querySelector('[data-tool="navigate"]').click();
             } else {
                 leftToolbar.style.display = '';
                 topPageIndicator.style.display = '';
                 btnExitPerformance.classList.add('hidden');
-                updatePageIndicator(); // Restores scrubber based on total page count
+                updatePageIndicator(); 
             }
         }
 
@@ -1159,10 +1174,12 @@
             lucide.createIcons();
 
             try {
+                showProgress('Exporting to PDF...');
                 const { jsPDF } = window.jspdf;
                 let pdfDoc = null;
 
                 for (let i = 0; i < visiblePages.length; i++) {
+                    updateProgress((i / visiblePages.length) * 100, `Processing page ${i + 1} of ${visiblePages.length}`);
                     const blob = await getPageAsBlob(visiblePages[i]);
                     if (!blob) continue;
 
@@ -1183,11 +1200,14 @@
                     }
                     pdfDoc.addImage(dataUrl, 'JPEG', 0, 0, tempImg.width, tempImg.height);
                 }
-
+                
+                updateProgress(100, 'Saving File...');
                 if (pdfDoc) {
                     pdfDoc.save(`HayNotes_Setlist_${Date.now()}.pdf`);
                 }
+                setTimeout(hideProgress, 500);
             } catch (err) {
+                hideProgress();
                 alert(`PDF export failed: ${err.message}`);
             } finally {
                 btn.innerHTML = originalContent;
@@ -1399,13 +1419,23 @@
         let tokenClient = null;
         let driveAccessToken = localStorage.getItem('haynotes_drive_token') || null;
 
-        // Visual Drive state is completely deferred to background or library interactions
         function setDriveConnectedUI() {
-            // Re-enables interactions internally and visually marks connected where applicable
+            const btn = document.getElementById('btnConnectDrive');
+            const icon = document.getElementById('driveStatusIcon');
+            btn.title = "Google Drive Connected";
+            icon.setAttribute('data-lucide', 'cloud');
+            icon.className = "w-4 h-4 text-emerald-400";
+            lucide.createIcons();
             document.getElementById('btnOpenDriveLibrary').disabled = false;
         }
 
         function setDriveDisconnectedUI() {
+            const btn = document.getElementById('btnConnectDrive');
+            const icon = document.getElementById('driveStatusIcon');
+            btn.title = "Google Drive Disconnected - Click to connect";
+            icon.setAttribute('data-lucide', 'cloud-off');
+            icon.className = "w-4 h-4 text-red-500";
+            lucide.createIcons();
             document.getElementById('btnOpenDriveLibrary').disabled = true;
         }
 
@@ -1449,6 +1479,17 @@
                 setDriveDisconnectedUI();
             }
         }
+
+        document.getElementById('btnConnectDrive').addEventListener('click', async () => {
+            if (driveAccessToken && await verifyToken(driveAccessToken)) {
+                setDriveConnectedUI();
+                document.getElementById('driveLibraryModal').classList.remove('hidden');
+                fetchDriveLibraryFiles();
+                return;
+            }
+            if (!tokenClient) initGoogleDrive();
+            if (tokenClient) tokenClient.requestAccessToken();
+        });
 
         async function createDriveFolder(folderName, parentFolderId = ROOT_HAYNOTES_FOLDER_ID) {
             const metadata = {
@@ -1611,8 +1652,11 @@
 
             if (driveAccessToken) {
                 try {
+                    showProgress('Saving to Google Drive...');
+                    updateProgress(5, 'Creating folder...');
                     const setlistFolderId = await createDriveFolder(setlistName, ROOT_HAYNOTES_FOLDER_ID);
                     for (let i = 0; i < pagesData.length; i++) {
+                        updateProgress(5 + ((i / pagesData.length) * 85), `Uploading page ${i + 1} of ${pagesData.length}...`);
                         const page = pagesData[i];
                         const blob = await getPageAsBlob(page);
                         if (blob) {
@@ -1623,10 +1667,17 @@
                         }
                     }
 
+                    updateProgress(95, 'Uploading manifest...');
                     const jsonBlob = new Blob([JSON.stringify(setlistPayload, null, 2)], { type: 'application/json' });
                     await uploadFileToDrive('setlist_manifest.json', jsonBlob, 'application/json', setlistFolderId);
-                    alert(`Setlist "${setlistName}" saved locally & synced to Google Drive (v${currentVersion})!`);
+                    
+                    updateProgress(100, 'Done!');
+                    setTimeout(() => {
+                        hideProgress();
+                        alert(`Setlist "${setlistName}" saved locally & synced to Google Drive (v${currentVersion})!`);
+                    }, 500);
                 } catch (err) {
+                    hideProgress();
                     alert(`Saved locally! (Drive sync error: ${err.message})`);
                 }
             } else {
@@ -1637,9 +1688,7 @@
         const driveLibraryModal = document.getElementById('driveLibraryModal');
         document.getElementById('btnOpenDriveLibrary').addEventListener('click', async () => {
             if (!driveAccessToken) {
-                // If they haven't authenticated yet, do so directly instead of relying on the removed red button
-                if (!tokenClient) initGoogleDrive();
-                if (tokenClient) tokenClient.requestAccessToken();
+                alert('Please connect to Google Drive first.');
                 return;
             }
             driveLibraryModal.classList.remove('hidden');
@@ -1710,7 +1759,10 @@
                                 activeSetlistName = file.name;
                                 await loadSetlistFast(file.id, file.name);
                             } else {
+                                showProgress(`Downloading ${file.name}...`);
+                                updateProgress(50, 'Fetching from Cloud...');
                                 await importDriveFile(file.id, file.name, file.mimeType);
+                                hideProgress();
                             }
                         } finally {
                             btn.disabled = false;
@@ -1768,11 +1820,15 @@
 
             if (localSetlist) {
                 try {
+                    showProgress(`Loading Setlist...`);
+                    updateProgress(50, 'Building views...');
                     await renderSetlistPayload(localSetlist);
                     driveLibraryModal.classList.add('hidden');
+                    hideProgress();
                     syncSetlistFromCloudInBackground(folderId, localSetlist, localKey);
                     return;
                 } catch (e) {
+                    hideProgress();
                     console.warn('Local setlist parse error, falling back to network:', e);
                 }
             }
@@ -1822,6 +1878,9 @@
 
         async function importDriveSetlistFolder(folderId, folderName) {
             try {
+                showProgress(`Syncing "${folderName}"...`);
+                updateProgress(10, 'Checking manifest...');
+                
                 const manifestQuery = `'${folderId}' in parents and name = 'setlist_manifest.json' and trashed = false`;
                 const manifestRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(manifestQuery)}&fields=files(id,name)`, {
                     headers: { 'Authorization': `Bearer ${driveAccessToken}` }
@@ -1829,19 +1888,25 @@
                 const manifestData = await manifestRes.json();
 
                 if (manifestData.files && manifestData.files.length > 0) {
+                    updateProgress(40, 'Downloading setlist data...');
                     const manifestId = manifestData.files[0].id;
                     const res = await fetch(`https://www.googleapis.com/drive/v3/files/${manifestId}?alt=media`, {
                         headers: { 'Authorization': `Bearer ${driveAccessToken}` }
                     });
                     const setlistData = await res.json();
+                    
+                    updateProgress(80, 'Rendering views...');
                     await renderSetlistPayload(setlistData);
 
                     const localKey = `haynotes_setlist_${folderName.replace(/\s+/g, '_')}`;
                     await saveToIDB(localKey, setlistData);
                     driveLibraryModal.classList.add('hidden');
+                    
+                    hideProgress();
                     return;
                 }
 
+                updateProgress(30, 'Listing files...');
                 const filesQuery = `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`;
                 const filesRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(filesQuery)}&fields=files(id,name,mimeType)&orderBy=name`, {
                     headers: { 'Authorization': `Bearer ${driveAccessToken}` }
@@ -1849,17 +1914,23 @@
                 const filesData = await filesRes.json();
 
                 if (!filesData.files || filesData.files.length === 0) {
+                    hideProgress();
                     alert(`No files found inside "${folderName}".`);
                     return;
                 }
 
-                for (const file of filesData.files) {
+                for (let i = 0; i < filesData.files.length; i++) {
+                    const file = filesData.files[i];
+                    updateProgress(30 + ((i / filesData.files.length) * 60), `Importing ${file.name}...`);
                     await importDriveFile(file.id, file.name, file.mimeType);
                 }
                 driveLibraryModal.classList.add('hidden');
                 showPage(getNextVisiblePageIndex(0, 1) === -1 ? 0 : getNextVisiblePageIndex(0, 1));
+                
+                hideProgress();
 
             } catch (err) {
+                hideProgress();
                 alert(`Error importing setlist from Drive: ${err.message}`);
             }
         }
@@ -1943,14 +2014,6 @@
         const fabricCanvases = {}; 
         let activeTool = 'navigate';
         let activeColor = '#ef4444';
-        
-        // Listen to Thickness Selector Slider Changes
-        const brushThicknessInput = document.getElementById('brushThickness');
-        if (brushThicknessInput) {
-            brushThicknessInput.addEventListener('input', () => {
-                updateAllCanvasesMode();
-            });
-        }
 
         const colors = [
             '#000000', '#4b5563', '#9ca3af', '#ffffff', 
@@ -1986,7 +2049,6 @@
             annotationToolbar.classList.add('hidden');
             annotationToolbar.style.display = '';
             
-            // Auto-deselect any active transform bounding box when closing drawing toolbar
             Object.values(fabricCanvases).forEach(canvas => {
                 canvas.discardActiveObject();
                 canvas.requestRenderAll();
@@ -2035,8 +2097,6 @@
         }
 
         function updateAllCanvasesMode() {
-            const baseThickness = brushThicknessInput ? parseInt(brushThicknessInput.value, 10) : 15;
-            
             Object.values(fabricCanvases).forEach(canvas => {
                 canvas.isDrawingMode = false;
                 canvas.selection = false;
@@ -2063,14 +2123,14 @@
                     canvas.isDrawingMode = true;
                     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                     canvas.freeDrawingBrush.color = activeColor;
-                    canvas.freeDrawingBrush.width = baseThickness;
+                    canvas.freeDrawingBrush.width = 15;
                 } 
                 else if (activeTool === 'highlight') {
                     canvas.allowTouchScrolling = false;
                     canvas.isDrawingMode = true;
                     canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
                     canvas.freeDrawingBrush.color = hexToRgba(activeColor, 0.35);
-                    canvas.freeDrawingBrush.width = baseThickness * 3.2; 
+                    canvas.freeDrawingBrush.width = 48;
                 } 
                 else if (activeTool === 'text') {
                     canvas.allowTouchScrolling = false;
@@ -2214,7 +2274,6 @@
             const visiblePages = pagesData.filter(p => isPageVisibleForPart(p, activePart));
             const total = visiblePages.length;
             
-            // Current display index based on visible pages, not absolute index
             let displayIndex = 0;
             if (pagesData[currentPageIndex] && isPageVisibleForPart(pagesData[currentPageIndex], activePart)) {
                 displayIndex = visiblePages.findIndex(p => p.id === pagesData[currentPageIndex].id);
@@ -2250,16 +2309,18 @@
         function showPage(index, broadcast = true) {
             if (pagesData.length === 0) { updatePageIndicator(); return; }
             
-            // Validate bounds for requested absolute index
-            index = Math.max(0, Math.min(index, pagesData.length - 1));
+            // Reset Pinch Zoom globally on page change
+            document.querySelectorAll('.doc-wrapper').forEach(w => {
+                w.style.transform = 'none';
+            });
+            currentZoomLevel = 1;
             
-            // Set current
+            index = Math.max(0, Math.min(index, pagesData.length - 1));
             currentPageIndex = index;
             const activePart = getActivePart();
             
             pagesData.forEach((p, i) => {
                 const el = document.getElementById(p.id);
-                // ONLY show if it's the exact index AND fits the part constraints. (It's possible index was forced)
                 if (el) el.classList.toggle('active', i === index && isPageVisibleForPart(p, activePart));
                 
                 const li = document.querySelector(`li[data-id="${p.id}"]`);
@@ -2285,7 +2346,6 @@
             const activePageEl = document.getElementById(pagesData[currentPageIndex].id);
             
             if (isLaptopMode && activePageEl) {
-                // If there is room to scroll down (using 10px threshold)
                 if (activePageEl.scrollTop + activePageEl.clientHeight < activePageEl.scrollHeight - 10) {
                     activePageEl.scrollBy({ top: activePageEl.clientHeight * 0.75, behavior: 'smooth' });
                     return;
@@ -2306,7 +2366,6 @@
             const activePageEl = document.getElementById(pagesData[currentPageIndex].id);
             
             if (isLaptopMode && activePageEl) {
-                // If there is room to scroll up
                 if (activePageEl.scrollTop > 10) {
                     activePageEl.scrollBy({ top: -activePageEl.clientHeight * 0.75, behavior: 'smooth' });
                     return;
@@ -2319,7 +2378,6 @@
                 flashPedal('left'); 
                 const prevEl = document.getElementById(pagesData[prevIdx].id);
                 if (prevEl && isLaptopMode) {
-                    // Small timeout ensures the element renders its height before jumping to the bottom
                     setTimeout(() => { prevEl.scrollTop = prevEl.scrollHeight; }, 10);
                 } else if (prevEl) {
                     prevEl.scrollTop = 0;
@@ -2449,30 +2507,68 @@
             }
         });
 
-        // Touch Swipe Gestures
+        // Touch Swipe Gestures & Pinch-To-Zoom Custom Implementation
         let touchStartX = 0;
         let touchStartY = 0;
+        let pinchStartDist = 0;
+        let baseZoom = 1;
+        let currentZoomLevel = 1;
         const touchWrapper = document.getElementById('touchCanvasWrapper');
 
         touchWrapper.addEventListener('touchstart', (e) => {
             if (activeTool !== 'navigate' || isScrubbing) return;
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
+            
+            if (e.touches.length === 2) {
+                pinchStartDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                baseZoom = currentZoomLevel;
+            } else if (e.touches.length === 1 && currentZoomLevel <= 1.05) {
+                touchStartX = e.touches[0].screenX;
+                touchStartY = e.touches[0].screenY;
+            }
+        }, { passive: false });
+
+        touchWrapper.addEventListener('touchmove', (e) => {
+            if (activeTool !== 'navigate' || isScrubbing) return;
+            
+            if (e.touches.length === 2) {
+                e.preventDefault(); // Stop native browser zoom
+                const currDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                currentZoomLevel = Math.max(1, Math.min(baseZoom * (currDist / pinchStartDist), 4));
+                
+                const activePageObj = pagesData[currentPageIndex];
+                if (activePageObj) {
+                    const wrapper = document.getElementById(`wrap-${activePageObj.id}`);
+                    if (wrapper) {
+                        wrapper.style.transform = `scale(${currentZoomLevel})`;
+                    }
+                }
+            }
+        }, { passive: false });
 
         touchWrapper.addEventListener('touchend', (e) => {
             if (activeTool !== 'navigate' || pagesData.length === 0 || isScrubbing) return;
-            const touchEndX = e.changedTouches[0].screenX;
-            const touchEndY = e.changedTouches[0].screenY;
+            
+            if (currentZoomLevel > 1.05) return; // Disable swipe page-turns if zoomed in
 
-            const diffX = touchEndX - touchStartX;
-            const diffY = touchEndY - touchStartY;
+            if (e.changedTouches.length === 1) {
+                const touchEndX = e.changedTouches[0].screenX;
+                const touchEndY = e.changedTouches[0].screenY;
 
-            if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
-                if (diffX < 0) {
-                    navigateNextAction();
-                } else {
-                    navigatePrevAction();
+                const diffX = touchEndX - touchStartX;
+                const diffY = touchEndY - touchStartY;
+
+                if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+                    if (diffX < 0) {
+                        navigateNextAction();
+                    } else {
+                        navigatePrevAction();
+                    }
                 }
             }
         }, { passive: true });
@@ -2522,21 +2618,17 @@
         document.getElementById('btnSortAlpha').addEventListener('click', () => {
             if (pagesData.length === 0) return;
             
-            // Sort logic: Group by baseTitle, then sort by pageNum
             pagesData.sort((a, b) => {
                 const infoA = parsePageGroupInfo(a.filename);
                 const infoB = parsePageGroupInfo(b.filename);
                 
                 const titleCmp = infoA.baseTitle.toLowerCase().localeCompare(infoB.baseTitle.toLowerCase());
                 if (titleCmp !== 0) return titleCmp;
-                
-                // If same base title, sort by part type to keep them together if possible, then page num
                 return (infoA.pageNum || 1) - (infoB.pageNum || 1);
             });
             
             renderPagesListDrawer();
             
-            // Jump to the first logical visible page after a sort to avoid getting stuck
             const firstVisible = getNextVisiblePageIndex(0, 1);
             showPage(firstVisible === -1 ? 0 : firstVisible);
         });
@@ -2554,7 +2646,6 @@
                 const isLinked = isPageLinkedToParent(pageObj);
                 const isCurrent = pageId === pagesData[currentPageIndex]?.id;
 
-                // Set drawer item color depending on the designated part(s)
                 let bgColorStr = 'bg-slate-800';
                 let borderColorStr = 'border-slate-700';
                 let textColorStr = 'text-slate-200';
@@ -2582,7 +2673,7 @@
                 const li = document.createElement('li');
                 let liClasses = `page-thumb-container ${bgColorStr} p-2 rounded-xl border-2 flex items-center gap-2 hover:bg-slate-750 transition-all ${borderColorStr}`;
                 if (isLinked) {
-                    liClasses += ' ml-8 opacity-95'; // indent children for clear nesting
+                    liClasses += ' ml-8 opacity-95'; 
                 }
                 if (isCurrent) {
                     liClasses += ' rearrange-active';
@@ -2592,7 +2683,6 @@
 
                 let iconStr = type==='image'?'image':type==='pdf'?'file-text':type==='abc'?'music':'music-4';
 
-                // Construct tag list for UI
                 let partsTags = '';
                 if (pageObj.parts) {
                     pageObj.parts.forEach(pt => {
@@ -2630,7 +2720,6 @@
             
             if (filename) lastUsedPageTitle = filename;
             
-            // Use provided parts, or automatically detect from the filename, or default to ['C']
             let finalParts = parts;
             if (!finalParts) {
                 const groupInfo = parsePageGroupInfo(filename);
@@ -2717,7 +2806,6 @@
                 pageObj.filename = newTitle.trim();
                 lastUsedPageTitle = pageObj.filename;
                 
-                // Also update the tags on rename if user adds tags
                 const groupInfo = parsePageGroupInfo(pageObj.filename);
                 if(groupInfo.detectedParts.length > 0) {
                     pageObj.parts = groupInfo.detectedParts;
@@ -2748,9 +2836,6 @@
             showPage(currentPageIndex);
         }
 
-        // ---------------------------------------------------------
-        // LOCKED SONG GROUP REARRANGE ENGINE WITH GREEN DROP ZONE
-        // ---------------------------------------------------------
         new Sortable(document.getElementById('pagesList'), {
             handle: '.drag-handle',
             animation: 150,
@@ -2773,7 +2858,7 @@
                 
                 const drawerRect = document.getElementById('pagesList').getBoundingClientRect();
                 const relativeX = dropX - drawerRect.left;
-                const isIndentedDrop = relativeX > 50; // Threshold for intentional linking
+                const isIndentedDrop = relativeX > 50; 
 
                 const groupMemberIds = getGroupMemberIds(draggedId);
                 const memberObjects = groupMemberIds.map(id => pagesData.find(p => p.id === id)).filter(Boolean);
@@ -2786,7 +2871,6 @@
 
                 pagesData.splice(targetIdx, 0, ...memberObjects);
 
-                // Auto-Link Logic when dropping indented
                 if (isIndentedDrop && targetIdx > 0 && memberObjects.length === 1) {
                     const prevPage = pagesData[targetIdx - 1];
                     const prevInfo = parsePageGroupInfo(prevPage.filename);
@@ -2813,11 +2897,10 @@
                 }
 
                 renderPagesListDrawer();
-                showPage(currentPageIndex, false); // Maintain visual active state
+                showPage(currentPageIndex, false); 
             }
         });
 
-        // Cropper Logic
         function openCropper(dataUrl) {
             return new Promise((resolve) => {
                 const cropModal = document.getElementById('cropModal');
@@ -2851,7 +2934,6 @@
             if (cropResolve) { cropResolve(null); cropResolve = null; }
         });
 
-        // Prompt for Insertion Position + Title Naming Modal with OCR Auto-Detection
         function showScanInsertPositionModal(dataUrlForOcr, defaultFallbackTitle) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('scanInsertModal');
@@ -2864,13 +2946,11 @@
                 const chkPartEb = document.getElementById('chkPartEb');
                 const chkPartBass = document.getElementById('chkPartBass');
                 
-                // Default resets
                 chkPartC.checked = true;
                 chkPartBb.checked = false;
                 chkPartEb.checked = false;
                 chkPartBass.checked = false;
 
-                // Infer checkmarks if title already contains Bb, Eb, or Bass
                 if (/\(Eb\)/i.test(defaultFallbackTitle)) { chkPartEb.checked = true; chkPartC.checked = false; }
                 if (/\(Bb\)/i.test(defaultFallbackTitle) || /\bBrass\b/i.test(defaultFallbackTitle)) { chkPartBb.checked = true; chkPartC.checked = false; }
                 if (/\bBass\b/i.test(defaultFallbackTitle) || /\(\s*Bass\s*\)/i.test(defaultFallbackTitle)) { chkPartBass.checked = true; chkPartC.checked = false; }
@@ -2907,7 +2987,7 @@
                     if (chkPartBb.checked) parts.push('Bb');
                     if (chkPartEb.checked) parts.push('Eb');
                     if (chkPartBass.checked) parts.push('Bass');
-                    if (parts.length === 0) parts.push('C'); // fallback
+                    if (parts.length === 0) parts.push('C');
                     return parts;
                 };
 
@@ -2971,12 +3051,17 @@
                 }
             }
             else if (file.type === 'application/pdf' || ext === 'pdf') {
+                showProgress(`Processing ${originalName}...`);
+                updateProgress(10, 'Reading PDF...');
+                
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
                 let pdfInsertIdx = null;
                 let pdfParts = null;
                 let pdfBaseTitle = suggestedDefaultTitle;
                 
                 for (let i = 1; i <= pdf.numPages; i++) {
+                    updateProgress(10 + (i / pdf.numPages) * 80, `Rendering page ${i} of ${pdf.numPages}...`);
+                    
                     const page = await pdf.getPage(i);
                     const viewport = page.getViewport({ scale: 2.0 }); 
                     const canvas = document.createElement('canvas');
@@ -2990,6 +3075,7 @@
                         await addPage('pdf', pageDataUrl, `${originalName}${pageSuffix}`);
                     } else {
                         if (i === 1) {
+                            hideProgress(); // Pause progress bar to wait for user's input modal
                             const detected = await detectTitleFromImage(pageDataUrl);
                             pdfBaseTitle = detected || suggestedDefaultTitle;
                             
@@ -2998,17 +3084,21 @@
                                 pdfParts = choice.parts;
                                 pdfInsertIdx = (choice.position === 'insert') ? currentPageIndex + 1 : pagesData.length;
                                 pdfBaseTitle = choice.title;
+                                showProgress(`Importing remaining PDF pages...`);
                                 await addPage('pdf', pageDataUrl, pdfBaseTitle, pdfInsertIdx, pdfParts);
                             } else {
-                                break; // Cancelled importing the PDF
+                                break;
                             }
                         } else {
                             const pageSuffix = ` p${i}`;
-                            if (pdfInsertIdx !== null) pdfInsertIdx++; // increment sequentially
+                            if (pdfInsertIdx !== null) pdfInsertIdx++; 
                             await addPage('pdf', pageDataUrl, `${pdfBaseTitle}${pageSuffix}`, pdfInsertIdx !== null ? pdfInsertIdx : undefined, pdfParts);
                         }
                     }
                 }
+                
+                updateProgress(100, 'Finished parsing');
+                setTimeout(hideProgress, 500);
             }
             else if (file.type.startsWith('image/')) {
                 const dataUrl = await new Promise((r) => { const rd = new FileReader(); rd.onload = e => r(e.target.result); rd.readAsDataURL(file); });
@@ -3039,7 +3129,6 @@
         const pagesDrawerEl = document.getElementById('pagesDrawer');
         document.getElementById('btnTogglePages').addEventListener('click', () => { 
             const isHidden = pagesDrawerEl.classList.toggle('hidden'); 
-            // Avoid toggling scrubber if performance mode is active
             if (!isPerformanceMode) {
                 scrubberContainerEl.style.display = isHidden ? '' : 'none';
             }
@@ -3094,3 +3183,4 @@
     </script>
 </body>
 </html>
+```eof
