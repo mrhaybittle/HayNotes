@@ -2243,6 +2243,16 @@
             }
         }
 
+        function scrollToActivePageInDrawer() {
+            const drawer = document.getElementById('pagesDrawer');
+            if (drawer.classList.contains('hidden')) return;
+            
+            const activeLi = document.querySelector('.rearrange-active');
+            if (activeLi) {
+                activeLi.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
         function showPage(index, broadcast = true) {
             if (pagesData.length === 0) { updatePageIndicator(); return; }
             
@@ -2264,6 +2274,7 @@
                 }
             });
             updatePageIndicator();
+            scrollToActivePageInDrawer();
 
             if (broadcast) {
                 broadcastPageToBand(currentPageIndex);
@@ -3037,6 +3048,9 @@
             // Avoid toggling scrubber if performance mode is active
             if (!isPerformanceMode) {
                 scrubberContainerEl.style.display = isHidden ? '' : 'none';
+            }
+            if (!isHidden) {
+                setTimeout(scrollToActivePageInDrawer, 50);
             }
         });
         document.getElementById('btnClosePages').addEventListener('click', () => { 
