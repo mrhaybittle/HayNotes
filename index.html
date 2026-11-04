@@ -1581,7 +1581,8 @@
             }
 
             const cleanDefaultName = activeSetlistName.replace(/_[A-Z][a-z]{2}\d{1,2}_\d{4}_\d{1,4}(AM|PM)$/i, '');
-            const rawName = prompt("Enter a name for this Setlist folder:", cleanDefaultName);
+            const promptDefault = cleanDefaultName === "Main Setlist" ? "" : cleanDefaultName;
+            const rawName = prompt("Enter a name for this Setlist folder:", promptDefault);
             if (!rawName || !rawName.trim()) return;
             
             const nowObj = new Date();
@@ -2508,7 +2509,7 @@
                 if (pageObj.parts) {
                     pageObj.parts.forEach(pt => {
                         let badgeCol = pt === 'Eb' ? 'text-sky-900 bg-sky-300' : pt === 'Bb' ? 'text-orange-900 bg-orange-400' : pt === 'Bass' ? 'text-purple-900 bg-purple-400' : 'text-yellow-900 bg-yellow-400';
-                        partsTags += `<span class="px-1.5 py-0.5 ${badgeCol} text-[9px] font-bold rounded-md shrink-0 mr-1">${pt}</span>`;
+                        partsTags += `<span class="px-1.5 py-0.5 ${badgeCol} text-[9px] font-bold rounded-md shrink-0 mr-1 normal-case">${pt}</span>`;
                     });
                 }
 
