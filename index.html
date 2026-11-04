@@ -284,7 +284,7 @@
                 <button id="btnClosePages" class="text-slate-400 hover:text-white p-1 rounded"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
             <div class="p-2 text-[10px] text-slate-400 text-center border-b border-slate-800 bg-slate-900/50 uppercase tracking-wide">
-                Click chain icon to unlink • Drag to reorder
+                Click icon to link/unlink • Drag RIGHT to link
             </div>
             <ul id="pagesList" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-900"></ul>
         </div>
@@ -546,6 +546,18 @@
         </div>
     </div>
 
+    <!-- Generic Confirm Modal -->
+    <div id="genericConfirmModal" class="hidden fixed inset-0 z-[90] bg-slate-900/80 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-sm p-6 shadow-2xl flex flex-col gap-4">
+            <h3 class="font-bold text-lg text-white" id="genericConfirmTitle">Confirm</h3>
+            <p class="text-sm text-slate-300" id="genericConfirmMsg"></p>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button id="btnGenericConfirmCancel" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-colors">Cancel</button>
+                <button id="btnGenericConfirmAction" class="px-4 py-2 rounded-xl text-white text-xs font-bold transition-colors shadow-lg">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 3-CHOICE IMPORT POPUP MODAL -->
     <div id="importOptionModal" class="hidden fixed inset-0 z-[60] bg-slate-950/80 flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-5">
@@ -772,16 +784,86 @@
             });
         }
 
+        function showCustomConfirm(title, msg, confirmText, confirmColorClass, callback) {
+            const modal = document.getElementById('genericConfirmModal');
+            document.getElementById('genericConfirmTitle').textContent = title;
+            document.getElementById('genericConfirmMsg').innerHTML = msg;
+            
+            const btnAction = document.getElementById('btnGenericConfirmAction');
+            btnAction.textContent = confirmText;
+            btnAction.className = `px-4 py-2 rounded-xl text-white text-xs font-bold transition-colors shadow-lg ${confirmColorClass}`;
+            
+            const btnCancel = document.getElementById('btnGenericConfirmCancel');
+            
+            modal.classList.remove('hidden');
+            
+            const cleanup = () => {
+                modal.classList.add('hidden');
+                btnAction.onclick = null;
+                btnCancel.onclick = null;
+            };
+            
+            btnCancel.onclick = () => { cleanup(); callback(false); };
+            btnAction.onclick = () => { cleanup(); callback(true); };
+        }
+
         function unlinkPageGroup(pageId) {
             const pageObj = pagesData.find(p => p.id === pageId);
             if (!pageObj) return;
 
-            if (confirm(`Unlink "${pageObj.filename}" as an independent page?`)) {
-                const groupInfo = parsePageGroupInfo(pageObj.filename);
-                pageObj.filename = groupInfo.baseTitle + ` (Unlinked Part ${groupInfo.pageNum})`;
-                renderPagesListDrawer();
-                updatePageIndicator();
-            }
+            showCustomConfirm(
+                "Unlink Page", 
+                `Unlink <strong>${pageObj.filename}</strong> as an independent page?`, 
+                "Unlink", 
+                "bg-amber-600 hover:bg-amber-500", 
+                (confirmed) => {
+                    if (confirmed) {
+                        const groupInfo = parsePageGroupInfo(pageObj.filename);
+                        pageObj.filename = groupInfo.baseTitle + ` (Unlinked Part ${groupInfo.pageNum})`;
+                        renderPagesListDrawer();
+                        updatePageIndicator();
+                    }
+                }
+            );
+        }
+
+        function linkToPrevious(pageId) {
+            const index = pagesData.findIndex(p => p.id === pageId);
+            if (index <= 0) return;
+            
+            const prevPage = pagesData[index - 1];
+            const prevInfo = parsePageGroupInfo(prevPage.filename);
+            const targetPage = pagesData[index];
+            const targetInfo = parsePageGroupInfo(targetPage.filename);
+            
+            if (prevInfo.baseTitle.toLowerCase() === targetInfo.baseTitle.toLowerCase()) return;
+            
+            showCustomConfirm(
+                "Link to Previous", 
+                `Link <strong>${targetPage.filename}</strong> to <strong>${prevInfo.baseTitle}</strong>?`, 
+                "Link Pages", 
+                "bg-blue-600 hover:bg-blue-500", 
+                (confirmed) => {
+                    if (confirmed) {
+                        let maxPageNum = 1;
+                        pagesData.forEach(p => {
+                            const info = parsePageGroupInfo(p.filename);
+                            if (info.baseTitle.toLowerCase() === prevInfo.baseTitle.toLowerCase() && info.pageNum > maxPageNum) {
+                                maxPageNum = info.pageNum;
+                            }
+                        });
+                        
+                        let partsStr = '';
+                        if (targetPage.parts) {
+                            if (targetPage.parts.includes('Bb')) partsStr = ' (Bb)';
+                            else if (targetPage.parts.includes('Eb')) partsStr = ' (Eb)';
+                        }
+                        targetPage.filename = `${prevInfo.baseTitle}${partsStr} p.${maxPageNum + 1}`;
+                        renderPagesListDrawer();
+                        updatePageIndicator();
+                    }
+                }
+            );
         }
 
         function getGroupMemberIds(targetPageId) {
@@ -2379,8 +2461,8 @@
                     <div class="drag-handle p-1 text-slate-500 hover:text-emerald-400 shrink-0" title="Drag to reorder song group">
                         <i data-lucide="grip-vertical" class="w-4 h-4"></i>
                     </div>
-                    <div onclick="${isLinked ? `unlinkPageGroup('${pageId}')` : ''}" class="w-7 h-7 rounded-lg ${isLinked ? 'bg-amber-950 border border-amber-700 hover:bg-amber-900 cursor-pointer' : 'bg-slate-900 border border-slate-800'} flex items-center justify-center shrink-0" title="${isLinked ? 'Click to UNLINK page' : ''}">
-                        <i data-lucide="${isLinked ? 'link' : iconStr}" class="w-3.5 h-3.5 ${isLinked ? 'text-amber-400 hover:text-rose-400' : 'text-blue-400'}"></i>
+                    <div onclick="${isLinked ? `unlinkPageGroup('${pageId}')` : `linkToPrevious('${pageId}')`}" class="w-7 h-7 rounded-lg ${isLinked ? 'bg-amber-950 border border-amber-700 hover:bg-amber-900 cursor-pointer' : 'bg-slate-900 border border-slate-800 hover:bg-slate-700 cursor-pointer'} flex items-center justify-center shrink-0" title="${isLinked ? 'Click to UNLINK page' : 'Click to LINK to the page above'}">
+                        <i data-lucide="${isLinked ? 'link' : iconStr}" class="w-3.5 h-3.5 ${isLinked ? 'text-amber-400 hover:text-rose-400' : 'text-slate-400 hover:text-blue-400'}"></i>
                     </div>
                     <div class="flex-1 overflow-hidden cursor-pointer" onclick="jumpToPageById('${pageId}')" ondblclick="renamePageTitle('${pageId}')" title="Single tap to jump • Double tap to rename">
                         <div id="thumb-title-${pageId}" class="text-xs ${textColorStr} truncate font-semibold flex items-center gap-1">
@@ -2536,6 +2618,19 @@
                 const draggedId = draggedDomEl ? draggedDomEl.dataset.id : null;
                 if (!draggedId) return;
 
+                let dropX = 0;
+                if (evt.originalEvent) {
+                    if (evt.originalEvent.changedTouches && evt.originalEvent.changedTouches.length > 0) {
+                        dropX = evt.originalEvent.changedTouches[0].clientX;
+                    } else if (evt.originalEvent.clientX !== undefined) {
+                        dropX = evt.originalEvent.clientX;
+                    }
+                }
+                
+                const drawerRect = document.getElementById('pagesList').getBoundingClientRect();
+                const relativeX = dropX - drawerRect.left;
+                const isIndentedDrop = relativeX > 50; // Threshold for intentional linking
+
                 const groupMemberIds = getGroupMemberIds(draggedId);
                 const memberObjects = groupMemberIds.map(id => pagesData.find(p => p.id === id)).filter(Boolean);
 
@@ -2546,6 +2641,32 @@
                 if (targetIdx === -1) targetIdx = pagesData.length;
 
                 pagesData.splice(targetIdx, 0, ...memberObjects);
+
+                // Auto-Link Logic when dropping indented
+                if (isIndentedDrop && targetIdx > 0 && memberObjects.length === 1) {
+                    const prevPage = pagesData[targetIdx - 1];
+                    const prevInfo = parsePageGroupInfo(prevPage.filename);
+                    const draggedPage = pagesData[targetIdx];
+                    const draggedInfo = parsePageGroupInfo(draggedPage.filename);
+                    
+                    if (prevInfo.baseTitle.toLowerCase() !== draggedInfo.baseTitle.toLowerCase()) {
+                        let maxPageNum = 1;
+                        pagesData.forEach(p => {
+                            const info = parsePageGroupInfo(p.filename);
+                            if (info.baseTitle.toLowerCase() === prevInfo.baseTitle.toLowerCase() && info.pageNum > maxPageNum) {
+                                maxPageNum = info.pageNum;
+                            }
+                        });
+                        
+                        let partsStr = '';
+                        if (draggedPage.parts) {
+                            if (draggedPage.parts.includes('Bb')) partsStr = ' (Bb)';
+                            else if (draggedPage.parts.includes('Eb')) partsStr = ' (Eb)';
+                        }
+                        
+                        draggedPage.filename = `${prevInfo.baseTitle}${partsStr} p.${maxPageNum + 1}`;
+                    }
+                }
 
                 renderPagesListDrawer();
                 showPage(currentPageIndex, false); // Maintain visual active state
